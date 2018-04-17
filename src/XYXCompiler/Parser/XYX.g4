@@ -16,7 +16,7 @@ type //ok
     |   String                                          #StringType
     |   Void                                            #VoidType
     |   Identifier                                      #IdType
-    |   type (LeftBracket expression? RightBracket)+    #ArrayType
+    |   type LeftBracket expression? RightBracket       #ArrayType
     ;
 
 classDeclaration //ok

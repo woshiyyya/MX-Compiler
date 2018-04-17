@@ -15,6 +15,8 @@ import static XYXCompiler.ASTNode.Expression.Unary_Expression.UnaryOP;
 import static XYXCompiler.ASTNode.Expression.Binary_Expression.BinaryOP;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
+import java.lang.reflect.Array;
+
 public class ASTBuilder extends XYXBaseListener{
     private ParseTreeProperty<Node> tag = new ParseTreeProperty<>();
     public ASTRoot Root = new ASTRoot();
@@ -460,14 +462,9 @@ public class ASTBuilder extends XYXBaseListener{
     @Override
     public void exitArrayType(XYXParser.ArrayTypeContext ctx) {
         Array_Type node = new Array_Type();
-        if(ctx.type() instanceof XYXParser.ArrayTypeContext)
-            System.out.println("Wrong Array_Type");
-        else
-            node.array_basetype = (Base_Type) tag.get(ctx.type());
-        for(XYXParser.ExpressionContext X : ctx.expression()){
-            node.dimension++;
-            node.size.add((Expression) tag.get(X));
-        }
+        node.basetype = (Base_Type) tag.get(ctx.type());
+        if(ctx.expression() != null)
+            node.size = (Expression) tag.get(ctx.expression());
         tag.put(ctx, node);
     }
 }

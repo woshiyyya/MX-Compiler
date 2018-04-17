@@ -3,10 +3,10 @@ package XYXCompiler.ASTNode.Type;
 import XYXCompiler.Tools.*;
 
 public class Class_Type extends Base_Type {
-    public Symbol name;
+    public String name;
 
     public Class_Type(String name){
-        this.name = new Symbol(name);
+        this.name = name;
         this.type = Type.Class;
     }
 
