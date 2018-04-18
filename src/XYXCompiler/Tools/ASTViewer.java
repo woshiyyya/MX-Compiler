@@ -42,12 +42,8 @@ public class ASTViewer implements ASTVisitor {
         ind++;
         Tab();
         out.println(node.name + " " + node.getClass().getSimpleName());
-        for(Variable_Declaration_Statement X: node.Var_Decls)
+        for(Declaration X: node.Members)
             X.accept(this);
-        for(Function_Declaration X: node.Func_Decls)
-            X.accept(this);
-        if(node.CF != null)
-            node.CF.accept(this);
         ind--;
     }
 

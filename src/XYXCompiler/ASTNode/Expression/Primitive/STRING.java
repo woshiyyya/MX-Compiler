@@ -5,7 +5,7 @@ import XYXCompiler.ASTNode.Expression.Expression;
 import XYXCompiler.Builder.ASTVisitor;
 
 public class STRING extends Expression {
-    String value;
+    public String value;
     public STRING() {
         value = null;
     }

@@ -20,7 +20,13 @@ type //ok
     ;
 
 classDeclaration //ok
-    :   Class Identifier '{' (variableDeclarationStatement | functionDeclaration | constructFunctionDeclaration)* '}' 
+    :   Class Identifier '{' classMembers* '}'
+    ;
+
+classMembers
+    :   variableDeclaration ';'
+    |   functionDeclaration
+    |   constructFunctionDeclaration
     ;
 
 globalVariableDeclaration //ok
@@ -58,7 +64,7 @@ primaryExpression //ok
 
 suffixExpression //ok
     :   primaryExpression
-//  |   suffixExpression Dot Identifier LeftParen expression? RightParen
+//  |   suffixExpression Dot Identifier LeftParen (expression (',' expression)*)? RightParen
     |   suffixExpression Dot Identifier
     |   suffixExpression LeftBracket expression RightBracket
     |   suffixExpression LeftParen (expression (',' expression)*)? RightParen

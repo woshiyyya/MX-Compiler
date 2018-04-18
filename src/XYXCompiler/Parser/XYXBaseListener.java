@@ -123,6 +123,18 @@ public class XYXBaseListener implements XYXListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterClassMembers(XYXParser.ClassMembersContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitClassMembers(XYXParser.ClassMembersContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterGlobalVariableDeclaration(XYXParser.GlobalVariableDeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}

@@ -110,6 +110,16 @@ public interface XYXListener extends ParseTreeListener {
 	 */
 	void exitClassDeclaration(XYXParser.ClassDeclarationContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link XYXParser#classMembers}.
+	 * @param ctx the parse tree
+	 */
+	void enterClassMembers(XYXParser.ClassMembersContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link XYXParser#classMembers}.
+	 * @param ctx the parse tree
+	 */
+	void exitClassMembers(XYXParser.ClassMembersContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link XYXParser#globalVariableDeclaration}.
 	 * @param ctx the parse tree
 	 */

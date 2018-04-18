@@ -1,6 +1,7 @@
 package Test;
 
 import XYXCompiler.ASTNode.ASTRoot;
+import XYXCompiler.ASTNode.Type.TypeTable;
 import XYXCompiler.Parser.XYXLexer;
 import XYXCompiler.Parser.XYXParser;
 import XYXCompiler.Tools.ASTViewer;
@@ -19,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Stack;
 
+import static XYXCompiler.Tools.Exceptions.SemanticException.printExceptions;
 import static org.antlr.v4.runtime.CharStreams.fromFileName;
 
 public class Test_Listener {
@@ -31,13 +33,14 @@ public class Test_Listener {
         CommonTokenStream tokens    = new CommonTokenStream(lexer);
         XYXParser parser            = new XYXParser(tokens);
         ParseTree tree = parser.program(); // parse;
-
         ParseTreeWalker walker = new ParseTreeWalker();
         ASTBuilder builder = new ASTBuilder();
+
         walker.walk(builder, tree);
 
+
         ASTViewer Viewer = new ASTViewer();
-        int a  = 0;
         Viewer.visit(builder.Root);
+        printExceptions();
     }
 }

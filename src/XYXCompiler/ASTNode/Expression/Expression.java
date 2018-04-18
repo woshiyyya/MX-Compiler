@@ -5,6 +5,10 @@ import XYXCompiler.ASTNode.Type.*;
 import XYXCompiler.Tools.Position;
 
 public class Expression extends Node {
-    public Base_Type expr_type;
+    public Base_Type type;
     public Boolean if_lvalue;
+
+    public void setType(Base_Type type){
+        this.type = type;
+    }
 }

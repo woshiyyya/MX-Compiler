@@ -2,9 +2,6 @@ package XYXCompiler.ASTNode.Expression.Suffix;
 
 import XYXCompiler.ASTNode.Expression.Expression;
 import XYXCompiler.Builder.ASTVisitor;
-import XYXCompiler.Tools.Symbol;
-
-import java.util.List;
 
 public class Indexing extends Expression {
     public Expression name;

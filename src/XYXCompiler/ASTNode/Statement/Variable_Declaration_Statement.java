@@ -3,7 +3,7 @@ package XYXCompiler.ASTNode.Statement;
 import XYXCompiler.ASTNode.Expression.Expression;
 import XYXCompiler.ASTNode.Type.Base_Type;
 import XYXCompiler.Builder.ASTVisitor;
-import XYXCompiler.Tools.Symbol;
+import XYXCompiler.Semantic.Symbol.Symbol;
 
 public class Variable_Declaration_Statement extends Statement {
     public Base_Type type;

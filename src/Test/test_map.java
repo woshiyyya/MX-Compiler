@@ -5,13 +5,12 @@ import java.util.Map;
 
 public class test_map {
     public static void main(String [] args){
-        Map<String, animal> map = new LinkedHashMap<>();
-        animal A = new animal(1);
-        animal B = new animal(2);
-        map.put("A", A);
-        map.put("B", B);
-        A.A = 5;
-        System.out.println(map.get("A").A);
+        animal A = new animal();
+        A.map.put("A",1);
+        animal B = new animal(A);
+        B.map.put("B",2);
+        if(A.map.containsKey("B"))
+            System.out.println("Contain");
     }
 
 }

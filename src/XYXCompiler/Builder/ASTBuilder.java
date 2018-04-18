@@ -10,12 +10,11 @@ import XYXCompiler.ASTNode.Statement.*;
 import XYXCompiler.ASTNode.Node;
 import XYXCompiler.ASTNode.Type.*;
 import XYXCompiler.Parser.*;
-import XYXCompiler.Tools.Symbol;
+import XYXCompiler.Semantic.Symbol.Symbol;
 import static XYXCompiler.ASTNode.Expression.Unary_Expression.UnaryOP;
 import static XYXCompiler.ASTNode.Expression.Binary_Expression.BinaryOP;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
-
-import java.lang.reflect.Array;
 
 public class ASTBuilder extends XYXBaseListener{
     private ParseTreeProperty<Node> tag = new ParseTreeProperty<>();
@@ -28,7 +27,6 @@ public class ASTBuilder extends XYXBaseListener{
             Root.declarations.add((Declaration) node);
             //System.out.println("Declaration:" + X.getClass() + "  " + X.getText());
         }
-
     }
 
     @Override
@@ -48,7 +46,14 @@ public class ASTBuilder extends XYXBaseListener{
         for(XYXParser.VariableDeclarationContext X:ctx.variableDeclaration()){
             node.params.add((Variable_Declaration) tag.get(X));
         }
+        node.updateType();
         tag.put(ctx, node);
+    }
+
+    // It is an ugly implementation
+    private Declaration FabricateThisMember(String name){
+        Variable_Declaration THIS = new Variable_Declaration(new Class_Type(name), "this");
+        return THIS;
     }
 
     @Override
@@ -56,16 +61,20 @@ public class ASTBuilder extends XYXBaseListener{
         Class_Declaration node = new Class_Declaration();
         node.name = ctx.Identifier().getText();
         node.symbol = new Symbol(ctx.Identifier().getText());
-        for(XYXParser.ConstructFunctionDeclarationContext X: ctx.constructFunctionDeclaration()){
-            node.CF = (Construct_Function) tag.get(X);
-        }
-        for(XYXParser.VariableDeclarationStatementContext X: ctx.variableDeclarationStatement()){
-            node.Var_Decls.add((Variable_Declaration_Statement) tag.get(X));
-        }
-        for(XYXParser.FunctionDeclarationContext X: ctx.functionDeclaration()){
-            node.Func_Decls.add((Function_Declaration) tag.get(X));
+
+        //Manually Add a 'this'
+        node.Members.add(FabricateThisMember(node.name));
+
+        for(XYXParser.ClassMembersContext X: ctx.classMembers()){
+            node.Members.add((Declaration) tag.get(X));
         }
         tag.put(ctx, node);
+    }
+
+    @Override
+    public void exitClassMembers(XYXParser.ClassMembersContext ctx) {
+        if(ctx.children.get(0) != null)
+            tag.put(ctx, tag.get(ctx.children.get(0)));
     }
 
     @Override
@@ -74,7 +83,7 @@ public class ASTBuilder extends XYXBaseListener{
         node.name = ctx.Identifier().getText();
         node.body = (Compound_Statement) tag.get(ctx.compoundStatement());
         for(XYXParser.VariableDeclarationContext X: ctx.variableDeclaration())
-            node.params.add((Expression) tag.get(X));
+            node.params.add((Variable_Declaration) tag.get(X));
         tag.put(ctx, node);
     }
 
@@ -89,7 +98,7 @@ public class ASTBuilder extends XYXBaseListener{
         tag.put(ctx, node);
     }
 
-    @Override //VariableDeclaration 仅用于函数参数列表
+    @Override //VariableDeclaration 仅用于函数参数列表 及 class成员变量声明
     public void exitVariableDeclaration(XYXParser.VariableDeclarationContext ctx) {
         Variable_Declaration node = new Variable_Declaration();
         node.type = (Base_Type) tag.get(ctx.type());
@@ -148,6 +157,7 @@ public class ASTBuilder extends XYXBaseListener{
                 if (body instanceof ID){
                     Function_call node = new Function_call();
                     node.name = ((ID) body).name;
+                    node.body = (ID) body;
                     for(XYXParser.ExpressionContext X: ctx.expression()){
                         node.params.add((Expression) tag.get(X));
                     }

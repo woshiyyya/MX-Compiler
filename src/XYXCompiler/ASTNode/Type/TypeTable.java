@@ -1,34 +1,52 @@
 package XYXCompiler.ASTNode.Type;
 
 import XYXCompiler.ASTNode.Expression.Primitive.Bool;
+import XYXCompiler.ASTNode.Expression.Primitive.STRING;
+import XYXCompiler.ASTNode.Node;
+import XYXCompiler.Semantic.Scope.LocalScope;
+import XYXCompiler.Tools.Exceptions.SemanticException;
+import XYXCompiler.Tools.Exceptions.XYXException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class TypeTable {
-    public Map<String, Base_Type> table;
+    public Map<String, Node> table;
+    public Map<String, LocalScope> ClassScopeMap;
+    public Map<String, STRING> StringLiteralTable;
 
-    public static Int_Type int_type = new Int_Type();
-    public static Bool_Type bool_type = new Bool_Type();
-    public static Void_Type void_type = new Void_Type();
 
     public TypeTable() {
         table = new LinkedHashMap<>();
-        table.put("int", int_type);
-        table.put("bool", bool_type);
-        table.put("void", void_type);
+        ClassScopeMap = new LinkedHashMap<>();
+        StringLiteralTable = new LinkedHashMap<>();
     }
 
-    public boolean add(String name, Base_Type type){
-        if(table.containsKey(name))
+    public boolean add(String name, Node type){
+        if(table.containsKey(name)){
+            SemanticException.exceptions.add(new XYXException("Duplicated Class Type"));
             return false;
-        else {
+        }else {
             table.put(name, type);
             return true;
         }
     }
 
+    public void LinkClassScope(String name, LocalScope localScope){
+        ClassScopeMap.put(name, localScope);
+    }
+
     public boolean find(String name){
         return table.containsKey(name);
+    }
+
+    public LocalScope getScope(String classname){
+        return ClassScopeMap.get(classname);
+    }
+
+    public void PrintTypeTable(){
+        for(String X: table.keySet()){
+            System.out.println(X);
+        }
     }
 }
