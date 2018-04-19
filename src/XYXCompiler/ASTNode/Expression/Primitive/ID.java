@@ -16,7 +16,7 @@ public class ID extends Expression {
         this.name = name;
     }
 
-    public void setEntity(Node entity){ //将ID与声明实体联系
+    public void setEntity(Node entity){
         if(this.entity == null)
             this.entity = entity;
     }
