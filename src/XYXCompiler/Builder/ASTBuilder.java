@@ -98,7 +98,7 @@ public class ASTBuilder extends XYXBaseListener{
         tag.put(ctx, node);
     }
 
-    @Override //VariableDeclaration 仅用于函数参数列表 及 class成员变量声明
+    @Override //VariableDeclaration (Only for Parameter List & Class Member Declaration)
     public void exitVariableDeclaration(XYXParser.VariableDeclarationContext ctx) {
         Variable_Declaration node = new Variable_Declaration();
         node.type = (Base_Type) tag.get(ctx.type());

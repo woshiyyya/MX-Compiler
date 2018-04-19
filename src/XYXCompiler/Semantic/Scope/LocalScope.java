@@ -33,7 +33,7 @@ public class LocalScope {
         if(Entity.containsKey(name)){
             SemanticException.exceptions.add(new XYXException("Duplicated Defination of: " + name + " " + node.getClass().getSimpleName()));
         }else{
-            Entity.put(name, node);  //对任意Declaration类型Node，其Scope已被tag标注
+            Entity.put(name, node);  //Tag the Declaration with its Scope
             node.setScope(this);
         }
     }

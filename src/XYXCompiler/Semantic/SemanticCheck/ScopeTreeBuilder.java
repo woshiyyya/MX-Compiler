@@ -43,7 +43,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
         }
     }
 
-    public void CreateFuncScope(List<Variable_Declaration> params){ //创建新的Scope并将其压入栈
+    public void CreateFuncScope(List<Variable_Declaration> params){ //Create new Scope for funcparams And Push into Stack
         LocalScope localScope = new LocalScope(scopeStack.peek());
         for(Variable_Declaration X: params){
             if(HaveType(X.type))
@@ -54,7 +54,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
         scopeStack.push(localScope);
     }
 
-    public boolean HaveType(Base_Type Type) {       //针对变量声明，检测其类是否存在
+    public boolean HaveType(Base_Type Type) {       //For Var Declaration,Check Whether its base Type exists
         if(Type instanceof Class_Type)
             return typeTable.find(((Class_Type) Type).name);
         else if(Type instanceof Array_Type)
@@ -67,9 +67,9 @@ public class ScopeTreeBuilder implements ASTVisitor {
         globalScope = node.globalScope;
         scopeStack.push(globalScope);
 
-        for(Declaration X: node.declarations){  //全局函数and全局Class支持前向引用，全局变量则不支持
+        for(Declaration X: node.declarations){  //Forwarding reference
             if(X instanceof Class_Declaration){
-                typeTable.add(X.name, X); //添加到类型表中
+                typeTable.add(X.name, X);
                 globalScope.put(X);
             }else if(X instanceof Function_Declaration){
                 globalScope.put(X);
@@ -91,28 +91,26 @@ public class ScopeTreeBuilder implements ASTVisitor {
 
         LocalScope currentScope = scopeStack.peek();
 
-        //给子表达式setScope，setEntity完再添加进scope里
         VISIT(node.RHS);
         currentScope.put(node);
     }
 
     @Override
     public void visit(Class_Declaration node) {
-        LocalScope currentScope = new LocalScope(scopeStack.peek());  //进入Class，建立新域
+        LocalScope currentScope = new LocalScope(scopeStack.peek());  //Enter Class, Enter new Scope
         scopeStack.push(currentScope);
         currentClass = node.name;
 
-        // 建立Class名与其定义域的映射
+        //Link Class Name with its Scope
         typeTable.LinkClassScope(node.name, currentScope);
 
-        //Class 内部函数支持前向引用
+        //Class Function support Forwarding reference
         for(Declaration X: node.Members){
             if(X instanceof Function_Declaration)
                 currentScope.put(X);
         }
 
-        // 给成员变量声明添加进Scope
-        for(Declaration X: node.Members){       //未检查构造函数个数
+        for(Declaration X: node.Members){       // ** Did not check num of CF
             VISIT(X);   //TROUBLE~!!!  Solved at Line167
             if(!(X instanceof Function_Declaration)){
                 System.out.println(X.name);
@@ -261,7 +259,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
 
     @Override
     public void visit(Function_call node) {
-        //手动建立函数名与函数声明的联系，否则Link到currentScope的同名变量
+        //Manually Link FuncCall with Global Func declration. Otherwise might Link to local variable
         try{
             node.body.setEntity(globalScope.find(node.name));
         }catch (Exception e){

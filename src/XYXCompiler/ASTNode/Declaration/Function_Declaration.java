@@ -10,7 +10,7 @@ import java.util.List;
 
 public class Function_Declaration extends Declaration {
     public Base_Type returntype;
-    public Symbol symbol;  //有用吗？
+    public Symbol symbol;
     public List<Variable_Declaration> params;
     public List<Base_Type> paramstype;
     public Compound_Statement body;
