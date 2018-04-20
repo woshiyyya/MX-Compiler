@@ -8,10 +8,7 @@ public class Self_Increasing extends Expression{
 
     public Self_Increasing(){
         body = null;
-    }
-
-    public Self_Increasing(Expression b){
-        body = b;
+        LValue = false;
     }
 
     public void print(){

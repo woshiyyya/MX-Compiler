@@ -22,6 +22,13 @@ import java.util.Stack;
 
 public class ScopeTreeBuilder implements ASTVisitor {
 
+    //  In this ScopeTreeBuilder class, we gonna do the following tasks:
+    //
+    //      1.Recursively Build the ScopeTree, put Var/Func/Class Declarations in to that Tree...
+    //      2.Set ID nodes with their declaration entities...
+    //      3.Find out illegal variable declaration & Function calls...
+    //      4.Add Built-in Function and primary class method into globalscope...
+
     public final Stack<LocalScope> scopeStack;
     public GlobalScope globalScope;
     public String currentClass;

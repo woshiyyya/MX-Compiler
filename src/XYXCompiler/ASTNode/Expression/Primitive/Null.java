@@ -8,6 +8,7 @@ public class Null extends Expression {
 
     public Null() {
         type = new Null_Type();
+        LValue = false;
     }
 
     @Override

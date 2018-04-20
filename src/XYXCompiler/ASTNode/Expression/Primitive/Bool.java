@@ -11,6 +11,7 @@ public class Bool extends Expression {
     public Bool(boolean v) {
         type = new Bool_Type();
         value = v;
+        LValue = false;
     }
 
     @Override

@@ -11,12 +11,9 @@ public class Func_Type extends Base_Type {
     public Base_Type returntype;
     public List<Base_Type> params_type;
 
-    public Func_Type() {
-        this.params_type = new LinkedList<>();
-    }
-
     public Func_Type(String name, Base_Type returntype, List<Base_Type> params_type) {
         this.name = name;
+        this.type = Type.Function;
         this.returntype = returntype;
         this.params_type = params_type;
     }

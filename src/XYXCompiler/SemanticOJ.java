@@ -37,7 +37,7 @@ public class SemanticOJ {
             TCK.visit(builder.Root);
 
             if(!SemanticException.exceptions.isEmpty()){
-                printExceptions();
+                printExceptions(0);
                 throw new Exception();
             }
         }catch (Exception e){

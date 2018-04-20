@@ -9,6 +9,7 @@ public class Newexpr extends Expression {
 
     public Newexpr(Base_Type type) {
         this.type = type;
+        this.LValue = true;
     }
 
     @Override

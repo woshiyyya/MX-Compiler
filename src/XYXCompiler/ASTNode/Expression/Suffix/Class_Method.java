@@ -12,6 +12,7 @@ public class Class_Method extends Expression {
 
     public Class_Method() {
         params = new LinkedList<>();
+        LValue = true;
     }
 
     @Override

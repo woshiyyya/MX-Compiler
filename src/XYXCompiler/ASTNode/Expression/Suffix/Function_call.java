@@ -15,6 +15,7 @@ public class Function_call extends Expression {
     public Function_call(){
         name = null;
         params = new LinkedList<>();
+        LValue = false;
     }
 
     @Override

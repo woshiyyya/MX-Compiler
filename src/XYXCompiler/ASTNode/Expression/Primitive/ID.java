@@ -8,12 +8,9 @@ public class ID extends Expression {
     public String name;
     public Node entity = null;
 
-    public ID(){
-        name = null;
-    }
-
     public ID(String name){
         this.name = name;
+        LValue = true;
     }
 
     public void setEntity(Node entity){

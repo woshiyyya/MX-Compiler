@@ -7,9 +7,9 @@ public class SemanticException {
 
     public static List<XYXException> exceptions = new ArrayList<>();
 
-    public static void printExceptions(){
+    public static void printExceptions(int i){
         for(Exception X: exceptions)
-            System.err.println(X.getMessage());
+            System.err.println(i + X.getMessage());
     }
 
     public void add(XYXException e){

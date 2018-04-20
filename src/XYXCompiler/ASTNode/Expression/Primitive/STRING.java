@@ -5,16 +5,15 @@ import XYXCompiler.ASTNode.Expression.Expression;
 import XYXCompiler.ASTNode.Type.String_Type;
 import XYXCompiler.Builder.ASTVisitor;
 
+import java.util.List;
+
 public class STRING extends Expression {
     public String value;
-    public STRING() {
-        type = new String_Type();
-        value = null;
-    }
 
     public STRING(String value) {
         type = new String_Type();
         this.value = value;
+        LValue = false;
     }
 
     public void print() {

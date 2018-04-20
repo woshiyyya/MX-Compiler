@@ -13,6 +13,7 @@ public class Unary_Expression extends Expression {
     public Unary_Expression(UnaryOP OP, Expression Base_Expr){
         this.op = OP;
         this.body = Base_Expr;
+        this.LValue = false;
     }
 
     public void print(){

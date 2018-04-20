@@ -13,4 +13,7 @@ public class Class_Type extends Base_Type {
     public void print(){
         System.out.println("Classtype ");
     }
+    public String toString(){
+        return name;
+    }
 }

@@ -15,4 +15,8 @@ public class Array_Type extends Base_Type {
         basetype = null;
         size = null;
     }
+
+    public String toString(){
+        return type.toString();
+    }
 }

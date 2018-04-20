@@ -6,7 +6,7 @@ import XYXCompiler.Tools.Position;
 
 public class Expression extends Node {
     public Base_Type type;
-    public Boolean if_lvalue;
+    public Boolean LValue;
 
     public void setType(Base_Type type){
         this.type = type;

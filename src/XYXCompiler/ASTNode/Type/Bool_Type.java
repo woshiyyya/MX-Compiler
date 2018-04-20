@@ -8,4 +8,8 @@ public class Bool_Type extends Base_Type {
     public Bool_Type(){
         type = Type.Bool;
     }
+
+    public String toString(){
+        return type.toString();
+    }
 }

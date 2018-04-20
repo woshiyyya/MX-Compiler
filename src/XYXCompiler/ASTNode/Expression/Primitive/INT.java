@@ -13,6 +13,7 @@ public class INT extends Expression {
         type = new Int_Type();
     }
     public INT(String v){
+        LValue = false;
         type = new Int_Type();
         value = new BigInteger(v);
     }

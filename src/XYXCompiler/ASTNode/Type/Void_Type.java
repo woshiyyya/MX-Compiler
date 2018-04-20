@@ -8,4 +8,8 @@ public class Void_Type extends Base_Type {
     public Void_Type(){
         type = Type.Void;
     }
+
+    public String toString(){
+        return type.toString();
+    }
 }

@@ -10,6 +10,7 @@ public class Accessing extends Expression {
     public Accessing(){
         body = null;
         components = null;
+        LValue = true;
     }
 
     @Override

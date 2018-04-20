@@ -8,4 +8,8 @@ public class Int_Type extends Base_Type{
     public Int_Type(){
         type = Type.Int;
     }
+
+    public String toString(){
+        return type.toString();
+    }
 }

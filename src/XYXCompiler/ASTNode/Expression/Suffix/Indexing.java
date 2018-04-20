@@ -10,11 +10,13 @@ public class Indexing extends Expression {
     public Indexing(){
         name = null;
         index = null;
+        LValue = true;
     }
 
     public Indexing(Expression name, Expression index) {
         this.name = name;
         this.index = index;
+        LValue = true;
     }
 
     @Override

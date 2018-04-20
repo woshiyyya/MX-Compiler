@@ -17,6 +17,7 @@ public class Binary_Expression extends Expression{
         this.op = OP;
         this.rhs = RHS;
         this.lhs = LHS;
+        this.LValue = false;
     }
 
     public void print(){

@@ -17,99 +17,37 @@ import XYXCompiler.Tools.Exceptions.SemanticException;
 import XYXCompiler.Tools.Exceptions.XYXException;
 import XYXCompiler.ASTNode.Expression.Unary_Expression.UnaryOP;
 
+import java.lang.reflect.Array;
 import java.util.List;
 
 public class TypeChecker implements ASTVisitor {
 
-    // When building AST, Funcdecl, VarDecl, ClassDecl have got their Types;
-    // Also, Newexpr & Literal Value (Bool, Int, String, Void, null) got their Types;
-    // 1. CHECK TYPE EQUAL:
-    //      We have to determine the type of ID from the Linked Entity,
-    //      and recursively determine the Type of every Expressions then check them
-    // 2. DETERMINE L-VALUE:
-    //      Left Value: variables && class members && array components
+    // When building AST,Types of Funcdecl, VarDecl, ClassDecl have been set;
+    // Newexpr & Literal Value (Bool, Int, String, Void, null) got their Types either;
+    //
+    //-------------------------------------------------------------------------------------------
+    //
+    //  In this TypeChecker, we will implement the following tasks:
+    //
+    //      1.Recursively determine the type of expressions, and check their correspondence...
+    //      2.Check the parameter List and return type of function calls...
+    //      3.Check the condition of (IF, FOR, WHILE) statement...
+    //      4.Check Main function...
 
-    private TypeTable typeTable;
+
 
     public TypeChecker(TypeTable typeTable) {
         this.typeTable = typeTable;
     }
 
-    private Base_Type returntype = null;
     private boolean IsCF = false;
+    private Base_Type returntype = null;
+    private TypeTable typeTable;
 
     private static Bool_Type BOOL = new Bool_Type();
     private static Int_Type INT = new Int_Type();
     private static String_Type STRING = new String_Type();
-
-
-
-    private boolean EqualType(Expression A, Expression B){
-        if(A.type instanceof Class_Type && B.type instanceof Null_Type) return true;
-        if(A.type instanceof Array_Type && B.type instanceof Null_Type) return true;
-
-        boolean Ans = false;
-        Base_Type TA = A.type;
-        Base_Type TB = B.type;
-
-        if(TA.type == TB.type)
-            Ans = true;
-        if(Ans && TA.type == Type.Class)
-            Ans = (((Class_Type) TA).name.equals(((Class_Type) TB).name));
-        else if(Ans && TA.type == Type.Array)
-            Ans = EqualArrayType((Array_Type)TA,(Array_Type)TB);
-        return Ans;
-    }
-
-    private boolean EqualType(Expression A, Base_Type B){
-        if(A.type instanceof Class_Type && B instanceof Null_Type) return true;
-        if(A.type instanceof Array_Type && B instanceof Null_Type) return true;
-
-        boolean Ans = false;
-        Base_Type TA = A.type;
-
-        if(TA.type == B.type)
-            Ans = true;
-        if(Ans && TA.type == Type.Class)
-            Ans = (((Class_Type) TA).name.equals(((Class_Type) B).name));
-        else if(Ans && TA.type == Type.Array)
-            Ans = EqualArrayType((Array_Type)TA, (Array_Type) B);
-        return Ans;
-    }
-
-    private boolean EqualType(Base_Type A, Base_Type B){
-        if(A instanceof Class_Type && B instanceof Null_Type) return true;
-        if(A instanceof Array_Type && B instanceof Null_Type) return true;
-
-        boolean Ans = false;
-        if(A.type == B.type)
-            Ans = true;
-        if(Ans && A.type == Type.Class)
-            Ans = (((Class_Type) A).name.equals(((Class_Type) B).name));
-        else if(Ans && A.type == Type.Array)
-            Ans = EqualArrayType((Array_Type) A, (Array_Type) B);
-        return Ans;
-    }
-
-    private boolean EqualArrayType(Array_Type A, Array_Type B){
-        int dimA = 1, dimB = 1;
-        Base_Type btA, btB;
-        Array_Type tem = A;
-        while(tem.basetype instanceof Array_Type){
-            dimA++;
-            tem = (Array_Type)A.basetype;
-        }
-        btA = tem.basetype;
-
-        tem = B;
-        while(tem.basetype instanceof Array_Type){
-            dimB++;
-            tem = (Array_Type)B.basetype;
-        }
-        btB = tem.basetype;
-
-        return (dimA == dimB && EqualType(btA, btB));
-    }
+    private static Void_Type VOID = new Void_Type();
 
     private void AddError(String error){
         SemanticException.exceptions.add(new XYXException(error));
@@ -193,7 +131,7 @@ public class TypeChecker implements ASTVisitor {
         VISIT(node.init);
         VISIT(node.condition);
         if(node.condition!= null && !EqualType(node.condition, BOOL))
-            AddError(node.getPosition() + " For Condition must be bool type!");
+            AddError(node.getPosition() + "For Condition must be bool type!");
         VISIT(node.update);
         VISIT(node.body);
     }
@@ -306,7 +244,7 @@ public class TypeChecker implements ASTVisitor {
                 break;
             }
             case Assign:{
-                node.setType(HSType);
+                node.setType(VOID);
                 break;
             }
             default:{
@@ -340,7 +278,7 @@ public class TypeChecker implements ASTVisitor {
             Array_Type bodytype = (Array_Type)node.name.type;
             node.setType(bodytype.basetype);
         }else
-            AddError(node.getPosition() + "Non-arraytype cannot be subscripted! name = " + node.name.toString());
+            AddError(node.getPosition() + "Non-arraytype cannot be subscripted! name = " + node.name.type.toString());
 
         VISIT(node.index);
         if(!EqualType(node.index, INT))
@@ -463,5 +401,72 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public void visit(Expression node) {
 
+    }
+
+    private boolean EqualType(Expression A, Expression B){
+        if(A.type instanceof Class_Type && B.type instanceof Null_Type) return true;
+        if(A.type instanceof Array_Type && B.type instanceof Null_Type) return true;
+
+        boolean Ans = false;
+        Base_Type TA = A.type;
+        Base_Type TB = B.type;
+
+        if(TA.type == TB.type)
+            Ans = true;
+        if(Ans && TA instanceof Class_Type)
+            Ans = (((Class_Type) TA).name.equals(((Class_Type) TB).name));
+        else if(Ans && TA instanceof Array_Type)
+            Ans = EqualArrayType((Array_Type)TA,(Array_Type)TB);
+        return Ans;
+    }
+
+    private boolean EqualType(Expression A, Base_Type B){
+        if(A.type instanceof Class_Type && B instanceof Null_Type) return true;
+        if(A.type instanceof Array_Type && B instanceof Null_Type) return true;
+
+        boolean Ans = false;
+        Base_Type TA = A.type;
+
+        if(TA.type == B.type)
+            Ans = true;
+        if(Ans && TA instanceof Class_Type)
+            Ans = (((Class_Type) TA).name.equals(((Class_Type) B).name));
+        else if(Ans && TA instanceof Array_Type)
+            Ans = EqualArrayType((Array_Type)TA, (Array_Type) B);
+        return Ans;
+    }
+
+    private boolean EqualType(Base_Type A, Base_Type B){
+        if(A instanceof Class_Type && B instanceof Null_Type) return true;
+        if(A instanceof Array_Type && B instanceof Null_Type) return true;
+
+        boolean Ans = false;
+        if(A.type == B.type)
+            Ans = true;
+        if(Ans && A instanceof Class_Type)
+            Ans = (((Class_Type) A).name.equals(((Class_Type) B).name));
+        else if(Ans && A instanceof Array_Type)
+            Ans = EqualArrayType((Array_Type) A, (Array_Type) B);
+        return Ans;
+    }
+
+    private boolean EqualArrayType(Array_Type A, Array_Type B){
+        int dimA = 0, dimB = 0;
+        Base_Type btA, btB;
+        Base_Type tem = A;
+        while(tem instanceof Array_Type){
+            dimA++;
+            tem = ((Array_Type)tem).basetype;
+        }
+        btA = tem;
+
+        tem = B;
+        while(tem instanceof Array_Type){
+            dimB++;
+            tem = ((Array_Type)tem).basetype;
+        }
+        btB = tem;
+
+        return (dimA == dimB && EqualType(btA, btB));
     }
 }
