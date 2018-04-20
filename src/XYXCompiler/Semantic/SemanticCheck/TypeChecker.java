@@ -43,9 +43,11 @@ public class TypeChecker implements ASTVisitor {
     public static Void_Type VOID = new Void_Type();
     public static Null_Type NULL = new Null_Type();
 
+
     private void Debug(String string){
         System.out.println(string);
     }
+    private boolean IsCF = false;
 
     public boolean EqualType(Expression A, Expression B){
         if(A.type instanceof Class_Type && B.type instanceof Null_Type) return true;
@@ -188,7 +190,9 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public void visit(Construct_Function node) {
+        IsCF = true;
         VISIT(node.body);
+        IsCF = false;
     }
 
     @Override
@@ -252,6 +256,9 @@ public class TypeChecker implements ASTVisitor {
     @Override
     public void visit(Return node) {
         VISIT(node.returnvalue);
+        if(IsCF && node.returnvalue == null)
+            return;
+
         if(node.returnvalue == null && returntype.type != Type.Void)
             SemanticException.exceptions.add(new XYXException(node.getPosition() + "Unmatched return value type!"));
         else if(node.returnvalue != null && !EqualType(returntype, node.returnvalue.type))

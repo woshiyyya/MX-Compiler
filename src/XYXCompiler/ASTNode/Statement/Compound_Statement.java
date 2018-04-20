@@ -16,6 +16,11 @@ public class Compound_Statement extends Statement{
         this.stmts = stmts;
     }
 
+    public Compound_Statement(Statement stmt) {
+        stmts = new LinkedList<>();
+        stmts.add(stmt);
+    }
+
     @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);

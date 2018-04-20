@@ -444,9 +444,23 @@ public class ASTBuilder extends XYXBaseListener{
     public void exitSelectionStatement(XYXParser.SelectionStatementContext ctx) {
         Selection_Statement node = new Selection_Statement();
         node.condition = (Expression) tag.get(ctx.expression());
-        node.body = (Statement) tag.get(ctx.statement().get(0));
-        if(ctx.Else() != null)
-            node.Else_body = (Statement) tag.get(ctx.statement().get(1));
+
+        Node body = tag.get(ctx.statement().get(0));
+        if(body instanceof Compound_Statement)
+            node.body = (Statement) body;
+        else{
+            node.body = new Compound_Statement((Statement)body);
+        }
+
+        if(ctx.Else() != null){
+            Node elsebody = tag.get(ctx.statement().get(1));
+            if(body instanceof Compound_Statement)
+                node.Else_body = (Statement) elsebody;
+            else{
+                node.Else_body = new Compound_Statement((Statement)elsebody);
+            }
+        }
+
         setPosition(node, ctx);
         tag.put(ctx, node);
     }
@@ -455,7 +469,13 @@ public class ASTBuilder extends XYXBaseListener{
     public void exitWhileLoop(XYXParser.WhileLoopContext ctx) {
         While_Statement node = new While_Statement();
         node.condition = (Expression) tag.get(ctx.expression());
-        node.body = (Statement) tag.get(ctx.statement());
+
+        Node body = tag.get(ctx.statement());
+        if(body instanceof Compound_Statement)
+            node.body = (Statement) body;
+        else
+            node.body = new Compound_Statement((Statement)body);
+
         setPosition(node, ctx);
         tag.put(ctx, node);
     }
@@ -469,7 +489,13 @@ public class ASTBuilder extends XYXBaseListener{
             node.condition = (Expression) tag.get(ctx.condition().expression());
         if(ctx.step() != null)
             node.update = (Expression) tag.get(ctx.step().expression());
-        node.body = (Statement) tag.get(ctx.statement());
+
+        Node body = tag.get(ctx.statement());
+        if(body instanceof Compound_Statement)
+            node.body = (Statement) tag.get(ctx.statement());
+        else
+            node.body = new Compound_Statement((Statement)body);
+
         setPosition(node, ctx);
         tag.put(ctx, node);
     }

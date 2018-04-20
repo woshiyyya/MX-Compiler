@@ -9,10 +9,7 @@ import XYXCompiler.ASTNode.Expression.Suffix.*;
 import XYXCompiler.ASTNode.Expression.Unary_Expression;
 import XYXCompiler.ASTNode.Node;
 import XYXCompiler.ASTNode.Statement.*;
-import XYXCompiler.ASTNode.Type.Array_Type;
-import XYXCompiler.ASTNode.Type.Base_Type;
-import XYXCompiler.ASTNode.Type.Class_Type;
-import XYXCompiler.ASTNode.Type.TypeTable;
+import XYXCompiler.ASTNode.Type.*;
 import XYXCompiler.Builder.ASTVisitor;
 import XYXCompiler.Semantic.Scope.GlobalScope;
 import XYXCompiler.Semantic.Scope.LocalScope;
@@ -43,6 +40,10 @@ public class ScopeTreeBuilder implements ASTVisitor {
         }
     }
 
+    private void AddError(String error){
+        SemanticException.exceptions.add(new XYXException(error));
+    }
+
     public void CreateFuncScope(List<Variable_Declaration> params){ //Create new Scope for funcparams And Push into Stack
         LocalScope localScope = new LocalScope(scopeStack.peek());
         for(Variable_Declaration X: params){
@@ -60,6 +61,17 @@ public class ScopeTreeBuilder implements ASTVisitor {
         else if(Type instanceof Array_Type)
             return HaveType(((Array_Type) Type).basetype);
         else return true;
+    }
+
+    private void CheckMain(){
+        Node node = globalScope.Entity.get("main");
+        if(node == null){
+            AddError("Without a Main function!");
+        }else if(!(((Function_Declaration)node).returntype instanceof Int_Type)){
+            AddError("Main Function must have int return type!");
+        }else if(((Function_Declaration)node).paramstype.size() != 0){
+            AddError("Main Function requires 0 parameter!");
+        }
     }
 
     @Override
@@ -82,6 +94,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
         }
 
         scopeStack.pop();
+        CheckMain();
     }
 
 
@@ -126,7 +139,8 @@ public class ScopeTreeBuilder implements ASTVisitor {
         CreateFuncScope(node.params);
         node.setScope(scopeStack.peek());
 
-        VISIT(node.body);
+        for(Statement X:node.body.stmts)
+            VISIT(X);
 
         scopeStack.pop();
     }
