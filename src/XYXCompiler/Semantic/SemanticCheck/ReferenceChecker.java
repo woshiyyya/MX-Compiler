@@ -9,8 +9,7 @@ import XYXCompiler.ASTNode.Expression.Suffix.*;
 import XYXCompiler.ASTNode.Expression.Unary_Expression;
 import XYXCompiler.ASTNode.Node;
 import XYXCompiler.ASTNode.Statement.*;
-import XYXCompiler.ASTNode.Type.Array_Type;
-import XYXCompiler.ASTNode.Type.Base_Type;
+import XYXCompiler.ASTNode.Type.*;
 import XYXCompiler.Builder.ASTVisitor;
 import XYXCompiler.Tools.Exceptions.SemanticException;
 import XYXCompiler.Tools.Exceptions.XYXException;
@@ -170,6 +169,10 @@ public class ReferenceChecker implements ASTVisitor {
     public void visit(Function_call node) {
         for(Expression X :node.params)
             VISIT(X);
+
+        Func_Type funcType = ((Function_Declaration) node.Scope.find(node.name)).functype;
+        if(funcType.returntype instanceof Class_Type || funcType.returntype instanceof String_Type)
+                node.LValue = true;
         if(!node.body.LValue)
             AddError(node.getPosition() + "Funccal body is not L-Value!");
     }

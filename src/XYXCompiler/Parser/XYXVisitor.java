@@ -1,5 +1,6 @@
 // Generated from XYX.g4 by ANTLR 4.7.1
 package XYXCompiler.Parser;
+import XYXCompiler.Parser.XYXParser;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
