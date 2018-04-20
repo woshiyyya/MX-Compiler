@@ -4,6 +4,7 @@ import XYXCompiler.Builder.ASTBuilder;
 import XYXCompiler.Parser.XYXLexer;
 import XYXCompiler.Parser.XYXParser;
 import XYXCompiler.Semantic.SemanticCheck.ScopeTreeBuilder;
+import XYXCompiler.Semantic.SemanticCheck.TypeChecker;
 import XYXCompiler.Tools.Exceptions.SemanticException;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -31,6 +32,9 @@ public class SemanticOJ {
 
             ScopeTreeBuilder STB = new ScopeTreeBuilder();
             STB.visit(builder.Root);
+
+            TypeChecker TCK = new TypeChecker(STB.typeTable);
+            TCK.visit(builder.Root);
 
             if(!SemanticException.exceptions.isEmpty()){
                 printExceptions();
