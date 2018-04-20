@@ -8,8 +8,6 @@ import XYXCompiler.ASTNode.Statement.Variable_Declaration_Statement;
 import XYXCompiler.ASTNode.Type.Base_Type;
 import XYXCompiler.Tools.Exceptions.SemanticException;
 import XYXCompiler.Tools.Exceptions.XYXException;
-import jdk.nashorn.api.tree.FunctionCallTree;
-import org.antlr.v4.codegen.model.decl.Decl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
