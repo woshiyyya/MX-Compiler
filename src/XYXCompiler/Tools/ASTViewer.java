@@ -8,6 +8,7 @@ import XYXCompiler.ASTNode.Expression.Primitive.*;
 import XYXCompiler.ASTNode.Expression.Suffix.*;
 import XYXCompiler.ASTNode.Expression.Unary_Expression;
 import XYXCompiler.ASTNode.Statement.*;
+import XYXCompiler.ASTNode.Type.Array_Type;
 import XYXCompiler.ASTNode.Type.Base_Type;
 import XYXCompiler.Builder.ASTVisitor;
 import static java.lang.System.out;
@@ -257,6 +258,11 @@ public class ASTViewer implements ASTVisitor {
 
     @Override
     public void visit(Expression node) {
+
+    }
+
+    @Override
+    public void visit(Array_Type node) {
 
     }
 }

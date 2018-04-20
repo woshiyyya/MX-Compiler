@@ -8,5 +8,4 @@ public class Base_Type extends Node {
     }
 
     public Type type;
-
 }

@@ -65,9 +65,9 @@ primaryExpression //ok
 suffixExpression //ok
     :   primaryExpression
 //  |   suffixExpression Dot Identifier LeftParen (expression (',' expression)*)? RightParen
-    |   suffixExpression Dot Identifier
-    |   suffixExpression LeftBracket expression RightBracket
-    |   suffixExpression LeftParen (expression (',' expression)*)? RightParen
+    |   suffixExpression Dot Identifier //Accessing
+    |   suffixExpression LeftBracket expression RightBracket //Indexing
+    |   suffixExpression LeftParen (expression (',' expression)*)? RightParen //funccall
     |   suffixExpression PlusPlus
     |   suffixExpression MinusMinus
 //  |   suffixExpression '.size()'

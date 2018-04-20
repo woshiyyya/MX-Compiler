@@ -13,7 +13,7 @@ public class Binary_Expression extends Expression{
     public Expression lhs;
     public Expression rhs;
 
-    public Binary_Expression(BinaryOP OP, Expression RHS, Expression LHS){
+    public Binary_Expression(BinaryOP OP, Expression LHS, Expression RHS){
         this.op = OP;
         this.rhs = RHS;
         this.lhs = LHS;

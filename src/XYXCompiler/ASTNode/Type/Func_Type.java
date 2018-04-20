@@ -8,10 +8,17 @@ import java.util.List;
 
 public class Func_Type extends Base_Type {
     public String name;
+    public Base_Type returntype;
     public List<Base_Type> params_type;
 
     public Func_Type() {
         this.params_type = new LinkedList<>();
+    }
+
+    public Func_Type(String name, Base_Type returntype, List<Base_Type> params_type) {
+        this.name = name;
+        this.returntype = returntype;
+        this.params_type = params_type;
     }
 
     public void add_params(List<Variable_Declaration> params){

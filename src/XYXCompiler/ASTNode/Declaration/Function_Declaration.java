@@ -1,6 +1,7 @@
 package XYXCompiler.ASTNode.Declaration;
 
 import XYXCompiler.ASTNode.Type.Base_Type;
+import XYXCompiler.ASTNode.Type.Func_Type;
 import XYXCompiler.Builder.ASTVisitor;
 import XYXCompiler.ASTNode.Statement.*;
 import XYXCompiler.Semantic.Symbol.Symbol;
@@ -10,6 +11,7 @@ import java.util.List;
 
 public class Function_Declaration extends Declaration {
     public Base_Type returntype;
+    public Func_Type functype;
     public Symbol symbol;
     public List<Variable_Declaration> params;
     public List<Base_Type> paramstype;
@@ -31,12 +33,15 @@ public class Function_Declaration extends Declaration {
         this.name = name;
         this.params = params;
         this.body = body;
+        this.paramstype = new LinkedList<>();
+        updateType();
     }
 
     public void updateType(){
         for(Variable_Declaration X: params){
             paramstype.add(X.type);
         }
+        functype = new Func_Type(name, returntype, paramstype);
     }
 
     @Override

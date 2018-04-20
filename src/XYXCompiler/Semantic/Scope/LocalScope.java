@@ -1,10 +1,14 @@
 package XYXCompiler.Semantic.Scope;
 
 import XYXCompiler.ASTNode.Declaration.Declaration;
+import XYXCompiler.ASTNode.Declaration.Function_Declaration;
+import XYXCompiler.ASTNode.Declaration.Variable_Declaration;
 import XYXCompiler.ASTNode.Node;
 import XYXCompiler.ASTNode.Statement.Variable_Declaration_Statement;
+import XYXCompiler.ASTNode.Type.Base_Type;
 import XYXCompiler.Tools.Exceptions.SemanticException;
 import XYXCompiler.Tools.Exceptions.XYXException;
+import jdk.nashorn.api.tree.FunctionCallTree;
 import org.antlr.v4.codegen.model.decl.Decl;
 
 import java.util.LinkedHashMap;
@@ -31,7 +35,7 @@ public class LocalScope {
             name = ((Variable_Declaration_Statement) node).name;
 
         if(Entity.containsKey(name)){
-            SemanticException.exceptions.add(new XYXException("Duplicated Defination of: " + name + " " + node.getClass().getSimpleName()));
+            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Duplicated Defination! name =  " + name + " [" + node.getClass().getSimpleName() + "]"));
         }else{
             Entity.put(name, node);  //Tag the Declaration with its Scope
             node.setScope(this);
@@ -51,5 +55,9 @@ public class LocalScope {
         else if (father != null)
             return father.contain(name);
         else return false;
+    }
+
+    public Node FindinClass(String name){
+        return Entity.get(name);
     }
 }

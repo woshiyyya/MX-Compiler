@@ -5,8 +5,6 @@ import XYXCompiler.ASTNode.Type.Base_Type;
 import XYXCompiler.Builder.ASTVisitor;
 
 public class Newexpr extends Expression {
-    public Base_Type type;
-
     public Newexpr() {}
 
     public Newexpr(Base_Type type) {

@@ -9,6 +9,7 @@ import XYXCompiler.ASTNode.Expression.Suffix.*;
 import XYXCompiler.ASTNode.Expression.Unary_Expression;
 import XYXCompiler.ASTNode.Node;
 import XYXCompiler.ASTNode.Statement.*;
+import XYXCompiler.ASTNode.Type.Array_Type;
 import XYXCompiler.ASTNode.Type.Base_Type;
 
 public interface ASTVisitor {
@@ -50,5 +51,7 @@ public interface ASTVisitor {
     void visit(Selection_Statement node);
     void visit(Expression_Statement node);
     void visit(Variable_Declaration_Statement node);
+
+    void visit(Array_Type node);
 
 }

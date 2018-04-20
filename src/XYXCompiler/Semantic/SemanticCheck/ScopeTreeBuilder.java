@@ -49,7 +49,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
             if(HaveType(X.type))
                 localScope.put(X);
             else
-                SemanticException.exceptions.add(new XYXException("Undefined Type! Param's Varname = " + X.name));
+                SemanticException.exceptions.add(new XYXException(X.getPosition() + "Undefined Type! Param's name = " + X.name));
         }
         scopeStack.push(localScope);
     }
@@ -66,6 +66,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
     public void visit(ASTRoot node) {
         globalScope = node.globalScope;
         scopeStack.push(globalScope);
+        typeTable.AddBuiltinClass(globalScope);
 
         for(Declaration X: node.declarations){  //Forwarding reference
             if(X instanceof Class_Declaration){
@@ -87,7 +88,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
     @Override
     public void visit(Global_Variable_Declaration node) {
         if(!HaveType(node.type))
-            SemanticException.exceptions.add(new XYXException("Undefined Type! Global Varname = " + node.name));
+            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Undefined Type! Global Varname = " + node.name));
 
         LocalScope currentScope = scopeStack.peek();
 
@@ -106,16 +107,11 @@ public class ScopeTreeBuilder implements ASTVisitor {
 
         //Class Function support Forwarding reference
         for(Declaration X: node.Members){
-            if(X instanceof Function_Declaration)
                 currentScope.put(X);
         }
 
         for(Declaration X: node.Members){       // ** Did not check num of CF
             VISIT(X);   //TROUBLE~!!!  Solved at Line167
-            if(!(X instanceof Function_Declaration)){
-                System.out.println(X.name);
-                currentScope.put(X);
-            }
         }
 
         scopeStack.pop();
@@ -125,7 +121,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
     @Override
     public void visit(Function_Declaration node) {
         if(!HaveType(node.returntype))
-            SemanticException.exceptions.add(new XYXException("Undefined Return Type! Funcname = " + node.name));
+            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Undefined Return Type! Funcname = " + node.name));
 
         CreateFuncScope(node.params);
         node.setScope(scopeStack.peek());
@@ -138,7 +134,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
     @Override
     public void visit(Construct_Function node) {
         if (!node.params.isEmpty())
-            SemanticException.exceptions.add(new XYXException("Construct Function requires no params!"));
+            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Construct Function requires no params!"));
 
         VISIT(node.body);
     }
@@ -158,7 +154,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
     @Override
     public void visit(Variable_Declaration node) {
         if(!HaveType(node.type))
-            SemanticException.exceptions.add(new XYXException("Undefined Type! name = " + node.name));
+            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Undefined Type! name = " + node.name));
 
         VISIT(node.RHS);
         LocalScope currentScope = scopeStack.peek();
@@ -170,7 +166,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
     @Override
     public void visit(Variable_Declaration_Statement node) {
         if(!HaveType(node.type))
-            SemanticException.exceptions.add(new XYXException("Undefined Type! name = " + node.name));
+            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Undefined Type! name = " + node.name));
 
         VISIT(node.RHS);
         scopeStack.peek().put(node);
@@ -244,7 +240,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
         VISIT(node.body);
         if(node.body instanceof ID){
             if(((ID) node.body).name.equals("this") && currentClass == null){
-                SemanticException.exceptions.add(new XYXException("keyword \"this\" can only be used in class declaration!"));
+                SemanticException.exceptions.add(new XYXException(node.getPosition() + "keyword \"this\" can only be used in class declaration!"));
             }
         }
     }
@@ -261,14 +257,18 @@ public class ScopeTreeBuilder implements ASTVisitor {
     public void visit(Function_call node) {
         //Manually Link FuncCall with Global Func declration. Otherwise might Link to local variable
         try{
-            node.body.setEntity(globalScope.find(node.name));
+            if(currentClass != null)
+                node.body.setEntity(scopeStack.peek().find(node.name));
+            else
+                node.body.setEntity(globalScope.find(node.name));
         }catch (Exception e){
-            SemanticException.exceptions.add(new XYXException("Cannot Find ID Defination! name = " + node.name));
+            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Cannot Find Function Defination! name = " + node.name));
         }
 
         for(Expression X: node.params){
             VISIT(X);
         }
+        node.setScope(scopeStack.peek());
     }
 
     @Override
@@ -287,8 +287,14 @@ public class ScopeTreeBuilder implements ASTVisitor {
             LocalScope currentScope = scopeStack.peek();
             node.setEntity(currentScope.find(node.name));
         }catch (Exception e){
-            SemanticException.exceptions.add(new XYXException("Cannot Find ID Defination! name = " + node.name));
+            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Cannot Find ID Defination! name = " + node.name));
         }
+    }
+
+    @Override
+    public void visit(Array_Type node) {
+        VISIT(node.basetype);
+        VISIT(node.size);
     }
 
     @Override

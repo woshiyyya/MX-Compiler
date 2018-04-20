@@ -1,8 +1,10 @@
 package XYXCompiler.ASTNode.Type;
 
+import XYXCompiler.ASTNode.Declaration.Global_Variable_Declaration;
 import XYXCompiler.ASTNode.Expression.Primitive.Bool;
 import XYXCompiler.ASTNode.Expression.Primitive.STRING;
 import XYXCompiler.ASTNode.Node;
+import XYXCompiler.Semantic.Scope.GlobalScope;
 import XYXCompiler.Semantic.Scope.LocalScope;
 import XYXCompiler.Tools.Exceptions.SemanticException;
 import XYXCompiler.Tools.Exceptions.XYXException;
@@ -42,6 +44,11 @@ public class TypeTable {
 
     public LocalScope getScope(String classname){
         return ClassScopeMap.get(classname);
+    }
+
+    public void AddBuiltinClass(GlobalScope globalScope){
+        ClassScopeMap.put("__STRING__", globalScope.StringScope);
+        ClassScopeMap.put("__ARRAY__", globalScope.ArrayScope);
     }
 
     public void PrintTypeTable(){

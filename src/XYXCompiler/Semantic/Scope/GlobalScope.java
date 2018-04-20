@@ -25,6 +25,7 @@ public class GlobalScope extends LocalScope {
     }
 
     public void AddBulitinMethod(){
+        List<Variable_Declaration> param0 = new LinkedList<>();
         List<Variable_Declaration> param1 = new LinkedList<>();     //(string)
         List<Variable_Declaration> param2 = new LinkedList<>();     //(int)
         List<Variable_Declaration> param3 = new LinkedList<>();     //(int, int)
@@ -36,18 +37,18 @@ public class GlobalScope extends LocalScope {
         //Builtin Functions
         Function_Declaration print = new Function_Declaration(new Void_Type(),"print",param1,null);
         Function_Declaration println = new Function_Declaration(new Void_Type(),"println",param1,null);
-        Function_Declaration getString = new Function_Declaration(new String_Type(),"getString",null,null);
-        Function_Declaration getInt = new Function_Declaration(new Int_Type(),"getInt",null,null);
+        Function_Declaration getString = new Function_Declaration(new String_Type(),"getString",param0,null);
+        Function_Declaration getInt = new Function_Declaration(new Int_Type(),"getInt",param0,null);
         Function_Declaration toString = new Function_Declaration(new String_Type(),"toString",param2,null);
 
         //String Builtin Functions
-        Function_Declaration length = new Function_Declaration(new Int_Type(),"length",null,null);
-        Function_Declaration subString = new Function_Declaration(new String_Type(),"subString",param3,null);
-        Function_Declaration parseInt = new Function_Declaration(new Int_Type(),"parseInt",null,null);
+        Function_Declaration length = new Function_Declaration(new Int_Type(),"length",param0,null);
+        Function_Declaration subString = new Function_Declaration(new String_Type(),"substring",param3,null);
+        Function_Declaration parseInt = new Function_Declaration(new Int_Type(),"parseInt",param0,null);
         Function_Declaration ord = new Function_Declaration(new Int_Type(),"ord",param2,null);
 
         //Array Builtin Function
-        Function_Declaration size = new Function_Declaration(new Int_Type(), "size",null,null);
+        Function_Declaration size = new Function_Declaration(new Int_Type(), "size",param0,null);
 
         put(print);
         put(println);

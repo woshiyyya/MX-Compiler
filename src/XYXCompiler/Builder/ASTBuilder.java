@@ -13,12 +13,18 @@ import XYXCompiler.Parser.*;
 import XYXCompiler.Semantic.Symbol.Symbol;
 import static XYXCompiler.ASTNode.Expression.Unary_Expression.UnaryOP;
 import static XYXCompiler.ASTNode.Expression.Binary_Expression.BinaryOP;
+
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
 public class ASTBuilder extends XYXBaseListener{
     private ParseTreeProperty<Node> tag = new ParseTreeProperty<>();
     public ASTRoot Root = new ASTRoot();
+
+    public void setPosition(Node node, ParserRuleContext ctx){
+        node.setPosition(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    }
 
     @Override
     public void exitProgram(XYXParser.ProgramContext ctx) {
@@ -47,6 +53,7 @@ public class ASTBuilder extends XYXBaseListener{
             node.params.add((Variable_Declaration) tag.get(X));
         }
         node.updateType();
+        setPosition(node, ctx);
         tag.put(ctx, node);
     }
 
@@ -68,6 +75,7 @@ public class ASTBuilder extends XYXBaseListener{
         for(XYXParser.ClassMembersContext X: ctx.classMembers()){
             node.Members.add((Declaration) tag.get(X));
         }
+        setPosition(node, ctx);
         tag.put(ctx, node);
     }
 
@@ -84,6 +92,7 @@ public class ASTBuilder extends XYXBaseListener{
         node.body = (Compound_Statement) tag.get(ctx.compoundStatement());
         for(XYXParser.VariableDeclarationContext X: ctx.variableDeclaration())
             node.params.add((Variable_Declaration) tag.get(X));
+        setPosition(node, ctx);
         tag.put(ctx, node);
     }
 
@@ -95,6 +104,7 @@ public class ASTBuilder extends XYXBaseListener{
         node.symbol = new Symbol(ctx.Identifier().getText());
         node.symbol.SetType(node.type);
         node.RHS = (Expression) tag.get(ctx.expression());
+        setPosition(node, ctx);
         tag.put(ctx, node);
     }
 
@@ -106,6 +116,7 @@ public class ASTBuilder extends XYXBaseListener{
         node.symbol = new Symbol(ctx.Identifier().getText());
         node.symbol.SetType(node.type);
         node.RHS = (Expression) tag.get(ctx.expression());
+        setPosition(node, ctx);
         tag.put(ctx, node);
     }
 
@@ -113,28 +124,42 @@ public class ASTBuilder extends XYXBaseListener{
     public void exitPrimaryExpression(XYXParser.PrimaryExpressionContext ctx) {
         if(ctx.type() != null){
             Newexpr node = new Newexpr((Base_Type) tag.get(ctx.type()));
+            setPosition(node, ctx);
             tag.put(ctx, node);
         }else if(ctx.expression() != null){
             tag.put(ctx, tag.get(ctx.expression()));
         }else if(ctx.constant() != null){
             tag.put(ctx, tag.get(ctx.children.get(0)));
         }else if(ctx.Identifier() != null){
-            tag.put(ctx, new ID(ctx.Identifier().getText()));
+            ID node =  new ID(ctx.Identifier().getText());
+            setPosition(node, ctx);
+            tag.put(ctx, node);
         }
     }
 
     @Override
     public void exitConstant(XYXParser.ConstantContext ctx) {
-        if(ctx.True() != null)
-            tag.put(ctx, new Bool(true));
-        else if(ctx.False() != null)
-            tag.put(ctx, new Bool(false));
-        else if(ctx.IntegerConstant() != null)
-            tag.put(ctx, new INT(ctx.IntegerConstant().getText()));
-        else if(ctx.StringConstant() != null)
-            tag.put(ctx, new STRING(ctx.StringConstant().getText()));
-        else if(ctx.Null() != null)
-            tag.put(ctx, new Null());
+        if(ctx.True() != null){
+            Bool node = new Bool(true);
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }else if(ctx.False() != null){
+            Bool node = new Bool(false);
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }else if(ctx.IntegerConstant() != null){
+            INT node = new INT(ctx.IntegerConstant().getText());
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }else if(ctx.StringConstant() != null){
+            STRING node = new STRING(ctx.StringConstant().getText());
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }else if(ctx.Null() != null){
+            Null node = new Null();
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }
     }
 
     @Override
@@ -144,11 +169,13 @@ public class ASTBuilder extends XYXBaseListener{
         }else{
             if(ctx.Dot() != null){
                 Accessing node = new Accessing();
+                setPosition(node, ctx);
                 node.body = (Expression) tag.get(ctx.suffixExpression());
                 node.components =  ctx.Identifier().getText();
                 tag.put(ctx, node);
             }else if(ctx.RightBracket() != null){
                 Indexing node = new Indexing();
+                setPosition(node, ctx);
                 node.index = (Expression) tag.get(ctx.expression().get(0));
                 node.name = (Expression) tag.get(ctx.suffixExpression());
                 tag.put(ctx, node);
@@ -156,6 +183,7 @@ public class ASTBuilder extends XYXBaseListener{
                 Node body = tag.get(ctx.suffixExpression());
                 if (body instanceof ID){
                     Function_call node = new Function_call();
+                    setPosition(node, ctx);
                     node.name = ((ID) body).name;
                     node.body = (ID) body;
                     for(XYXParser.ExpressionContext X: ctx.expression()){
@@ -164,6 +192,7 @@ public class ASTBuilder extends XYXBaseListener{
                     tag.put(ctx, node);
                 }else{
                     Class_Method node = new Class_Method();
+                    setPosition(node, ctx);
                     node.body = (Expression) tag.get(ctx.suffixExpression());
                     for(XYXParser.ExpressionContext X: ctx.expression()){
                         node.params.add((Expression) tag.get(X));
@@ -172,10 +201,12 @@ public class ASTBuilder extends XYXBaseListener{
                 }
             }else if(ctx.PlusPlus() != null){
                 Self_Increasing node = new Self_Increasing();
+                setPosition(node, ctx);
                 node.body = (Expression) tag.get(ctx.suffixExpression());
                 tag.put(ctx, node);
             }else if(ctx.MinusMinus() != null){
                 Self_Decreasing node = new Self_Decreasing();
+                setPosition(node, ctx);
                 node.body = (Expression) tag.get(ctx.suffixExpression());
                 tag.put(ctx, node);
             }
@@ -201,8 +232,9 @@ public class ASTBuilder extends XYXBaseListener{
             tag.put(ctx, tag.get(ctx.suffixExpression()));
             return;
         }
-
-        tag.put(ctx, new Unary_Expression(op, (Expression) tag.get(ctx.suffixExpression())));
+        Unary_Expression node = new Unary_Expression(op, (Expression) tag.get(ctx.suffixExpression()));
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
@@ -219,9 +251,11 @@ public class ASTBuilder extends XYXBaseListener{
             return;
         }
 
-        tag.put(ctx, new Binary_Expression(op,
+        Binary_Expression node = new Binary_Expression(op,
                 (Expression) tag.get(ctx.multiplicativeExpression()),
-                (Expression) tag.get(ctx.unaryExpression())));
+                (Expression) tag.get(ctx.unaryExpression()));
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
@@ -236,9 +270,11 @@ public class ASTBuilder extends XYXBaseListener{
             return;
         }
 
-        tag.put(ctx, new Binary_Expression(op,
+        Binary_Expression node = new Binary_Expression(op,
                 (Expression) tag.get(ctx.additiveExpression()),
-                (Expression) tag.get(ctx.multiplicativeExpression())));
+                (Expression) tag.get(ctx.multiplicativeExpression()));
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
@@ -253,9 +289,11 @@ public class ASTBuilder extends XYXBaseListener{
             return;
         }
 
-        tag.put(ctx, new Binary_Expression(op,
+        Binary_Expression node =  new Binary_Expression(op,
                 (Expression) tag.get(ctx.shiftExpression()),
-                (Expression) tag.get(ctx.additiveExpression())));
+                (Expression) tag.get(ctx.additiveExpression()));
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
@@ -274,9 +312,11 @@ public class ASTBuilder extends XYXBaseListener{
             return;
         }
 
-        tag.put(ctx, new Binary_Expression(op,
+        Binary_Expression node = new Binary_Expression(op,
                 (Expression) tag.get(ctx.relationExpression()),
-                (Expression) tag.get(ctx.shiftExpression())));
+                (Expression) tag.get(ctx.shiftExpression()));
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
@@ -291,68 +331,83 @@ public class ASTBuilder extends XYXBaseListener{
             return;
         }
 
-        tag.put(ctx, new Binary_Expression(op,
+
+        Binary_Expression node = new Binary_Expression(op,
                 (Expression) tag.get(ctx.equalityExpression()),
-                (Expression) tag.get(ctx.relationExpression())));
+                (Expression) tag.get(ctx.relationExpression()));
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
     public void exitBitwiseAndExpression(XYXParser.BitwiseAndExpressionContext ctx) {
-        if(ctx.bitwiseAndExpression() != null)
-            tag.put(ctx, new Binary_Expression(BinaryOP.BitAnd,
+        if(ctx.bitwiseAndExpression() != null){
+            Binary_Expression node = new Binary_Expression(BinaryOP.BitAnd,
                     (Expression) tag.get(ctx.bitwiseAndExpression()),
-                    (Expression) tag.get(ctx.equalityExpression())));
-        else
+                    (Expression) tag.get(ctx.equalityExpression()));
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }else
             tag.put(ctx, tag.get(ctx.equalityExpression()));
     }
 
     @Override
     public void exitBitwiseExclusiveOrExpression(XYXParser.BitwiseExclusiveOrExpressionContext ctx) {
-        if(ctx.bitwiseExclusiveOrExpression() != null)
-            tag.put(ctx, new Binary_Expression(BinaryOP.BitXor,
+        if(ctx.bitwiseExclusiveOrExpression() != null){
+            Binary_Expression node =  new Binary_Expression(BinaryOP.BitXor,
                     (Expression) tag.get(ctx.bitwiseExclusiveOrExpression()),
-                    (Expression) tag.get(ctx.bitwiseAndExpression())));
-        else
+                    (Expression) tag.get(ctx.bitwiseAndExpression()));
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }else
             tag.put(ctx, tag.get(ctx.bitwiseAndExpression()));
     }
 
     @Override
     public void exitBitwiseInclusiveOrExpression(XYXParser.BitwiseInclusiveOrExpressionContext ctx) {
-        if(ctx.bitwiseInclusiveOrExpression() != null)
-            tag.put(ctx, new Binary_Expression(BinaryOP.BitOr,
+        if(ctx.bitwiseInclusiveOrExpression() != null){
+            Binary_Expression node = new Binary_Expression(BinaryOP.BitOr,
                     (Expression) tag.get(ctx.bitwiseInclusiveOrExpression()),
-                    (Expression) tag.get(ctx.bitwiseExclusiveOrExpression())));
-        else
+                    (Expression) tag.get(ctx.bitwiseExclusiveOrExpression()));
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }else
             tag.put(ctx, tag.get(ctx.bitwiseExclusiveOrExpression()));
     }
 
     @Override
     public void exitLogicalAndExpression(XYXParser.LogicalAndExpressionContext ctx) {
-        if(ctx.logicalAndExpression() != null)
-            tag.put(ctx, new Binary_Expression(BinaryOP.LogicalAnd,
+        if(ctx.logicalAndExpression() != null){
+            Binary_Expression node =  new Binary_Expression(BinaryOP.LogicalAnd,
                     (Expression) tag.get(ctx.logicalAndExpression()),
-                    (Expression) tag.get(ctx.bitwiseInclusiveOrExpression())));
-        else
+                    (Expression) tag.get(ctx.bitwiseInclusiveOrExpression()));
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }else
             tag.put(ctx, tag.get(ctx.bitwiseInclusiveOrExpression()));
     }
 
     @Override
     public void exitLogicalOrExpression(XYXParser.LogicalOrExpressionContext ctx) {
-        if(ctx.logicalOrExpression() != null)
-            tag.put(ctx, new Binary_Expression(BinaryOP.LogicalOr,
+        if(ctx.logicalOrExpression() != null){
+            Binary_Expression node = new Binary_Expression(BinaryOP.LogicalOr,
                     (Expression) tag.get(ctx.logicalOrExpression()),
-                    (Expression) tag.get(ctx.logicalAndExpression())));
-        else
+                    (Expression) tag.get(ctx.logicalAndExpression()));
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }else
             tag.put(ctx, tag.get(ctx.logicalAndExpression()));
     }
 
     @Override
     public void exitAssignmentExpression(XYXParser.AssignmentExpressionContext ctx) {
-        if(ctx.unaryExpression() != null)
-            tag.put(ctx, new Binary_Expression(BinaryOP.Assign,
+        if(ctx.unaryExpression() != null){
+            Binary_Expression node = new Binary_Expression(BinaryOP.Assign,
                     (Expression) tag.get(ctx.unaryExpression()),
-                    (Expression) tag.get(ctx.assignmentExpression())));
-        else
+                    (Expression) tag.get(ctx.assignmentExpression()));
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }else
             tag.put(ctx, tag.get(ctx.logicalOrExpression()));
     }
 
@@ -372,6 +427,7 @@ public class ASTBuilder extends XYXBaseListener{
         for(XYXParser.StatementContext X:ctx.statement()){
             node.stmts.add((Statement) tag.get(X));
         }
+        setPosition(node, ctx);
         tag.put(ctx, node);
     }
 
@@ -380,6 +436,7 @@ public class ASTBuilder extends XYXBaseListener{
         Expression_Statement node = new Expression_Statement();
         if(ctx.expression() != null)
             node.body = (Expression) tag.get(ctx.expression());
+        setPosition(node, ctx);
         tag.put(ctx, node);
     }
 
@@ -390,6 +447,7 @@ public class ASTBuilder extends XYXBaseListener{
         node.body = (Statement) tag.get(ctx.statement().get(0));
         if(ctx.Else() != null)
             node.Else_body = (Statement) tag.get(ctx.statement().get(1));
+        setPosition(node, ctx);
         tag.put(ctx, node);
     }
 
@@ -398,6 +456,7 @@ public class ASTBuilder extends XYXBaseListener{
         While_Statement node = new While_Statement();
         node.condition = (Expression) tag.get(ctx.expression());
         node.body = (Statement) tag.get(ctx.statement());
+        setPosition(node, ctx);
         tag.put(ctx, node);
     }
 
@@ -411,25 +470,35 @@ public class ASTBuilder extends XYXBaseListener{
         if(ctx.step() != null)
             node.update = (Expression) tag.get(ctx.step().expression());
         node.body = (Statement) tag.get(ctx.statement());
+        setPosition(node, ctx);
         tag.put(ctx, node);
     }
 
     @Override
     public void exitBreakStatement(XYXParser.BreakStatementContext ctx) {
-        tag.put(ctx, new Break());
+        Break node = new Break();
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
     public void exitContinueStatement(XYXParser.ContinueStatementContext ctx) {
-        tag.put(ctx, new Continue());
+        Continue node = new Continue();
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
     public void exitReturnStatement(XYXParser.ReturnStatementContext ctx) {
-        if(tag.get(ctx.expression()) != null)
-            tag.put(ctx, new Return((Expression)tag.get(ctx.expression())));
-        else
-            tag.put(ctx, new Return());
+        if(tag.get(ctx.expression()) != null){
+            Return node = new Return((Expression)tag.get(ctx.expression()));
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }else{
+            Return node = new Return();
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }
     }
 
     @Override
@@ -441,32 +510,43 @@ public class ASTBuilder extends XYXBaseListener{
         node.symbol.SetType(node.type);
         if(ctx.expression() != null)
             node.RHS = (Expression) tag.get(ctx.expression());
+        setPosition(node, ctx);
         tag.put(ctx, node);
     }
 
     @Override
     public void exitVoidType(XYXParser.VoidTypeContext ctx) {
-        tag.put(ctx, new Void_Type());
+        Void_Type node = new Void_Type();
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
     public void exitIntType(XYXParser.IntTypeContext ctx) {
-        tag.put(ctx, new Int_Type());
+        Int_Type node = new Int_Type();
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
     public void exitStringType(XYXParser.StringTypeContext ctx) {
-        tag.put(ctx, new String_Type());
+        String_Type node = new String_Type();
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
     public void exitBoolType(XYXParser.BoolTypeContext ctx) {
-        tag.put(ctx, new Bool_Type());
+        Bool_Type node = new Bool_Type();
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
     public void exitIdType(XYXParser.IdTypeContext ctx) {
-        tag.put(ctx, new Class_Type(ctx.getText()));
+        Class_Type node = new Class_Type(ctx.getText());
+        setPosition(node, ctx);
+        tag.put(ctx, node);
     }
 
     @Override
@@ -475,6 +555,7 @@ public class ASTBuilder extends XYXBaseListener{
         node.basetype = (Base_Type) tag.get(ctx.type());
         if(ctx.expression() != null)
             node.size = (Expression) tag.get(ctx.expression());
+        setPosition(node, ctx);
         tag.put(ctx, node);
     }
 }
