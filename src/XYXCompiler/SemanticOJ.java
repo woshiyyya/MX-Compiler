@@ -3,6 +3,7 @@ package XYXCompiler;
 import XYXCompiler.Builder.ASTBuilder;
 import XYXCompiler.Parser.XYXLexer;
 import XYXCompiler.Parser.XYXParser;
+import XYXCompiler.Semantic.SemanticCheck.ReferenceChecker;
 import XYXCompiler.Semantic.SemanticCheck.ScopeTreeBuilder;
 import XYXCompiler.Semantic.SemanticCheck.TypeChecker;
 import XYXCompiler.Tools.Exceptions.SemanticException;
@@ -35,6 +36,9 @@ public class SemanticOJ {
 
             TypeChecker TCK = new TypeChecker(STB.typeTable);
             TCK.visit(builder.Root);
+
+            ReferenceChecker RCK = new ReferenceChecker();
+            RCK.visit(builder.Root);
 
             if(!SemanticException.exceptions.isEmpty()){
                 printExceptions(0);
