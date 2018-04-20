@@ -17,7 +17,7 @@ public class STRING extends Expression {
         this.value = value;
     }
 
-    public void print(int d) {
+    public void print() {
         System.out.println("StringLiteral " + value);
     }
 

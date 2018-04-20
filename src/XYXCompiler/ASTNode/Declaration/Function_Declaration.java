@@ -4,7 +4,6 @@ import XYXCompiler.ASTNode.Type.Base_Type;
 import XYXCompiler.ASTNode.Type.Func_Type;
 import XYXCompiler.Builder.ASTVisitor;
 import XYXCompiler.ASTNode.Statement.*;
-import XYXCompiler.Semantic.Symbol.Symbol;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -12,14 +11,12 @@ import java.util.List;
 public class Function_Declaration extends Declaration {
     public Base_Type returntype;
     public Func_Type functype;
-    public Symbol symbol;
     public List<Variable_Declaration> params;
     public List<Base_Type> paramstype;
     public Compound_Statement body;
 
     public Function_Declaration() {
         decl_type = Decl_type.FUNCTION;
-        symbol = null;
         returntype = null;
         name = null;
         params = new LinkedList<>();

@@ -50,7 +50,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
             if(HaveType(X.type))
                 localScope.put(X);
             else
-                SemanticException.exceptions.add(new XYXException(X.getPosition() + "Undefined Type! Param's name = " + X.name));
+                AddError(X.getPosition() + "Undefined Type! Param's name = " + X.name);
         }
         scopeStack.push(localScope);
     }
@@ -101,7 +101,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
     @Override
     public void visit(Global_Variable_Declaration node) {
         if(!HaveType(node.type))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Undefined Type! Global Varname = " + node.name));
+            AddError(node.getPosition() + "Undefined Type! Global Varname = " + node.name);
 
         LocalScope currentScope = scopeStack.peek();
 
@@ -134,7 +134,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
     @Override
     public void visit(Function_Declaration node) {
         if(!HaveType(node.returntype))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Undefined Return Type! Funcname = " + node.name));
+            AddError(node.getPosition() + "Undefined Return Type! Funcname = " + node.name);
 
         CreateFuncScope(node.params);
         node.setScope(scopeStack.peek());
@@ -148,7 +148,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
     @Override
     public void visit(Construct_Function node) {
         if (!node.params.isEmpty())
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Construct Function requires no params!"));
+            AddError(node.getPosition() + "Construct Function requires no params!");
 
         VISIT(node.body);
     }
@@ -168,7 +168,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
     @Override
     public void visit(Variable_Declaration node) {
         if(!HaveType(node.type))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Undefined Type! name = " + node.name));
+            AddError(node.getPosition() + "Undefined Type! name = " + node.name);
 
         VISIT(node.RHS);
         LocalScope currentScope = scopeStack.peek();
@@ -180,7 +180,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
     @Override
     public void visit(Variable_Declaration_Statement node) {
         if(!HaveType(node.type))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Undefined Type! name = " + node.name));
+            AddError(node.getPosition() + "Undefined Type! name = " + node.name);
 
         VISIT(node.RHS);
         scopeStack.peek().put(node);
@@ -254,7 +254,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
         VISIT(node.body);
         if(node.body instanceof ID){
             if(((ID) node.body).name.equals("this") && currentClass == null){
-                SemanticException.exceptions.add(new XYXException(node.getPosition() + "keyword \"this\" can only be used in class declaration!"));
+                AddError(node.getPosition() + "keyword \"this\" can only be used in class declaration!");
             }
         }
     }
@@ -276,7 +276,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
             else
                 node.body.setEntity(globalScope.find(node.name));
         }catch (Exception e){
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Cannot Find Function Defination! name = " + node.name));
+            AddError(node.getPosition() + "Cannot Find Function Defination! name = " + node.name);
         }
 
         for(Expression X: node.params){
@@ -301,7 +301,7 @@ public class ScopeTreeBuilder implements ASTVisitor {
             LocalScope currentScope = scopeStack.peek();
             node.setEntity(currentScope.find(node.name));
         }catch (Exception e){
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Cannot Find ID Defination! name = " + node.name));
+            AddError(node.getPosition() + "Cannot Find ID Defination! name = " + node.name);
         }
     }
 

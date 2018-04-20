@@ -10,7 +10,6 @@ import XYXCompiler.ASTNode.Statement.*;
 import XYXCompiler.ASTNode.Node;
 import XYXCompiler.ASTNode.Type.*;
 import XYXCompiler.Parser.*;
-import XYXCompiler.Semantic.Symbol.Symbol;
 import static XYXCompiler.ASTNode.Expression.Unary_Expression.UnaryOP;
 import static XYXCompiler.ASTNode.Expression.Binary_Expression.BinaryOP;
 
@@ -46,7 +45,6 @@ public class ASTBuilder extends XYXBaseListener{
     public void exitFunctionDeclaration(XYXParser.FunctionDeclarationContext ctx) {
         Function_Declaration node = new Function_Declaration();
         node.name = ctx.Identifier().getText();
-        node.symbol = new Symbol(ctx.Identifier().getText());
         node.returntype = (Base_Type) tag.get(ctx.type());
         node.body = (Compound_Statement) tag.get(ctx.compoundStatement());
         for(XYXParser.VariableDeclarationContext X:ctx.variableDeclaration()){
@@ -67,8 +65,6 @@ public class ASTBuilder extends XYXBaseListener{
     public void exitClassDeclaration(XYXParser.ClassDeclarationContext ctx) {
         Class_Declaration node = new Class_Declaration();
         node.name = ctx.Identifier().getText();
-        node.symbol = new Symbol(ctx.Identifier().getText());
-
         //Manually Add a 'this'
         node.Members.add(FabricateThisMember(node.name));
 
@@ -101,8 +97,6 @@ public class ASTBuilder extends XYXBaseListener{
         Global_Variable_Declaration node = new Global_Variable_Declaration();
         node.type = (Base_Type) tag.get(ctx.type());
         node.name = ctx.Identifier().getText();
-        node.symbol = new Symbol(ctx.Identifier().getText());
-        node.symbol.SetType(node.type);
         node.RHS = (Expression) tag.get(ctx.expression());
         setPosition(node, ctx);
         tag.put(ctx, node);
@@ -113,8 +107,6 @@ public class ASTBuilder extends XYXBaseListener{
         Variable_Declaration node = new Variable_Declaration();
         node.type = (Base_Type) tag.get(ctx.type());
         node.name = ctx.Identifier().getText();
-        node.symbol = new Symbol(ctx.Identifier().getText());
-        node.symbol.SetType(node.type);
         node.RHS = (Expression) tag.get(ctx.expression());
         setPosition(node, ctx);
         tag.put(ctx, node);
@@ -532,8 +524,6 @@ public class ASTBuilder extends XYXBaseListener{
         Variable_Declaration_Statement node = new Variable_Declaration_Statement();
         node.type = (Base_Type) tag.get(ctx.type());
         node.name = ctx.Identifier().getText();
-        node.symbol = new Symbol(ctx.Identifier().getText());
-        node.symbol.SetType(node.type);
         if(ctx.expression() != null)
             node.RHS = (Expression) tag.get(ctx.expression());
         setPosition(node, ctx);

@@ -16,7 +16,6 @@ import XYXCompiler.Semantic.Scope.LocalScope;
 import XYXCompiler.Tools.Exceptions.SemanticException;
 import XYXCompiler.Tools.Exceptions.XYXException;
 import XYXCompiler.ASTNode.Expression.Unary_Expression.UnaryOP;
-import XYXCompiler.ASTNode.Expression.Binary_Expression.BinaryOP;
 
 import java.util.List;
 
@@ -30,26 +29,22 @@ public class TypeChecker implements ASTVisitor {
     // 2. DETERMINE L-VALUE:
     //      Left Value: variables && class members && array components
 
-    protected TypeTable typeTable;
+    private TypeTable typeTable;
 
     public TypeChecker(TypeTable typeTable) {
         this.typeTable = typeTable;
     }
 
     private Base_Type returntype = null;
-    public static Bool_Type BOOL = new Bool_Type();
-    public static Int_Type INT = new Int_Type();
-    public static String_Type STRING = new String_Type();
-    public static Void_Type VOID = new Void_Type();
-    public static Null_Type NULL = new Null_Type();
-
-
-    private void Debug(String string){
-        System.out.println(string);
-    }
     private boolean IsCF = false;
 
-    public boolean EqualType(Expression A, Expression B){
+    private static Bool_Type BOOL = new Bool_Type();
+    private static Int_Type INT = new Int_Type();
+    private static String_Type STRING = new String_Type();
+
+
+
+    private boolean EqualType(Expression A, Expression B){
         if(A.type instanceof Class_Type && B.type instanceof Null_Type) return true;
         if(A.type instanceof Array_Type && B.type instanceof Null_Type) return true;
 
@@ -66,14 +61,13 @@ public class TypeChecker implements ASTVisitor {
         return Ans;
     }
 
-    public boolean EqualType(Expression A, Base_Type B){
+    private boolean EqualType(Expression A, Base_Type B){
         if(A.type instanceof Class_Type && B instanceof Null_Type) return true;
         if(A.type instanceof Array_Type && B instanceof Null_Type) return true;
 
         boolean Ans = false;
         Base_Type TA = A.type;
-        if(TA == null)
-            Debug("FUCK" + A.getPosition() + A.getClass() + " " + B.toString());
+
         if(TA.type == B.type)
             Ans = true;
         if(Ans && TA.type == Type.Class)
@@ -83,7 +77,7 @@ public class TypeChecker implements ASTVisitor {
         return Ans;
     }
 
-    public boolean EqualType(Base_Type A, Base_Type B){
+    private boolean EqualType(Base_Type A, Base_Type B){
         if(A instanceof Class_Type && B instanceof Null_Type) return true;
         if(A instanceof Array_Type && B instanceof Null_Type) return true;
 
@@ -95,13 +89,6 @@ public class TypeChecker implements ASTVisitor {
         else if(Ans && A.type == Type.Array)
             Ans = EqualArrayType((Array_Type) A, (Array_Type) B);
         return Ans;
-    }
-
-    private Base_Type ResolveArrayBaseType(Array_Type A){
-        if(A.basetype instanceof Array_Type)
-            return ResolveArrayBaseType((Array_Type) A.basetype);
-        else
-            return A.basetype;
     }
 
     private boolean EqualArrayType(Array_Type A, Array_Type B){
@@ -156,10 +143,10 @@ public class TypeChecker implements ASTVisitor {
     public void visit(Variable_Declaration node) {
         VISIT(node.RHS);
         if(node.type instanceof Void_Type){
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Cannot define Void Variables!"));
+            AddError(node.getPosition() + "Cannot define Void Variables!");
         }
         if(node.RHS != null && !EqualType(node.type, node.RHS.type)){
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Unmatched Type! name = " + node.name));
+            AddError(node.getPosition() + "Unmatched Type! name = " + node.name);
         }
     }
 
@@ -167,10 +154,10 @@ public class TypeChecker implements ASTVisitor {
     public void visit(Global_Variable_Declaration node) {
         VISIT(node.RHS);
         if(node.type instanceof Void_Type){
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Cannot define Void Variables!"));
+            AddError(node.getPosition() + "Cannot define Void Variables!");
         }
         if(node.RHS != null && !EqualType(node.type, node.RHS.type)){
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Unmatched Type! name = " + node.name));
+            AddError(node.getPosition() + "Unmatched Type! name = " + node.name);
         }
     }
 
@@ -206,7 +193,7 @@ public class TypeChecker implements ASTVisitor {
         VISIT(node.init);
         VISIT(node.condition);
         if(node.condition!= null && !EqualType(node.condition, BOOL))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + " For Condition must be bool type!"));
+            AddError(node.getPosition() + " For Condition must be bool type!");
         VISIT(node.update);
         VISIT(node.body);
     }
@@ -215,9 +202,9 @@ public class TypeChecker implements ASTVisitor {
     public void visit(While_Statement node) {
         VISIT(node.condition);
         if(node.condition == null)
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Condition Cannot be null!"));
+            AddError(node.getPosition() + "Condition Cannot be null!");
         if(node.condition != null && !EqualType(node.condition, BOOL))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + " While Condition must be bool type!"));
+            AddError(node.getPosition() + " While Condition must be bool type!");
         VISIT(node.body);
     }
 
@@ -225,9 +212,9 @@ public class TypeChecker implements ASTVisitor {
     public void visit(Selection_Statement node) {
         VISIT(node.condition);
         if(node.condition == null)
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Condition Cannot be null!"));
+            AddError(node.getPosition() + "Condition Cannot be null!");
         if(node.condition != null && !EqualType(node.condition, BOOL))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + " IF Condition must be bool type!"));
+            AddError(node.getPosition() + " IF Condition must be bool type!");
         VISIT(node.body);
         VISIT(node.Else_body);
     }
@@ -241,10 +228,10 @@ public class TypeChecker implements ASTVisitor {
     public void visit(Variable_Declaration_Statement node) {
         VISIT(node.RHS);
         if(node.type instanceof Void_Type){
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Cannot define Void Variables!"));
+            AddError(node.getPosition() + "Cannot define Void Variables!");
         }
         if(node.RHS != null && !EqualType(node.type, node.RHS.type))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Unmatched Type name = " + node.name));
+            AddError(node.getPosition() + "Unmatched Type name = " + node.name);
     }
 
     @Override
@@ -260,9 +247,9 @@ public class TypeChecker implements ASTVisitor {
             return;
 
         if(node.returnvalue == null && returntype.type != Type.Void)
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Unmatched return value type!"));
+            AddError(node.getPosition() + "Unmatched return value type!");
         else if(node.returnvalue != null && !EqualType(returntype, node.returnvalue.type))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Unmatched return value type!"));
+            AddError(node.getPosition() + "Unmatched return value type!");
     }
 
     @Override
@@ -272,13 +259,13 @@ public class TypeChecker implements ASTVisitor {
             if(EqualType(node.body, BOOL)){
                 node.setType(BOOL);
             }else{
-                SemanticException.exceptions.add(new XYXException(node.getPosition() + "Unary Expression Unmatched Type!"));
+                AddError(node.getPosition() + "Unary Expression Unmatched Type!");
             }
         }else{
             if(EqualType(node.body, INT)){
                 node.setType(INT);
             }else{
-                SemanticException.exceptions.add(new XYXException(node.getPosition() + "Unary Expression Unmatched Type!"));
+                AddError(node.getPosition() + "Unary Expression Unmatched Type!");
             }
         }
     }
@@ -288,7 +275,7 @@ public class TypeChecker implements ASTVisitor {
         VISIT(node.rhs);
         VISIT(node.lhs);
         if(!EqualType(node.lhs, node.rhs))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Binary Expression unmatched type!"));
+            AddError(node.getPosition() + "Binary Expression unmatched type!");
 
         Base_Type HSType = node.lhs.type;
 
@@ -296,7 +283,7 @@ public class TypeChecker implements ASTVisitor {
             case LogicalAnd:case LogicalOr:{
                 node.setType(BOOL);
                 if(!(HSType instanceof Bool_Type))
-                    AddError(node.getPosition() + " Logical Operands must be bool type!");
+                    AddError(node.getPosition() + "Logical Operands must be bool type!");
                 break;
             }
             case Less:case Greater:case LessEqual:case GreaterEqual:{
@@ -334,7 +321,7 @@ public class TypeChecker implements ASTVisitor {
     public void visit(Self_Decreasing node) {
         VISIT(node.body);
         if(!EqualType(node.body , INT))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Self decreasing only support Int type~!"));
+            AddError(node.getPosition() + "Self decreasing only support Int type~!");
         node.setType(INT);
     }
 
@@ -342,7 +329,7 @@ public class TypeChecker implements ASTVisitor {
     public void visit(Self_Increasing node) {
         VISIT(node.body);
         if(!EqualType(node.body , INT))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Self Increasing only support Int type~!"));
+            AddError(node.getPosition() + "Self Increasing only support Int type~!");
         node.setType(INT);
     }
 
@@ -353,11 +340,11 @@ public class TypeChecker implements ASTVisitor {
             Array_Type bodytype = (Array_Type)node.name.type;
             node.setType(bodytype.basetype);
         }else
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Non-arraytype cannot be subscripted! name = " + node.name.toString()));
+            AddError(node.getPosition() + "Non-arraytype cannot be subscripted! name = " + node.name.toString());
 
         VISIT(node.index);
         if(!EqualType(node.index, INT))
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Index must be Integer!"));
+            AddError(node.getPosition() + "Index must be Integer!");
     }
 
     @Override
@@ -381,7 +368,7 @@ public class TypeChecker implements ASTVisitor {
                 node.setType(((Function_Declaration) member).functype);
             }
         }else
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Undefined Member!"));
+            AddError(node.getPosition() + "Undefined Member!");
     }
 
     @Override
@@ -391,15 +378,15 @@ public class TypeChecker implements ASTVisitor {
             VISIT(X);
 
         if(!(node.body.type instanceof Func_Type))
-            SemanticException.exceptions.add(new XYXException("Body is not a Class Method!"));
+            AddError("Body is not a Class Method!");
         else{
             List<Base_Type> ParamTypes = ((Func_Type) node.body.type).params_type;
             if(ParamTypes.size() != node.params.size()){
-                SemanticException.exceptions.add(new XYXException(node.getPosition() + "Unmatched ClassMethod parameters number!"));
+                AddError(node.getPosition() + "Unmatched ClassMethod parameters number!");
             }else{
                 for(int i = 0;i < ParamTypes.size();i++){
                     if(!EqualType(ParamTypes.get(i), node.params.get(i).type))
-                        SemanticException.exceptions.add(new XYXException(node.getPosition() + "Unmatched ClassMethod " + i +"th params type!"));
+                        AddError(node.getPosition() + "Unmatched ClassMethod " + i +"th params type!");
                 }
             }
         }
@@ -416,14 +403,13 @@ public class TypeChecker implements ASTVisitor {
         List<Base_Type> ParamTypes = funcType.params_type;
 
         if(ParamTypes.size() != node.params.size())
-            SemanticException.exceptions.add(new XYXException(node.getPosition() + "Unmatched Funccall parameters number!"));
+            AddError(node.getPosition() + "Unmatched Funccall parameters number!");
         else{
             for(int i = 0;i < ParamTypes.size();i++){
                 if(!EqualType(ParamTypes.get(i), node.params.get(i).type))
-                    SemanticException.exceptions.add(new XYXException(node.getPosition() + "Unmatched Funccal " + i +"th params type!"));
+                    AddError(node.getPosition() + "Unmatched Funccal " + i +"th params type!");
             }
         }
-
         node.setType(funcType.returntype);
     }
 
