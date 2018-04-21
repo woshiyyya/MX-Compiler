@@ -353,6 +353,7 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public void visit(Newexpr node) {
+        node.setType(node.type);
         VISIT(node.type);
     }
 

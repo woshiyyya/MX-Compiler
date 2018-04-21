@@ -110,6 +110,9 @@ public class ScopeTreeBuilder implements ASTVisitor {
         if(!HaveType(node.type))
             AddError(node.getPosition() + "Undefined Type! Global Varname = " + node.name);
 
+        if(node.name.equals("this"))
+            AddError(node.getPosition() + "this is a key word!");
+
         LocalScope currentScope = scopeStack.peek();
 
         VISIT(node.RHS);
@@ -156,7 +159,8 @@ public class ScopeTreeBuilder implements ASTVisitor {
     public void visit(Construct_Function node) {
         if (!node.params.isEmpty())
             AddError(node.getPosition() + "Construct Function requires no params!");
-
+        if(!node.name.equals(currentClass))
+            AddError(node.getPosition() + "Construction name must be the same as class name!");
         VISIT(node.body);
     }
 

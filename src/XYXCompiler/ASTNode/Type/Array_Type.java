@@ -1,6 +1,7 @@
 package XYXCompiler.ASTNode.Type;
 
 import XYXCompiler.ASTNode.Expression.Expression;
+import XYXCompiler.Builder.ASTVisitor;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -18,5 +19,10 @@ public class Array_Type extends Base_Type {
 
     public String toString(){
         return type.toString();
+    }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 }

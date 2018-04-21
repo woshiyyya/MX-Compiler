@@ -206,6 +206,8 @@ public class ReferenceChecker implements ASTVisitor {
         VISIT(node.lhs);
         VISIT(node.rhs);
         if(node.op.equals(Binary_Expression.BinaryOP.Assign)){
+            if(node.lhs instanceof Function_call || node.lhs instanceof Class_Method)
+                AddError(node.getPosition() + "Function call are not Assignable!");
             if(!node.lhs.LValue)
                 AddError(node.getPosition() + "Assign LHS body is not L-Value!");
         }
@@ -230,6 +232,8 @@ public class ReferenceChecker implements ASTVisitor {
 
     @Override
     public void visit(Array_Type node) {
+        if(node.size != null && (node.basetype instanceof Array_Type && ((Array_Type) node.basetype).size == null))
+            AddError(node.getPosition() + "Invalid Array Type");
         VISIT(node.size);
         VISIT(node.basetype);
     }
