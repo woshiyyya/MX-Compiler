@@ -7,6 +7,7 @@ import XYXCompiler.Semantic.SemanticCheck.ReferenceChecker;
 import XYXCompiler.Semantic.SemanticCheck.ScopeTreeBuilder;
 import XYXCompiler.Semantic.SemanticCheck.TypeChecker;
 import XYXCompiler.Tools.Exceptions.SemanticException;
+import XYXCompiler.Tools.Exceptions.VerboseListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -26,6 +27,10 @@ public class SemanticOJ {
             XYXLexer lexer              = new XYXLexer(stream);
             CommonTokenStream tokens    = new CommonTokenStream(lexer);
             XYXParser parser            = new XYXParser(tokens);
+
+            parser.removeErrorListeners(); // remove ConsoleErrorListener
+            parser.addErrorListener(new VerboseListener()); // add ours
+
             ParseTree tree = parser.program(); // parse;
             ParseTreeWalker walker = new ParseTreeWalker();
             ASTBuilder builder = new ASTBuilder();
