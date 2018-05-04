@@ -208,25 +208,35 @@ public class ASTBuilder extends XYXBaseListener{
     @Override
     public void exitUnaryExpression(XYXParser.UnaryExpressionContext ctx) {
         UnaryOP op = null;
-        if(ctx.PlusPlus() != null)
-            op = UnaryOP.PlusPlus;
-        else if(ctx.MinusMinus() != null)
-            op = UnaryOP.MinusMinus;
-        else if(ctx.Tilde() != null)
-            op = UnaryOP.Tilde;
-        else if(ctx.Not() != null)
-            op = UnaryOP.Not;
-        else if(ctx.Plus() != null)
-            op = UnaryOP.Plus;
-        else if(ctx.Minus() != null)
-            op = UnaryOP.Minus;
-        else{
-            tag.put(ctx, tag.get(ctx.suffixExpression()));
-            return;
+        if(ctx.unaryExpression() != null){
+            if(ctx.Minus() != null)
+                op = UnaryOP.Minus;
+            else if(ctx.Tilde() != null)
+                op = UnaryOP.Tilde;
+            Unary_Expression node = new Unary_Expression(op, (Expression) tag.get(ctx.unaryExpression()));
+            setPosition(node, ctx);
+            tag.put(ctx, node);
+        }else{
+            if(ctx.PlusPlus() != null)
+                op = UnaryOP.PlusPlus;
+            else if(ctx.MinusMinus() != null)
+                op = UnaryOP.MinusMinus;
+            else if(ctx.Tilde() != null)
+                op = UnaryOP.Tilde;
+            else if(ctx.Not() != null)
+                op = UnaryOP.Not;
+            else if(ctx.Plus() != null)
+                op = UnaryOP.Plus;
+            else if(ctx.Minus() != null)
+                op = UnaryOP.Minus;
+            else{
+                tag.put(ctx, tag.get(ctx.suffixExpression()));
+                return;
+            }
+            Unary_Expression node = new Unary_Expression(op, (Expression) tag.get(ctx.suffixExpression()));
+            setPosition(node, ctx);
+            tag.put(ctx, node);
         }
-        Unary_Expression node = new Unary_Expression(op, (Expression) tag.get(ctx.suffixExpression()));
-        setPosition(node, ctx);
-        tag.put(ctx, node);
     }
 
     @Override

@@ -82,6 +82,9 @@ public class TypeChecker implements ASTVisitor {
         VISIT(node.RHS);
         if(node.type instanceof Void_Type){
             AddError(node.getPosition() + "Cannot define Void Variables!");
+        }else if(node.type instanceof Array_Type){
+            if(((Array_Type)node.type).getBasetype() instanceof Void_Type)
+                AddError(node.getPosition() + "Cannot define Void Array!");
         }
         if(node.RHS != null && !EqualType(node.type, node.RHS.type)){
             AddError(node.getPosition() + "Unmatched Type! name = " + node.name);
@@ -93,6 +96,9 @@ public class TypeChecker implements ASTVisitor {
         VISIT(node.RHS);
         if(node.type instanceof Void_Type){
             AddError(node.getPosition() + "Cannot define Void Variables!");
+        }else if(node.type instanceof Array_Type){
+            if(((Array_Type)node.type).getBasetype() instanceof Void_Type)
+                AddError(node.getPosition() + "Cannot define Global Void Array!");
         }
         if(node.RHS != null && !EqualType(node.type, node.RHS.type)){
             AddError(node.getPosition() + "Unmatched Type! name = " + node.name);
@@ -167,6 +173,9 @@ public class TypeChecker implements ASTVisitor {
         VISIT(node.RHS);
         if(node.type instanceof Void_Type){
             AddError(node.getPosition() + "Cannot define Void Variables!");
+        }else if(node.type instanceof Array_Type){
+            if(((Array_Type)node.type).getBasetype() instanceof Void_Type)
+                AddError(node.getPosition() + "Cannot define a Void Array!");
         }
         if(node.RHS != null && !EqualType(node.type, node.RHS.type))
             AddError(node.getPosition() + "Unmatched Type name = " + node.name);
@@ -328,7 +337,6 @@ public class TypeChecker implements ASTVisitor {
                 }
             }
         }
-
         Func_Type bodytype = (Func_Type)node.body.type;
         node.setType(bodytype.returntype);
     }
@@ -353,6 +361,8 @@ public class TypeChecker implements ASTVisitor {
 
     @Override
     public void visit(Newexpr node) {
+        if(node.type instanceof Void_Type)
+            AddError(node.getPosition() + "Cannot New Void!");
         node.setType(node.type);
         VISIT(node.type);
     }

@@ -133,7 +133,7 @@ public class ReferenceChecker implements ASTVisitor {
 
     @Override
     public void visit(STRING node) {
-
+        node.LValue = true;
     }
 
     @Override

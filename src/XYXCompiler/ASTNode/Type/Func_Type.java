@@ -17,10 +17,4 @@ public class Func_Type extends Base_Type {
         this.returntype = returntype;
         this.params_type = params_type;
     }
-
-    public void add_params(List<Variable_Declaration> params){
-        for(Variable_Declaration X:params) {
-            params_type.add(X.type);
-        }
-    }
 }

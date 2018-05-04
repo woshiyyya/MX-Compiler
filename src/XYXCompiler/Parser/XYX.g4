@@ -81,6 +81,8 @@ unaryExpression //ok
     |   Not suffixExpression
     |   Plus suffixExpression
     |   Minus suffixExpression
+    |   Tilde unaryExpression  //add
+    |   Minus unaryExpression  //add
     ;
 
 multiplicativeExpression //ok

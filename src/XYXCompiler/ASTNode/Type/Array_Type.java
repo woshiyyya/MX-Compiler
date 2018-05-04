@@ -25,4 +25,11 @@ public class Array_Type extends Base_Type {
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);
     }
+
+    public Base_Type getBasetype(){
+        if(!(basetype instanceof Array_Type))
+            return basetype;
+        else
+            return ((Array_Type)this.basetype).getBasetype();
+    }
 }
