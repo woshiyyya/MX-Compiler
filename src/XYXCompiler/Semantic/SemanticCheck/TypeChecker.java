@@ -312,10 +312,11 @@ public class TypeChecker implements ASTVisitor {
             if(member instanceof Variable_Declaration){
                 node.setType(((Variable_Declaration) member).type);
             }else if(member instanceof Function_Declaration){
-                node.setType(((Function_Declaration) member).functype);
+                //node.setType(((Function_Declaration) member).functype);
+                AddError(node.getPosition() + "It's not a var-member!");
             }
         }else
-            AddError(node.getPosition() + "Undefined Member!");
+            AddError(node.getPosition() + "Undefined Class!");
     }
 
     @Override
@@ -323,8 +324,37 @@ public class TypeChecker implements ASTVisitor {
         VISIT(node.body);
         for(Expression X : node.params)
             VISIT(X);
+        LocalScope classscope = null;
+        Base_Type bodytype = node.body.type;
 
-        if(!(node.body.type instanceof Func_Type))
+        if(bodytype instanceof Class_Type)
+            classscope = typeTable.getScope(((Class_Type) bodytype).name);
+        else if(bodytype instanceof String_Type)
+            classscope = typeTable.getScope("__STRING__");
+        else if(bodytype instanceof Array_Type)
+            classscope = typeTable.getScope("__ARRAY__");
+
+        if(classscope != null){
+            Node Func = classscope.FindinClass(node.Func_Name);
+            if(Func == null || (!(Func instanceof Function_Declaration))){
+                AddError(node.getPosition() + "Undefined Class Method!");
+            }else{
+                List<Base_Type> ParamTypes = ((Function_Declaration) Func).paramstype;
+                if(ParamTypes.size() != node.params.size())
+                    AddError(node.getPosition() + "Unmatched ClassMethod parameters number!");
+
+                for(int i = 0;i < ParamTypes.size();i++){
+                    if(!EqualType(ParamTypes.get(i), node.params.get(i).type))
+                        AddError(node.getPosition() + "Unmatched ClassMethod " + i +"th params type!");
+                    }
+
+                node.setType(((Function_Declaration)Func).returntype);
+                node.returntype = ((Function_Declaration)Func).returntype;
+            }
+        }else
+            AddError(node.getPosition() + "Undefined Class!");
+
+        /*if(!(node.body.type instanceof Func_Type))
             AddError("Body is not a Class Method!");
         else{
             List<Base_Type> ParamTypes = ((Func_Type) node.body.type).params_type;
@@ -339,6 +369,7 @@ public class TypeChecker implements ASTVisitor {
         }
         Func_Type bodytype = (Func_Type)node.body.type;
         node.setType(bodytype.returntype);
+        */
     }
 
     @Override

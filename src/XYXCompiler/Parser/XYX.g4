@@ -59,12 +59,12 @@ primaryExpression //ok
     :   constant
     |   Identifier
     |   LeftParen expression RightParen
-    |   New type
+    |   New type ('(' ')')?
     ;
 
 suffixExpression //ok
     :   primaryExpression
-//  |   suffixExpression Dot Identifier LeftParen (expression (',' expression)*)? RightParen
+    |   suffixExpression Dot Identifier LeftParen (expression (',' expression)*)? RightParen //classMethod
     |   suffixExpression Dot Identifier //Accessing
     |   suffixExpression LeftBracket expression RightBracket //Indexing
     |   suffixExpression LeftParen (expression (',' expression)*)? RightParen //funccall

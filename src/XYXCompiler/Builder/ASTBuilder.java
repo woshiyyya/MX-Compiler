@@ -160,11 +160,22 @@ public class ASTBuilder extends XYXBaseListener{
             tag.put(ctx, tag.get(ctx.primaryExpression()));
         }else{
             if(ctx.Dot() != null){
-                Accessing node = new Accessing();
-                setPosition(node, ctx);
-                node.body = (Expression) tag.get(ctx.suffixExpression());
-                node.components =  ctx.Identifier().getText();
-                tag.put(ctx, node);
+                if(ctx.LeftParen() != null){
+                    Class_Method node = new Class_Method();
+                    setPosition(node, ctx);
+                    node.Func_Name = ctx.Identifier().getText();
+                    node.body = (Expression) tag.get(ctx.suffixExpression());
+                    for(XYXParser.ExpressionContext X: ctx.expression()){
+                        node.params.add((Expression) tag.get(X));
+                    }
+                    tag.put(ctx, node);
+                }else{
+                    Accessing node = new Accessing();
+                    setPosition(node, ctx);
+                    node.body = (Expression) tag.get(ctx.suffixExpression());
+                    node.components =  ctx.Identifier().getText();
+                    tag.put(ctx, node);
+                }
             }else if(ctx.RightBracket() != null){
                 Indexing node = new Indexing();
                 setPosition(node, ctx);
@@ -182,7 +193,8 @@ public class ASTBuilder extends XYXBaseListener{
                         node.params.add((Expression) tag.get(X));
                     }
                     tag.put(ctx, node);
-                }else{
+                }
+                /*else{
                     Class_Method node = new Class_Method();
                     setPosition(node, ctx);
                     node.body = (Expression) tag.get(ctx.suffixExpression());
@@ -190,7 +202,7 @@ public class ASTBuilder extends XYXBaseListener{
                         node.params.add((Expression) tag.get(X));
                     }
                     tag.put(ctx, node);
-                }
+                }*/
             }else if(ctx.PlusPlus() != null){
                 Self_Increasing node = new Self_Increasing();
                 setPosition(node, ctx);

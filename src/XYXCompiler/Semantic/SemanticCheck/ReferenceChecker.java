@@ -163,6 +163,8 @@ public class ReferenceChecker implements ASTVisitor {
         VISIT(node.body);
         if(!node.body.LValue)
             AddError(node.getPosition() + "Class_Method body is not L-Value!");
+        if(node.returntype instanceof Class_Type || node.returntype instanceof String_Type)
+            node.LValue = true;
     }
 
     @Override
