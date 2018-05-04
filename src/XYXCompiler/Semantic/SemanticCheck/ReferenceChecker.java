@@ -133,7 +133,6 @@ public class ReferenceChecker implements ASTVisitor {
 
     @Override
     public void visit(STRING node) {
-        node.LValue = true;
     }
 
     @Override
@@ -154,15 +153,17 @@ public class ReferenceChecker implements ASTVisitor {
     @Override
     public void visit(Accessing node) {
         VISIT(node.body);
-        if(!node.body.LValue)
-            AddError(node.body.getPosition() + "Accessing body is not L-Value!" + node.body.type.toString());
+        Base_Type bodytype = node.body.type;
+        if(!(bodytype instanceof String_Type || bodytype instanceof Class_Type || bodytype instanceof Array_Type))
+            AddError(node.body.getPosition() + "Accessing body is not Accessible!" + node.body.type.toString());
     }
 
     @Override
     public void visit(Class_Method node) {
         VISIT(node.body);
-        if(!node.body.LValue)
-            AddError(node.getPosition() + "Class_Method body is not L-Value!");
+        Base_Type bodytype = node.body.type;
+        if(!(bodytype instanceof String_Type || bodytype instanceof Class_Type || bodytype instanceof Array_Type))
+            AddError(node.getPosition() + "Class_Method body is not Accessible!");
         if(node.returntype instanceof Class_Type || node.returntype instanceof String_Type)
             node.LValue = true;
     }
@@ -175,8 +176,8 @@ public class ReferenceChecker implements ASTVisitor {
         Func_Type funcType = ((Function_Declaration) node.Scope.find(node.name)).functype;
         if(funcType.returntype instanceof Class_Type || funcType.returntype instanceof String_Type)
                 node.LValue = true;
-        if(!node.body.LValue)
-            AddError(node.getPosition() + "Funccal body is not L-Value!");
+        //if(!node.body.LValue)
+        //    AddError(node.getPosition() + "Funccal body is not L-Value!");
     }
 
     @Override
