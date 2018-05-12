@@ -1,16 +1,16 @@
 package XYXCompiler.Tools;
 
-import XYXCompiler.ASTNode.ASTRoot;
-import XYXCompiler.ASTNode.Declaration.*;
-import XYXCompiler.ASTNode.Expression.Binary_Expression;
-import XYXCompiler.ASTNode.Expression.Expression;
-import XYXCompiler.ASTNode.Expression.Primitive.*;
-import XYXCompiler.ASTNode.Expression.Suffix.*;
-import XYXCompiler.ASTNode.Expression.Unary_Expression;
-import XYXCompiler.ASTNode.Statement.*;
-import XYXCompiler.ASTNode.Type.Array_Type;
-import XYXCompiler.ASTNode.Type.Base_Type;
-import XYXCompiler.Builder.ASTVisitor;
+import XYXCompiler.FrontEnd.ASTNode.ASTRoot;
+import XYXCompiler.FrontEnd.ASTNode.Declaration.*;
+import XYXCompiler.FrontEnd.ASTNode.Expression.Binary_Expression;
+import XYXCompiler.FrontEnd.ASTNode.Expression.Expression;
+import XYXCompiler.FrontEnd.ASTNode.Expression.Primitive.*;
+import XYXCompiler.FrontEnd.ASTNode.Expression.Suffix.*;
+import XYXCompiler.FrontEnd.ASTNode.Expression.Unary_Expression;
+import XYXCompiler.FrontEnd.ASTNode.Statement.*;
+import XYXCompiler.FrontEnd.ASTNode.Type.Array_Type;
+import XYXCompiler.FrontEnd.ASTNode.Type.Base_Type;
+import XYXCompiler.FrontEnd.Builder.ASTVisitor;
 import static java.lang.System.out;
 
 public class ASTViewer implements ASTVisitor {

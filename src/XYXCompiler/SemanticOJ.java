@@ -1,11 +1,11 @@
 package XYXCompiler;
 
-import XYXCompiler.Builder.ASTBuilder;
+import XYXCompiler.FrontEnd.Builder.ASTBuilder;
 import XYXCompiler.Parser.XYXLexer;
 import XYXCompiler.Parser.XYXParser;
-import XYXCompiler.Semantic.SemanticCheck.ReferenceChecker;
-import XYXCompiler.Semantic.SemanticCheck.ScopeTreeBuilder;
-import XYXCompiler.Semantic.SemanticCheck.TypeChecker;
+import XYXCompiler.FrontEnd.Semantic.SemanticCheck.ReferenceChecker;
+import XYXCompiler.FrontEnd.Semantic.SemanticCheck.ScopeTreeBuilder;
+import XYXCompiler.FrontEnd.Semantic.SemanticCheck.TypeChecker;
 import XYXCompiler.Tools.Exceptions.SemanticException;
 import XYXCompiler.Tools.Exceptions.VerboseListener;
 import org.antlr.v4.runtime.CharStream;
