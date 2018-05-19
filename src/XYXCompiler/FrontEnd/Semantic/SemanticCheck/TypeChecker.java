@@ -253,6 +253,9 @@ public class TypeChecker implements ASTVisitor {
                 break;
             }
             case Assign:{
+                if(node.lhs instanceof ID)
+                    if(((ID) node.lhs).name.equals("this"))
+                        AddError(node.getPosition() + "this cannot be assigned!");
                 node.setType(VOID);
                 break;
             }

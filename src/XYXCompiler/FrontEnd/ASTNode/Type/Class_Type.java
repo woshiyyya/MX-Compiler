@@ -2,14 +2,15 @@ package XYXCompiler.FrontEnd.ASTNode.Type;
 
 import XYXCompiler.Tools.*;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import static XYXCompiler.XIR.Tools.ConstVal.intsize;
 
 public class Class_Type extends Base_Type {
     public String name;
-    public List<Base_Type> membertypeList;
-    public List<String> membernameList;
+    public List<Base_Type> membertypeList = new LinkedList<>();
+    public List<String> membernameList = new LinkedList<>();
 
     public Class_Type(String name){
         this.name = name;

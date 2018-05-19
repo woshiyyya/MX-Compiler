@@ -227,7 +227,7 @@ Identifier
 
 fragment
 Nondigit
-    :   [a-zA-Z_]
+    :   [a-zA-Z]
     ;
 
 fragment
