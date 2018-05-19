@@ -12,4 +12,8 @@ public class Bool_Type extends Base_Type {
     public String toString(){
         return type.toString();
     }
+
+    public int getSize(){
+        return 8;
+    }
 }

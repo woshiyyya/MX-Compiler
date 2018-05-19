@@ -1,8 +1,7 @@
 package XYXCompiler.XIR.Instruction.Memory;
 
 import XYXCompiler.XIR.CFG.BasicBlock;
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
-import XYXCompiler.XIR.Operand.Register.Register;
+import XYXCompiler.XIR.Operand.DataSrc;
 
 public class Move_Inst extends Memory {
     public DataSrc dest;

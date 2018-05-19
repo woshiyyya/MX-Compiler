@@ -2,10 +2,8 @@ package XYXCompiler.FrontEnd.ASTNode.Expression;
 
 import XYXCompiler.FrontEnd.ASTNode.Node;
 import XYXCompiler.FrontEnd.ASTNode.Type.*;
-import XYXCompiler.Tools.Position;
 import XYXCompiler.XIR.CFG.BasicBlock;
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
-import XYXCompiler.XIR.Operand.Register.Register;
+import XYXCompiler.XIR.Operand.DataSrc;
 
 public class Expression extends Node {
     public Base_Type type;
@@ -16,7 +14,7 @@ public class Expression extends Node {
 
     //Actual Memory Location
     public DataSrc baseaddr = null;
-    public int offset;
+    public DataSrc offset = null;
 
     //Short-Circuit Evaluation
     public BasicBlock ifTrue = null;

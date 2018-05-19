@@ -1,6 +1,6 @@
 package XYXCompiler.XIR.Instruction.Functional;
 import XYXCompiler.XIR.CFG.BasicBlock;
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
+import XYXCompiler.XIR.Operand.DataSrc;
 
 public class Return_Inst extends Functional {
     public DataSrc retval;

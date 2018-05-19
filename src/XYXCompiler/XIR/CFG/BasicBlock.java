@@ -1,17 +1,14 @@
 package XYXCompiler.XIR.CFG;
 
 import XYXCompiler.XIR.Instruction.Control.Branch_Inst;
+import XYXCompiler.XIR.Instruction.Control.CMP;
 import XYXCompiler.XIR.Instruction.Control.Jump_Inst;
 import XYXCompiler.XIR.Instruction.Functional.Return_Inst;
 import XYXCompiler.XIR.Instruction.Instruction;
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
-import XYXCompiler.XIR.Operand.Register.Register;
-import XYXCompiler.XIR.Tools.Condition;
+import XYXCompiler.XIR.Operand.DataSrc;
 
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 public class BasicBlock {
     public Function Func_Scope;
@@ -21,6 +18,7 @@ public class BasicBlock {
     public Instruction Exit = null;
     public Return_Inst ret = null;
     public boolean If_closed = false;
+    public CMP cmp = null;
 
     public BasicBlock(Function func_Scope) {
         Func_Scope = func_Scope;

@@ -1,7 +1,5 @@
 package XYXCompiler.XIR.CFG;
 
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
-import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.Literal;
 import XYXCompiler.XIR.Operand.Static.StaticData;
 

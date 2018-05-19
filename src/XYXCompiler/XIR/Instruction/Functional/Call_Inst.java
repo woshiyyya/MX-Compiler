@@ -1,7 +1,7 @@
 package XYXCompiler.XIR.Instruction.Functional;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.CFG.Function;
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
+import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.Register;
 
 import java.util.LinkedList;

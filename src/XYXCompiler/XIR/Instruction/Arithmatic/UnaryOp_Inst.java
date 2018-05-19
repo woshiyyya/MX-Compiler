@@ -1,7 +1,7 @@
 package XYXCompiler.XIR.Instruction.Arithmatic;
 
 import XYXCompiler.XIR.CFG.BasicBlock;
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
+import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.Register;
 
 public class UnaryOp_Inst extends Arithmatic {

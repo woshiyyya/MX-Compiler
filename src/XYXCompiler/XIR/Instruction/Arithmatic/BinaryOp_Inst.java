@@ -1,7 +1,7 @@
 package XYXCompiler.XIR.Instruction.Arithmatic;
 
 import XYXCompiler.XIR.CFG.BasicBlock;
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
+import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.Register;
 
 public class BinaryOp_Inst extends Arithmatic {
@@ -20,6 +20,10 @@ public class BinaryOp_Inst extends Arithmatic {
         L_operand = l_operand;
         R_operand = r_operand;
         this.op = op;
+    }
+
+    public BinaryOp_Inst(BasicBlock BB_Scope){
+        super(BB_Scope);
     }
 
     public boolean isLogical(){

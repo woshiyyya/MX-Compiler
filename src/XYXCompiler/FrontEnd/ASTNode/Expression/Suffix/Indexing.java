@@ -2,9 +2,6 @@ package XYXCompiler.FrontEnd.ASTNode.Expression.Suffix;
 
 import XYXCompiler.FrontEnd.ASTNode.Expression.Expression;
 import XYXCompiler.FrontEnd.Builder.ASTVisitor;
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
-
-import javax.xml.crypto.Data;
 
 public class Indexing extends Expression {
     public Expression name;

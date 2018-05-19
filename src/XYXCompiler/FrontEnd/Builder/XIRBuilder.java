@@ -9,33 +9,36 @@ import XYXCompiler.FrontEnd.ASTNode.Expression.Suffix.*;
 import XYXCompiler.FrontEnd.ASTNode.Expression.Unary_Expression;
 import XYXCompiler.FrontEnd.ASTNode.Node;
 import XYXCompiler.FrontEnd.ASTNode.Statement.*;
-import XYXCompiler.FrontEnd.ASTNode.Type.Array_Type;
-import XYXCompiler.FrontEnd.ASTNode.Type.Base_Type;
-import XYXCompiler.FrontEnd.ASTNode.Type.Void_Type;
+import XYXCompiler.FrontEnd.ASTNode.Type.*;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.CFG.Function;
 import XYXCompiler.XIR.CFG.XIRRoot;
 import XYXCompiler.XIR.Instruction.Arithmatic.BinaryOp_Inst;
 import XYXCompiler.XIR.Instruction.Arithmatic.BinaryOp_Inst.*;
 import XYXCompiler.XIR.Instruction.Arithmatic.RelationOp_Inst;
+import XYXCompiler.XIR.Instruction.Arithmatic.RelationOp_Inst.CmpOp;
 import XYXCompiler.XIR.Instruction.Arithmatic.UnaryOp_Inst;
 import XYXCompiler.XIR.Instruction.Arithmatic.UnaryOp_Inst.unaryop;
 import XYXCompiler.XIR.Instruction.Control.CMP;
 import XYXCompiler.XIR.Instruction.Functional.Call_Inst;
 import XYXCompiler.XIR.Instruction.Functional.Return_Inst;
+import XYXCompiler.XIR.Instruction.Memory.Alloc_Inst;
+import XYXCompiler.XIR.Instruction.Memory.Load_Inst;
 import XYXCompiler.XIR.Instruction.Memory.Move_Inst;
 import XYXCompiler.XIR.Instruction.Memory.Store_Inst;
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
-import XYXCompiler.XIR.Operand.Memory.Immediate;
+import XYXCompiler.XIR.Operand.DataSrc;
+import XYXCompiler.XIR.Operand.Static.Immediate;
 import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Static.IntLiteral;
 import XYXCompiler.XIR.Operand.Static.Literal;
 import XYXCompiler.XIR.Operand.Static.StaticData;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.StringLiteral;
-import XYXCompiler.XIR.Tools.Initializer;
 
+import javax.xml.crypto.Data;
+import java.lang.reflect.Array;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,9 +52,18 @@ public class XIRBuilder implements ASTVisitor {
     public BasicBlock preLoopAfter;
     public BasicBlock CurLoopUpdate;
     public BasicBlock CurLoopAfter;
+    public Boolean curNeedAddr = false;
+    public Boolean preNeedAddr = false;
+    public Register NewDest = null;
     public Map<String, Function> FuncMap = new HashMap<>();
+    public List<Array_Type> NewDimList = new LinkedList<>();
+    public TypeTable typeTable = null;
 
-    public XIRBuilder() {}
+    private int PointerSize = 8;
+
+    public XIRBuilder(TypeTable typeTable) {
+        this.typeTable = typeTable;
+    }
 
     public void VISIT(Node node){
         if(node != null)
@@ -90,42 +102,82 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.rhs);
     }
 
-    private void MergeCircuit(Binary_Expression node, Expression lhs){
+    private void MergeCircuit(Binary_Expression node){
         // Merge the Short Circuit BBs for Expr Value only
         BasicBlock MergeBlk = new BasicBlock(curFunc);
-        if(lhs instanceof Accessing || lhs instanceof Indexing){
-            node.ifTrue.add(new Store_Inst(curBlk, new Immediate(1),intsize, lhs.baseaddr, lhs.offset));
-            node.ifFalse.add(new Store_Inst(curBlk, new Immediate(0), intsize, lhs.baseaddr, lhs.offset));
-        }else{
-            node.datasrc = new VirtualReg(null);
-            node.ifTrue.add(new Move_Inst(curBlk, node.datasrc, new Immediate(1)));
-            node.ifFalse.add(new Move_Inst(curBlk, node.datasrc, new Immediate(0)));
-        }
+        node.datasrc = new VirtualReg(null);
+
+        node.ifTrue.add(new Move_Inst(curBlk, node.datasrc, new Immediate(1)));
+        node.ifFalse.add(new Move_Inst(curBlk, node.datasrc, new Immediate(0)));
+
         node.ifTrue.Close_J(MergeBlk);
         node.ifFalse.Close_J(MergeBlk);
         curBlk = MergeBlk;//Warning: the curBB has been changed
     }
 
-    private void Construct_Compare(Binary_Expression node){
-        //specifically for while/for condition expr with compare operator
-        RelationOp_Inst inst = new RelationOp_Inst(curBlk, new VirtualReg(null));
-        switch (node.op) {
-            case Equal:         inst.op = RelationOp_Inst.CmpOp.EQ; break;
-            case NotEqual:      inst.op = RelationOp_Inst.CmpOp.NE; break;
-            case LessEqual:     inst.op = RelationOp_Inst.CmpOp.LE; break;
-            case GreaterEqual:  inst.op = RelationOp_Inst.CmpOp.GE; break;
-            case Less:          inst.op = RelationOp_Inst.CmpOp.LS; break;
-            case Greater:       inst.op = RelationOp_Inst.CmpOp.GT; break;
+    private void Construct_Assign(Binary_Expression node){
+        if(ifLogical(node.rhs)){
+            node.rhs.ifTrue = new BasicBlock(curFunc);
+            node.rhs.ifFalse = new BasicBlock(curFunc);
         }
 
         VISIT(node.lhs);
         VISIT(node.rhs);
 
+        if(node.lhs instanceof Accessing || node.lhs instanceof Indexing){
+            curBlk.add(new Store_Inst(curBlk,node.lhs.baseaddr, node.lhs.offset, intsize, node.rhs.datasrc, intsize));
+        }else{
+            curBlk.add(new Move_Inst(curBlk, node.lhs.datasrc, node.rhs.datasrc));
+        }
+    }
+
+    private void Construct_Comparation(Binary_Expression node){
+        //specifically for while/for condition expr with compare operator
+        RelationOp_Inst inst = new RelationOp_Inst(curBlk, new VirtualReg(null));
+        switch (node.op) {
+            case Equal:         inst.op = CmpOp.EQ; break;
+            case NotEqual:      inst.op = CmpOp.NE; break;
+            case LessEqual:     inst.op = CmpOp.LE; break;
+            case GreaterEqual:  inst.op = CmpOp.GE; break;
+            case Less:          inst.op = CmpOp.LS; break;
+            case Greater:       inst.op = CmpOp.GT; break;
+        }
+
+        VISIT(node.lhs);
+        VISIT(node.rhs);
+
+        if(hasBranch(node)){
+            //for this kind of Branch, we have to write "cmp L_operand R_operand; jle Label"
+            curBlk.cmp = new CMP(curBlk, node.lhs.datasrc, node.rhs.datasrc);
+            curBlk.Close_B(null, node.ifTrue, node.ifFalse);
+        }else{
+            inst.L_operand = node.lhs.datasrc;
+            inst.R_operand = node.rhs.datasrc;
+            curBlk.add(inst);
+            node.datasrc = inst.dest;
+        }
+    }
+
+    private void Construct_Arithmatic(Binary_Expression node){
+        BinaryOp_Inst inst = new BinaryOp_Inst(curBlk);
+        switch(node.op){
+            case Mul:           inst.op = binaryop.Mul; break;
+            case Div:           inst.op = binaryop.Div; break;
+            case Mod:           inst.op = binaryop.Mod; break;
+            case Plus:          inst.op = binaryop.Add; break;
+            case Minus:         inst.op = binaryop.Sub; break;
+            case LeftShift:     inst.op = binaryop.Lsh; break;
+            case RightShift:    inst.op = binaryop.Rsh; break;
+            case BitAnd:        inst.op = binaryop.And; break;
+            case BitOr:         inst.op = binaryop.Or;  break;
+            case BitXor:        inst.op = binaryop.Xor; break;
+        }
+        VISIT(node.lhs);
+        VISIT(node.rhs);
         inst.L_operand = node.lhs.datasrc;
         inst.R_operand = node.rhs.datasrc;
+        inst.dest = new VirtualReg(null);
         curBlk.add(inst);
-        //for this kind of Branch, we have to write "cmp L_operand R_operand; jle Label"
-        curBlk.Close_B(inst.dest, node.ifTrue, node.ifFalse);
     }
 
     private void enterLoop(BasicBlock Update, BasicBlock After){
@@ -140,6 +192,18 @@ public class XIRBuilder implements ASTVisitor {
         CurLoopAfter = preLoopAfter;
     }
 
+    private void enterMem(){
+        preNeedAddr = curNeedAddr;
+        curNeedAddr = false;
+    }
+
+    private void exitMem(){
+        curNeedAddr = preNeedAddr;
+    }
+
+    private boolean hasBranch(Expression node){
+        return node.ifFalse != null;
+    }
 
     private void Collect_Functions(Node node){
         List<Declaration> declarations;
@@ -239,7 +303,7 @@ public class XIRBuilder implements ASTVisitor {
                 node.returnvalue.ifFalse = new BasicBlock(curFunc);
                 node.returnvalue.ifTrue = new BasicBlock(curFunc);
                 VISIT(node.returnvalue); //Warning: it must call ShortCircuit Fnuction
-                MergeCircuit((Binary_Expression)(node.returnvalue),null);
+                MergeCircuit((Binary_Expression)(node.returnvalue));
             }else
                 VISIT(node.returnvalue);
             curBlk.Close_R(new Return_Inst(curBlk, node.returnvalue.datasrc));
@@ -434,7 +498,7 @@ public class XIRBuilder implements ASTVisitor {
             node.datasrc = ((Variable_Declaration) Entity).reg;
         if(Entity instanceof Variable_Declaration_Statement)
             node.datasrc = ((Variable_Declaration_Statement) Entity).reg;
-        if(node.ifTrue != null){
+        if(hasBranch(node)){
             curBlk.Close_B(node.datasrc, node.ifTrue, node.ifFalse);
         }
     }
@@ -472,7 +536,7 @@ public class XIRBuilder implements ASTVisitor {
 
     public void Construct_PPMM(Expression node, Expression body, binaryop op){
         VISIT(body);
-        IntLiteral RHS = new IntLiteral(1);
+        Immediate RHS = new Immediate(1);
         DataSrc LHS = body.datasrc;
         //????? WTF Memory operation
         if(node instanceof Unary_Expression){
@@ -491,22 +555,50 @@ public class XIRBuilder implements ASTVisitor {
 
     @Override
     public void visit(Binary_Expression node) {
-
+        switch(node.op){
+            case Mul:
+            case Div:
+            case Mod:
+            case Plus:
+            case Minus:
+            case LeftShift:
+            case RightShift:
+            case BitAnd:
+            case BitOr:
+            case BitXor:
+                Construct_Arithmatic(node);
+                break;
+            case Less:
+            case LessEqual:
+            case Greater:
+            case GreaterEqual:
+            case Equal:
+            case NotEqual:
+                Construct_Comparation(node);
+                break;
+            case LogicalAnd:
+            case LogicalOr:
+                Construct_ShortCircuit(node);
+                MergeCircuit(node);
+                break;
+            case Assign:
+                Construct_Assign(node);
+        }
     }
 
     @Override
     public void visit(INT node) {
-        node.datasrc = new IntLiteral(node.value);
+        node.datasrc = new Immediate(node.value);
     }
 
     @Override
     public void visit(Null node) {
-        node.datasrc = new IntLiteral(0);
+        node.datasrc = new Immediate(0);
     }
 
     @Override
     public void visit(Bool node) {
-        node.datasrc = new IntLiteral(node.value ? 1 : 0);
+        node.datasrc = new Immediate(node.value ? 1 : 0);
     }
 
     @Override
@@ -514,21 +606,180 @@ public class XIRBuilder implements ASTVisitor {
         node.datasrc = new StringLiteral(node.value);
     }
 
+    private void getDim(Array_Type t, List<Integer> dim){
+        Base_Type type = t;
+        while(type instanceof Array_Type){
+            Expression temDim = ((Array_Type) type).size;
+            int value = ((IntLiteral)((INT)temDim).datasrc).value;
+            dim.add(value);
+            type = ((Array_Type) type).basetype;
+        }
+    }
+
+    private void Alloc_Heap(Register baseaddr, int pos, int basetypesize, List<DataSrc> dim, int level){
+        if(dim.get(level) == null)
+            return;
+        /*
+        #compute offset
+            lea     rdx, [rax*8]
+
+        #load baseaddr:
+            mov     rax, qword [rbp-20H]
+
+        #compute baseaddr + offset
+            lea     rbx, [rdx+rax]
+
+        #load size 3*4
+            mov     edi, 12
+            call    _Znam
+
+        #save array baseaddr into pointer addr
+            mov     qword [rbx], rax
+        */
+
+        int typesize = level == dim.size()-1 ? basetypesize : PointerSize;
+        Immediate offset = new Immediate(pos);
+        Register spacesize = new VirtualReg("__SpaceSize__");
+        Register blockaddr = new VirtualReg("__blockaddr__");
+
+        // compute the size of block we want to alloc
+        curBlk.add(new BinaryOp_Inst(curBlk, spacesize, dim.get(level), new Immediate(typesize), binaryop.Mul));
+
+        // Alloc
+        curBlk.add(new Alloc_Inst(curBlk, blockaddr, spacesize));
+
+        // Write back
+        curBlk.add(new Store_Inst(curBlk, baseaddr, offset, PointerSize, blockaddr, PointerSize));
+    }
+
+    private void Construct_Forloop(DataSrc baseaddr, DataSrc thisdim, int level){
+        //NewDimList.size() - level
+        Array_Type now = NewDimList.get(NewDimList.size() - level);
+        if(now == null)
+            return;
+
+        DataSrc nextdim = now.size.datasrc;
+        BasicBlock ForCond   = new BasicBlock(curFunc);
+        BasicBlock ForBody   = new BasicBlock(curFunc);
+        BasicBlock ForUpdate = new BasicBlock(curFunc);
+        BasicBlock ForAfter  = new BasicBlock(curFunc);
+
+        enterLoop(ForUpdate, ForAfter);
+        /*
+            (init)
+            jmp -> _Cond
+
+        _ForCond:
+            cmp c, 0
+            jz _After
+
+        _ForBody:
+            (Loop body)
+
+        _ForUpdate:
+            (update)
+            jmp -> _Cond
+
+         _ForAfter:
+
+         */
+        Register cnt = new VirtualReg("cnt");
+        Register flag = new VirtualReg("flag");
+        Register size = new VirtualReg("size");
+        Register addr = new VirtualReg("addr");
+
+        //----construct init block
+        curBlk.add(new Move_Inst(curBlk, cnt, new Immediate(0)));
+        curBlk.Close_J(ForCond);
+
+        //------construct condition block
+        curBlk = ForCond;
+        curBlk.add(new RelationOp_Inst(curBlk, flag, cnt, thisdim, CmpOp.LS));
+        curBlk.Close_B(flag, ForBody, ForAfter);
+
+        //------construct body block
+        curBlk = ForBody;
+
+        curBlk.add(new BinaryOp_Inst(curBlk, size, nextdim, new Immediate(PointerSize), binaryop.Mul));
+
+        curBlk.add(new Alloc_Inst(curBlk, addr, size));
+        fuck here, the first?
+        curBlk.add(new Store_Inst(curBlk, baseaddr, cnt, PointerSize, addr, PointerSize));
+
+        if(level < NewDimList.size())
+            Construct_Forloop(addr, nextdim, level + 1);
+
+        curBlk.Close_J(ForUpdate);
+
+        //-------construct update block
+        curBlk = ForUpdate;
+        curBlk.add(new BinaryOp_Inst(curBlk, cnt, cnt, new Immediate(1), binaryop.Add));
+        curBlk.Close_J(ForCond);
+
+        //-------shift to after block
+        exitLoop();
+        curBlk = ForAfter;
+    }
+
+    @Override
+    public void visit(Array_Type node) {
+        VISIT(node.size);
+        VISIT(node.basetype);
+        NewDimList.add(node);
+    }
+
     @Override
     public void visit(Newexpr node) {
-        VISIT(node.type);
-        int size = node.type.size;
-        // IM Not Sure what to Store !!!
+
+        if(node.type instanceof Array_Type){
+            NewDimList.clear();
+            VISIT(node.type);
+            node.datasrc = new VirtualReg("new");
+            Construct_Forloop(node.datasrc, new Immediate(1), 1);
+        }else{
+            int size = ((Class_Type)node.type).getSize();
+            node.datasrc = new VirtualReg(null);
+            curBlk.add(new Alloc_Inst(curBlk, (Register)node.datasrc, new Immediate(size)));
+        }
     }
 
     @Override
     public void visit(Indexing node) {
-
+        VISIT(node.index);
+        enterMem();
+        VISIT(node.name);
+        exitMem();
+        if(curNeedAddr){
+            node.baseaddr = node.name.datasrc;
+            node.offset = node.index.datasrc;
+        }else{
+            node.datasrc = new VirtualReg(null);
+            curBlk.add(new Load_Inst(curBlk, (Register)node.datasrc, node.name.datasrc, node.index.datasrc, intsize));
+            if(hasBranch(node)){
+                curBlk.Close_B(node.datasrc, node.ifTrue, node.ifFalse);
+            }
+        }
     }
 
     @Override
     public void visit(Accessing node) {
+        enterMem();
+        VISIT(node.body);
+        exitMem();
 
+        Class_Type class_type = typeTable.ClassTypeTable.get(((Class_Type)(node.body.type)).name);
+        int offset = class_type.getOffset(node.components);
+
+        if(curNeedAddr){
+            node.baseaddr = node.body.datasrc;
+            node.offset = new Immediate(offset);
+        }else{
+            node.datasrc = new VirtualReg(null);
+            curBlk.add(new Load_Inst(curBlk, (Register)node.datasrc, node.body.datasrc, new Immediate(offset),intsize));
+            if(hasBranch(node)){
+                curBlk.Close_B(node.datasrc, node.ifTrue, node.ifFalse);
+            }
+        }
     }
 
     @Override
@@ -571,13 +822,6 @@ public class XIRBuilder implements ASTVisitor {
     @Override
     public void visit(Self_Increasing node) {
         Construct_PPMM(node, node.body, binaryop.Add);
-    }
-
-
-
-    @Override
-    public void visit(Array_Type node) {
-
     }
 
     @Override

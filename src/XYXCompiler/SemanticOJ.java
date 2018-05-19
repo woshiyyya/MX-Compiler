@@ -25,6 +25,10 @@ public class SemanticOJ {
             InputStream is = System.in;
             CharStream stream = fromStream(is);
             XYXLexer lexer              = new XYXLexer(stream);
+
+            lexer.removeErrorListeners();
+            lexer.addErrorListener(new VerboseListener());
+
             CommonTokenStream tokens    = new CommonTokenStream(lexer);
             XYXParser parser            = new XYXParser(tokens);
 

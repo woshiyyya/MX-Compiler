@@ -1,6 +1,6 @@
 package XYXCompiler.XIR.Tools;
 
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
+import XYXCompiler.XIR.Operand.DataSrc;
 
 public class Condition {
     public DataSrc LHS;

@@ -1,7 +1,6 @@
 package XYXCompiler.XIR.Operand.Static;
 
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
-import javafx.scene.chart.PieChart;
+import XYXCompiler.XIR.Operand.DataSrc;
 
 public class StaticData extends DataSrc {
     public String name;

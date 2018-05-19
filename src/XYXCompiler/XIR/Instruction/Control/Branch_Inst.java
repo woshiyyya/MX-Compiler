@@ -1,9 +1,7 @@
 package XYXCompiler.XIR.Instruction.Control;
 
 import XYXCompiler.XIR.CFG.BasicBlock;
-import XYXCompiler.XIR.Operand.Memory.DataSrc;
-import XYXCompiler.XIR.Operand.Register.Register;
-import XYXCompiler.XIR.Tools.Condition;
+import XYXCompiler.XIR.Operand.DataSrc;
 
 public class Branch_Inst extends Control {
     public DataSrc Cond;

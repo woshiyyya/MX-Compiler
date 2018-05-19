@@ -137,6 +137,8 @@ public class ScopeTreeBuilder implements ASTVisitor {
             VISIT(X);   //TROUBLE~!!!  Solved at Line167
         }
 
+        typeTable.UpdateClassTypeMap(node);
+
         scopeStack.pop();
         currentClass = null;
     }
@@ -192,6 +194,9 @@ public class ScopeTreeBuilder implements ASTVisitor {
     public void visit(Variable_Declaration_Statement node) {
         if(!HaveType(node.type))
             AddError(node.getPosition() + "Undefined Type! name = " + node.name);
+
+        if(node.name.equals("this") && currentClass != null)
+            AddError(node.getPosition() + "this is a key word!");
 
         VISIT(node.RHS);
         scopeStack.peek().put(node);
