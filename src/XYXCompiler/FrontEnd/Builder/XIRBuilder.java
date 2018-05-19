@@ -703,7 +703,7 @@ public class XIRBuilder implements ASTVisitor {
         curBlk.add(new BinaryOp_Inst(curBlk, size, nextdim, new Immediate(PointerSize), binaryop.Mul));
 
         curBlk.add(new Alloc_Inst(curBlk, addr, size));
-        fuck here, the first?
+        //fuck here, the first?
         curBlk.add(new Store_Inst(curBlk, baseaddr, cnt, PointerSize, addr, PointerSize));
 
         if(level < NewDimList.size())
