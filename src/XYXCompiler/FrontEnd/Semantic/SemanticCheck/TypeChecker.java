@@ -16,8 +16,8 @@ import XYXCompiler.FrontEnd.Semantic.Scope.LocalScope;
 import XYXCompiler.Tools.Exceptions.SemanticException;
 import XYXCompiler.Tools.Exceptions.XYXException;
 import XYXCompiler.FrontEnd.ASTNode.Expression.Unary_Expression.UnaryOP;
+import XYXCompiler.Tools.TypeTable.TypeTable;
 
-import java.lang.reflect.Array;
 import java.util.List;
 
 public class TypeChecker implements ASTVisitor {
@@ -456,6 +456,8 @@ public class TypeChecker implements ASTVisitor {
         Base_Type TA = A.type;
         Base_Type TB = B.type;
 
+        if(TA == null || TB == null)
+            Ans = false;
         if(TA.type == TB.type)
             Ans = true;
         if(Ans && TA instanceof Class_Type)

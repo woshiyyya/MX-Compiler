@@ -9,8 +9,6 @@ import static XYXCompiler.XIR.Tools.ConstVal.intsize;
 
 public class Class_Type extends Base_Type {
     public String name;
-    public List<Base_Type> membertypeList = new LinkedList<>();
-    public List<String> membernameList = new LinkedList<>();
 
     public Class_Type(String name){
         this.name = name;
@@ -24,17 +22,5 @@ public class Class_Type extends Base_Type {
         return name;
     }
 
-    public int getOffset(String name){
-        int cnt = 0;
-        for(String X: membernameList){
-            cnt++;
-            if(name.equals(X))
-                return cnt;
-        }
-        return -1;
-    }
 
-    public int getSize(){
-        return membernameList.size() * intsize;
-    }
 }

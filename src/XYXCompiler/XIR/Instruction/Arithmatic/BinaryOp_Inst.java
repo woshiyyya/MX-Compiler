@@ -3,6 +3,7 @@ package XYXCompiler.XIR.Instruction.Arithmatic;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.Register;
+import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
 public class BinaryOp_Inst extends Arithmatic {
     public static enum binaryop{
@@ -26,7 +27,16 @@ public class BinaryOp_Inst extends Arithmatic {
         super(BB_Scope);
     }
 
-    public boolean isLogical(){
-        return (op == binaryop.Or || op == binaryop.And);
+
+    @Override
+    public void Update_UseDef() {
+        if(dest instanceof VirtualReg)
+            this.Def = (VirtualReg) dest;
+        if(L_operand instanceof VirtualReg)
+            this.Used.add((VirtualReg) L_operand);
+        if(R_operand instanceof VirtualReg)
+            this.Used.add((VirtualReg) R_operand);
+
+        this.ifupdated = true;
     }
 }

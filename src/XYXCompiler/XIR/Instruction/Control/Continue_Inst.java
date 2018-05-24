@@ -9,4 +9,9 @@ public class Continue_Inst extends Control {
         super(BB_Scope);
         this.target = target;
     }
+
+    @Override
+    public void Update_UseDef() {
+        this.ifupdated = true;
+    }
 }

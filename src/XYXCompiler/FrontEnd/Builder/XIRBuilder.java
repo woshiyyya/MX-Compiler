@@ -10,6 +10,8 @@ import XYXCompiler.FrontEnd.ASTNode.Expression.Unary_Expression;
 import XYXCompiler.FrontEnd.ASTNode.Node;
 import XYXCompiler.FrontEnd.ASTNode.Statement.*;
 import XYXCompiler.FrontEnd.ASTNode.Type.*;
+import XYXCompiler.Tools.TypeTable.Class_info;
+import XYXCompiler.Tools.TypeTable.TypeTable;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.CFG.Function;
 import XYXCompiler.XIR.CFG.XIRRoot;
@@ -19,7 +21,7 @@ import XYXCompiler.XIR.Instruction.Arithmatic.RelationOp_Inst;
 import XYXCompiler.XIR.Instruction.Arithmatic.RelationOp_Inst.CmpOp;
 import XYXCompiler.XIR.Instruction.Arithmatic.UnaryOp_Inst;
 import XYXCompiler.XIR.Instruction.Arithmatic.UnaryOp_Inst.unaryop;
-import XYXCompiler.XIR.Instruction.Control.CMP;
+import XYXCompiler.XIR.Instruction.Control.Jump_Inst;
 import XYXCompiler.XIR.Instruction.Functional.Call_Inst;
 import XYXCompiler.XIR.Instruction.Functional.Return_Inst;
 import XYXCompiler.XIR.Instruction.Memory.Alloc_Inst;
@@ -27,16 +29,14 @@ import XYXCompiler.XIR.Instruction.Memory.Load_Inst;
 import XYXCompiler.XIR.Instruction.Memory.Move_Inst;
 import XYXCompiler.XIR.Instruction.Memory.Store_Inst;
 import XYXCompiler.XIR.Operand.DataSrc;
+import XYXCompiler.XIR.Operand.Register.GlobalVar;
 import XYXCompiler.XIR.Operand.Static.Immediate;
 import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Static.IntLiteral;
 import XYXCompiler.XIR.Operand.Static.Literal;
-import XYXCompiler.XIR.Operand.Static.StaticData;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.StringLiteral;
 
-import javax.xml.crypto.Data;
-import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,14 +46,14 @@ import static XYXCompiler.XIR.Tools.ConstVal.intsize;
 
 public class XIRBuilder implements ASTVisitor {
     public XIRRoot Root = new XIRRoot();
-    public BasicBlock curBlk = null;
-    public Function curFunc = null;
-    public BasicBlock preLoopUpdate;
-    public BasicBlock preLoopAfter;
-    public BasicBlock CurLoopUpdate;
-    public BasicBlock CurLoopAfter;
-    public Boolean curNeedAddr = false;
-    public Boolean preNeedAddr = false;
+    private BasicBlock curBlk = null;
+    private Function curFunc = null;
+    private BasicBlock preLoopUpdate;
+    private BasicBlock preLoopAfter;
+    private BasicBlock CurLoopUpdate;
+    private BasicBlock CurLoopAfter;
+    private Boolean curNeedAddr = false;
+    private Boolean preNeedAddr = false;
     public Register NewDest = null;
     public Map<String, Function> FuncMap = new HashMap<>();
     public List<Array_Type> NewDimList = new LinkedList<>();
@@ -83,18 +83,20 @@ public class XIRBuilder implements ASTVisitor {
         // Construct the CFG from <node> to <node.ifTrue> and <node.ifFalse>
         if(node.op == Binary_Expression.BinaryOP.LogicalAnd){
             node.lhs.ifFalse = node.ifFalse;
-            node.lhs.ifTrue = new BasicBlock(curFunc);
+            node.lhs.ifTrue = new BasicBlock(curFunc, "[&&]lhs iftrue");
             VISIT(node.lhs);
 
             //Actually we just need to write "cmp datasrc 0; jz ifFalse"
-            curBlk.Close_B(node.lhs.datasrc, node.lhs.ifTrue, node.ifFalse);
+            curBlk.Close_B(node.lhs.datasrc, new Immediate(1), CmpOp.EQ, node.lhs.ifTrue, node.ifFalse);
+            curBlk.setName("logical And");
             curBlk = node.lhs.ifTrue;
         }else if(node.op == Binary_Expression.BinaryOP.LogicalOr){
             node.lhs.ifTrue = node.ifTrue;
-            node.lhs.ifFalse = new BasicBlock(curFunc);
+            node.lhs.ifFalse = new BasicBlock(curFunc,"[||]lhs iffalse");
             VISIT(node.lhs);
 
-            curBlk.Close_B(node.lhs.datasrc, node.ifTrue, node.lhs.ifFalse);
+            curBlk.setName("logical Or");
+            curBlk.Close_B(node.lhs.datasrc, new Immediate(1), CmpOp.EQ, node.ifTrue, node.lhs.ifFalse);
             curBlk = node.lhs.ifFalse;
         }
         node.rhs.ifFalse = node.ifFalse;
@@ -104,7 +106,7 @@ public class XIRBuilder implements ASTVisitor {
 
     private void MergeCircuit(Binary_Expression node){
         // Merge the Short Circuit BBs for Expr Value only
-        BasicBlock MergeBlk = new BasicBlock(curFunc);
+        BasicBlock MergeBlk = new BasicBlock(curFunc, "merge binary");
         node.datasrc = new VirtualReg(null);
 
         node.ifTrue.add(new Move_Inst(curBlk, node.datasrc, new Immediate(1)));
@@ -117,8 +119,8 @@ public class XIRBuilder implements ASTVisitor {
 
     private void Construct_Assign(Binary_Expression node){
         if(ifLogical(node.rhs)){
-            node.rhs.ifTrue = new BasicBlock(curFunc);
-            node.rhs.ifFalse = new BasicBlock(curFunc);
+            node.rhs.ifTrue = new BasicBlock(curFunc, "logical iftrue");
+            node.rhs.ifFalse = new BasicBlock(curFunc, "logical iffalse");
         }
 
         VISIT(node.lhs);
@@ -148,8 +150,7 @@ public class XIRBuilder implements ASTVisitor {
 
         if(hasBranch(node)){
             //for this kind of Branch, we have to write "cmp L_operand R_operand; jle Label"
-            curBlk.cmp = new CMP(curBlk, node.lhs.datasrc, node.rhs.datasrc);
-            curBlk.Close_B(null, node.ifTrue, node.ifFalse);
+            curBlk.Close_B(node.lhs.datasrc, node.rhs.datasrc, inst.op, node.ifTrue, node.ifFalse);
         }else{
             inst.L_operand = node.lhs.datasrc;
             inst.R_operand = node.rhs.datasrc;
@@ -266,7 +267,8 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.body);
 
         //Merge multiple return block
-        int returnInstsize = curFunc.EndBB.predcessor.size();
+        int a = 1;
+        int returnInstsize = curFunc.RetBlks.size();
         if(returnInstsize == 1){
             curFunc.EndBB = curFunc.RetBlks.get(0);
         }
@@ -282,7 +284,7 @@ public class XIRBuilder implements ASTVisitor {
         else{
             //create end BB
             VirtualReg retReg = new VirtualReg("retval");
-            curFunc.EndBB = new BasicBlock(curFunc);
+            curFunc.EndBB = new BasicBlock(curFunc,"return merge");
             curFunc.EndBB.add(new Return_Inst(curFunc.EndBB, retReg));
             //merge All return BB
             for(BasicBlock X: curFunc.RetBlks){
@@ -300,8 +302,8 @@ public class XIRBuilder implements ASTVisitor {
             curBlk.Close_R(new Return_Inst(curBlk, null));
         }else{
             if(ifLogical(node.returnvalue)){
-                node.returnvalue.ifFalse = new BasicBlock(curFunc);
-                node.returnvalue.ifTrue = new BasicBlock(curFunc);
+                node.returnvalue.ifFalse = new BasicBlock(curFunc,"return logical iffalse");
+                node.returnvalue.ifTrue = new BasicBlock(curFunc, "return logical iftrue");
                 VISIT(node.returnvalue); //Warning: it must call ShortCircuit Fnuction
                 MergeCircuit((Binary_Expression)(node.returnvalue));
             }else
@@ -325,7 +327,7 @@ public class XIRBuilder implements ASTVisitor {
     public void visit(Global_Variable_Declaration node) {
         //only considered the LHS is literal value
         Literal literal = null;
-        StaticData space = new StaticData(node.name, node.size);
+        GlobalVar space = new GlobalVar(node.name, node.size);
         if(node.RHS instanceof STRING){
             STRING rhs = (STRING) node.RHS;
             literal = new StringLiteral(rhs.value);
@@ -347,8 +349,8 @@ public class XIRBuilder implements ASTVisitor {
         node.reg = reg;
         if(node.RHS != null){
             if(ifLogical(node.RHS)){
-                node.RHS.ifTrue = new BasicBlock(curFunc);
-                node.RHS.ifFalse = new BasicBlock(curFunc);
+                node.RHS.ifTrue = new BasicBlock(curFunc,"vardecl RHS iftrue");
+                node.RHS.ifFalse = new BasicBlock(curFunc, "vardecl RHS iffalse");
             }
             VISIT(node.RHS);
             curBlk.add(new Move_Inst(curBlk, reg, node.RHS.datasrc));
@@ -361,10 +363,10 @@ public class XIRBuilder implements ASTVisitor {
 
     @Override
     public void visit(For_Statement node) {
-        BasicBlock ForCond   = new BasicBlock(curFunc);
-        BasicBlock ForBody   = new BasicBlock(curFunc);
-        BasicBlock ForUpdate = new BasicBlock(curFunc);
-        BasicBlock ForAfter  = new BasicBlock(curFunc);
+        BasicBlock ForCond   = new BasicBlock(curFunc, "for cond");
+        BasicBlock ForBody   = new BasicBlock(curFunc, "for body");
+        BasicBlock ForUpdate = new BasicBlock(curFunc, "for update");
+        BasicBlock ForAfter  = new BasicBlock(curFunc, "for after");
 
         enterLoop(ForUpdate, ForAfter);
         /*
@@ -388,12 +390,17 @@ public class XIRBuilder implements ASTVisitor {
 
         //construct init and jump to condition
         VISIT(node.init);
-        curBlk.Close_J(ForCond);
+        if(node.condition != null)
+            curBlk.Close_J(ForCond);
+        else
+            curBlk.Close_J(ForBody);
 
         //construct condition block
         curBlk = ForCond;
-        node.condition.ifTrue = ForBody;
-        node.condition.ifFalse = ForAfter;
+        if(node.condition != null){
+            node.condition.ifTrue = ForBody;
+            node.condition.ifFalse = ForAfter;
+        }
         VISIT(node.condition);
 
         //construct body block
@@ -404,7 +411,10 @@ public class XIRBuilder implements ASTVisitor {
         //construct update block
         curBlk = ForUpdate;
         VISIT(node.update);
-        ForUpdate.Close_J(ForCond);
+        if(node.condition != null)
+            ForUpdate.Close_J(ForCond);
+        else
+            ForUpdate.Close_J(ForBody);
 
         //shift to after block
         exitLoop();
@@ -413,9 +423,9 @@ public class XIRBuilder implements ASTVisitor {
 
     @Override
     public void visit(While_Statement node) {
-        BasicBlock WhileCond = new BasicBlock(curFunc);
-        BasicBlock WhileBody = new BasicBlock(curFunc);
-        BasicBlock WhileAfter = new BasicBlock(curFunc);
+        BasicBlock WhileCond = new BasicBlock(curFunc, "while cond");
+        BasicBlock WhileBody = new BasicBlock(curFunc, "while body");
+        BasicBlock WhileAfter = new BasicBlock(curFunc, "while after");
 
         /*
             jmp -> _WhileCond
@@ -468,12 +478,13 @@ public class XIRBuilder implements ASTVisitor {
 
     @Override
     public void visit(Selection_Statement node) {
-        BasicBlock thenbody = new BasicBlock(curFunc);
-        BasicBlock afterIF = new BasicBlock(curFunc);
+        BasicBlock thenbody = new BasicBlock(curFunc, "thenbody");
+        BasicBlock afterIF = new BasicBlock(curFunc, "afterIF");
         BasicBlock elsebody = null;
-        if(node.Else_body != null)
-            elsebody = new BasicBlock(curFunc);
-        else
+
+        if(node.Else_body != null){
+            elsebody = new BasicBlock(curFunc, "else body");
+        }else
             elsebody = afterIF;
 
         node.condition.ifTrue = thenbody;
@@ -481,6 +492,16 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.condition);
 
         curBlk = thenbody;
+        VISIT(node.body);
+        thenbody.Close_J(afterIF);
+
+        if(node.Else_body != null){
+            curBlk = elsebody;
+            VISIT(node.Else_body);
+            curBlk.Close_J(afterIF);
+        }
+
+        curBlk = afterIF;
     }
 
     @Override
@@ -499,7 +520,7 @@ public class XIRBuilder implements ASTVisitor {
         if(Entity instanceof Variable_Declaration_Statement)
             node.datasrc = ((Variable_Declaration_Statement) Entity).reg;
         if(hasBranch(node)){
-            curBlk.Close_B(node.datasrc, node.ifTrue, node.ifFalse);
+            curBlk.Close_B(node.datasrc, new Immediate(1), CmpOp.EQ, node.ifTrue, node.ifFalse);
         }
     }
 
@@ -507,8 +528,8 @@ public class XIRBuilder implements ASTVisitor {
     public void visit(Unary_Expression node) {
         switch (node.op){
             case Not:
-                node.ifFalse = new BasicBlock(curFunc);
-                node.ifTrue = new BasicBlock(curFunc);
+                node.ifFalse = new BasicBlock(curFunc, "[Not] iffalse");
+                node.ifTrue = new BasicBlock(curFunc, "[Not] iftrue");
                 VISIT(node.body);
                 break;
             case Plus:
@@ -578,8 +599,13 @@ public class XIRBuilder implements ASTVisitor {
                 break;
             case LogicalAnd:
             case LogicalOr:
-                Construct_ShortCircuit(node);
-                MergeCircuit(node);
+                if(node.ifFalse == null){
+                    node.ifTrue = new BasicBlock(null,"logical iftrue");
+                    node.ifFalse = new BasicBlock(null, "logical iffalse");
+                    Construct_ShortCircuit(node);
+                    MergeCircuit(node);
+                }else
+                    Construct_ShortCircuit(node);
                 break;
             case Assign:
                 Construct_Assign(node);
@@ -655,14 +681,14 @@ public class XIRBuilder implements ASTVisitor {
     private void Construct_Forloop(DataSrc baseaddr, DataSrc thisdim, int level){
         //NewDimList.size() - level
         Array_Type now = NewDimList.get(NewDimList.size() - level);
-        if(now == null)
+        if(now == null || now.size == null)
             return;
 
         DataSrc nextdim = now.size.datasrc;
-        BasicBlock ForCond   = new BasicBlock(curFunc);
-        BasicBlock ForBody   = new BasicBlock(curFunc);
-        BasicBlock ForUpdate = new BasicBlock(curFunc);
-        BasicBlock ForAfter  = new BasicBlock(curFunc);
+        BasicBlock ForCond   = new BasicBlock(curFunc, "dim forcond");
+        BasicBlock ForBody   = new BasicBlock(curFunc, "dim forbody");
+        BasicBlock ForUpdate = new BasicBlock(curFunc,"dim forupdate");
+        BasicBlock ForAfter  = new BasicBlock(curFunc, "dim forafter");
 
         enterLoop(ForUpdate, ForAfter);
         /*
@@ -695,7 +721,7 @@ public class XIRBuilder implements ASTVisitor {
         //------construct condition block
         curBlk = ForCond;
         curBlk.add(new RelationOp_Inst(curBlk, flag, cnt, thisdim, CmpOp.LS));
-        curBlk.Close_B(flag, ForBody, ForAfter);
+        curBlk.Close_B(flag, new Immediate(1), CmpOp.EQ, ForBody, ForAfter);
 
         //------construct body block
         curBlk = ForBody;
@@ -736,8 +762,8 @@ public class XIRBuilder implements ASTVisitor {
             VISIT(node.type);
             node.datasrc = new VirtualReg("new");
             Construct_Forloop(node.datasrc, new Immediate(1), 1);
-        }else{
-            int size = ((Class_Type)node.type).getSize();
+        }else if(node.type instanceof Class_Type){
+            int size = (typeTable.getInfo(((Class_Type) node.type).name)).getSize();
             node.datasrc = new VirtualReg(null);
             curBlk.add(new Alloc_Inst(curBlk, (Register)node.datasrc, new Immediate(size)));
         }
@@ -756,7 +782,7 @@ public class XIRBuilder implements ASTVisitor {
             node.datasrc = new VirtualReg(null);
             curBlk.add(new Load_Inst(curBlk, (Register)node.datasrc, node.name.datasrc, node.index.datasrc, intsize));
             if(hasBranch(node)){
-                curBlk.Close_B(node.datasrc, node.ifTrue, node.ifFalse);
+                curBlk.Close_B(node.datasrc,new Immediate(1), CmpOp.EQ, node.ifTrue, node.ifFalse);
             }
         }
     }
@@ -767,8 +793,8 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.body);
         exitMem();
 
-        Class_Type class_type = typeTable.ClassTypeTable.get(((Class_Type)(node.body.type)).name);
-        int offset = class_type.getOffset(node.components);
+        Class_info class_info = typeTable.getInfo(((Class_Type)(node.body.type)).name);
+        int offset = class_info.getOffset(node.components);
 
         if(curNeedAddr){
             node.baseaddr = node.body.datasrc;
@@ -777,7 +803,7 @@ public class XIRBuilder implements ASTVisitor {
             node.datasrc = new VirtualReg(null);
             curBlk.add(new Load_Inst(curBlk, (Register)node.datasrc, node.body.datasrc, new Immediate(offset),intsize));
             if(hasBranch(node)){
-                curBlk.Close_B(node.datasrc, node.ifTrue, node.ifFalse);
+                curBlk.Close_B(node.datasrc, new Immediate(1), CmpOp.EQ, node.ifTrue, node.ifFalse);
             }
         }
     }

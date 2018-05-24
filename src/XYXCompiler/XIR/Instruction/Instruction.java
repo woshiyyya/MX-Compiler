@@ -1,11 +1,20 @@
 package XYXCompiler.XIR.Instruction;
 
 import XYXCompiler.XIR.CFG.BasicBlock;
+import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
-public class Instruction {
-    private Instruction prev = null;
-    private Instruction next = null;
+import java.util.HashSet;
+import java.util.Set;
+
+public abstract class Instruction {
+    public Instruction prev = null;
+    public Instruction next = null;
     public BasicBlock BB_Scope;
+    public Set<VirtualReg> Live_in = new HashSet<>();
+    public Set<VirtualReg> Live_out= new HashSet<>();
+    public Set<VirtualReg> Used = new HashSet<>();
+    public VirtualReg Def = null;
+    public boolean ifupdated = false;
 
     public Instruction() {
     }
@@ -47,4 +56,6 @@ public class Instruction {
         if(next != null)
             next.prev = prev;
     }
+
+    public abstract void Update_UseDef();
 }

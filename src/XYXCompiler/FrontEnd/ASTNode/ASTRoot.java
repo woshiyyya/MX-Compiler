@@ -1,7 +1,6 @@
 package XYXCompiler.FrontEnd.ASTNode;
 
 import XYXCompiler.FrontEnd.ASTNode.Declaration.Declaration;
-import XYXCompiler.FrontEnd.ASTNode.Type.TypeTable;
 import XYXCompiler.FrontEnd.Builder.ASTVisitor;
 import XYXCompiler.FrontEnd.Semantic.Scope.GlobalScope;
 

@@ -2,6 +2,7 @@ package XYXCompiler.XIR.Instruction.Memory;
 
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
+import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
 public class Store_Inst extends Memory {
     //store imm/reg to memory location
@@ -18,5 +19,17 @@ public class Store_Inst extends Memory {
         this.addr = addr;
         this.offset = offset;
         this.offsetsize = offsetsize;
+    }
+
+    @Override
+    public void Update_UseDef() {
+        if(source instanceof VirtualReg)
+            this.Used.add((VirtualReg) source);
+        if(addr instanceof VirtualReg)
+            this.Used.add((VirtualReg) addr);
+        if(offset instanceof VirtualReg)
+            this.Used.add((VirtualReg) offset);
+
+        this.ifupdated = true;
     }
 }

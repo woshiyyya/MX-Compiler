@@ -15,7 +15,7 @@ import XYXCompiler.FrontEnd.Semantic.Scope.GlobalScope;
 import XYXCompiler.FrontEnd.Semantic.Scope.LocalScope;
 import XYXCompiler.Tools.Exceptions.SemanticException;
 import XYXCompiler.Tools.Exceptions.XYXException;
-import org.antlr.v4.codegen.model.decl.Decl;
+import XYXCompiler.Tools.TypeTable.TypeTable;
 
 import java.util.List;
 import java.util.Stack;

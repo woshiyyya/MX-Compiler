@@ -17,6 +17,6 @@ public class Self_Decreasing extends Expression{
 
     @Override
     public void accept(ASTVisitor visitor) {
-        super.accept(visitor);
+        visitor.visit(this);
     }
 }

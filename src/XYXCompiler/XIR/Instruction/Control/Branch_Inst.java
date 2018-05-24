@@ -14,4 +14,9 @@ public class Branch_Inst extends Control {
         this.ifTrue = ifTrue;
         this.ifFalse = ifFalse;
     }
+
+    @Override
+    public void Update_UseDef() {
+        this.ifupdated = true;
+    }
 }
