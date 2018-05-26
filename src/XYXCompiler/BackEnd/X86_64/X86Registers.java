@@ -1,8 +1,11 @@
 package XYXCompiler.BackEnd.X86_64;
 
+import XYXCompiler.XIR.CFG.Function;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 public class X86Registers {
@@ -28,7 +31,9 @@ public class X86Registers {
 
     public Set<PhysicalReg> CallerSavedRegs = new HashSet<>();
     public Set<PhysicalReg> CalleeSavedRegs = new HashSet<>();
-    public Set<PhysicalReg> FullRegs = new HashSet<>();
+    public List<PhysicalReg> GeneralRegs = new LinkedList<>();
+    public List<PhysicalReg> FuncParamRegs = new LinkedList<>();
+
     public X86Registers() {
         // 9
         CallerSavedRegs.add(rax);
@@ -50,8 +55,26 @@ public class X86Registers {
         CalleeSavedRegs.add(r14);
         CalleeSavedRegs.add(r15);
 
-        FullRegs.addAll(CallerSavedRegs);
-        FullRegs.addAll(CalleeSavedRegs);
+        GeneralRegs.add(rax);
+        GeneralRegs.add(rdi);
+        GeneralRegs.add(rsi);
+        GeneralRegs.add(rdx);
+        GeneralRegs.add(rcx);
+        GeneralRegs.add(r8);
+        GeneralRegs.add(r9);
+        GeneralRegs.add(r10);
+        GeneralRegs.add(r11);
+        GeneralRegs.add(rbx);
+        GeneralRegs.add(r12);
+        GeneralRegs.add(r13);
+        GeneralRegs.add(r14);
+        GeneralRegs.add(r15);
 
+        FuncParamRegs.add(rdi);
+        FuncParamRegs.add(rsi);
+        FuncParamRegs.add(rdx);
+        FuncParamRegs.add(rcx);
+        FuncParamRegs.add(r8);
+        FuncParamRegs.add(r9);
     }
 }

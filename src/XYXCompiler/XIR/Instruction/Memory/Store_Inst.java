@@ -2,6 +2,7 @@ package XYXCompiler.XIR.Instruction.Memory;
 
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
+import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
 public class Store_Inst extends Memory {
@@ -32,4 +33,14 @@ public class Store_Inst extends Memory {
 
         this.ifupdated = true;
     }
+
+    @Override
+    public void Reset_OperandRegs(VirtualReg VReg, PhysicalReg PReg) {
+        if(source != null && source.equals(VReg)) source = PReg;
+        if(addr != null && addr.equals(VReg)) addr = PReg;
+        if(offset != null && offset.equals(VReg)) offset = PReg;
+    }
+
+    @Override
+    public void Reset_DestRegs(PhysicalReg Reg) {}
 }

@@ -2,6 +2,7 @@ package XYXCompiler.XIR.Instruction.Arithmatic;
 
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
+import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
@@ -38,5 +39,16 @@ public class RelationOp_Inst extends Arithmatic {
             this.Used.add((VirtualReg) R_operand);
 
         this.ifupdated = true;
+    }
+
+    @Override
+    public void Reset_OperandRegs(VirtualReg VReg, PhysicalReg PReg) {
+        if(L_operand.equals(VReg)) L_operand = PReg;
+        if(R_operand.equals(VReg)) R_operand = PReg;
+    }
+
+    @Override
+    public void Reset_DestRegs(PhysicalReg Reg) {
+        if(dest instanceof VirtualReg) dest = Reg;
     }
 }

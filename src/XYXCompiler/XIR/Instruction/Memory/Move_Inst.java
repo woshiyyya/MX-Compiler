@@ -2,6 +2,7 @@ package XYXCompiler.XIR.Instruction.Memory;
 
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
+import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
 public class Move_Inst extends Memory {
@@ -22,5 +23,15 @@ public class Move_Inst extends Memory {
             this.Used.add((VirtualReg) Source);
 
         this.ifupdated = true;
+    }
+
+    @Override
+    public void Reset_OperandRegs(VirtualReg VReg, PhysicalReg PReg) {
+        if(Source.equals(VReg)) Source = PReg;
+    }
+
+    @Override
+    public void Reset_DestRegs(PhysicalReg Reg) {
+        if(dest instanceof VirtualReg) dest = Reg;
     }
 }

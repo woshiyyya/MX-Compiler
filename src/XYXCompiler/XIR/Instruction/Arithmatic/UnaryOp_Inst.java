@@ -2,6 +2,7 @@ package XYXCompiler.XIR.Instruction.Arithmatic;
 
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
+import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
@@ -29,5 +30,15 @@ public class UnaryOp_Inst extends Arithmatic {
             this.Used.add((VirtualReg) operand);
 
         this.ifupdated = true;
+    }
+
+    @Override
+    public void Reset_OperandRegs(VirtualReg VReg, PhysicalReg PReg) {
+        if(operand.equals(VReg)) operand = PReg;
+    }
+
+    @Override
+    public void Reset_DestRegs(PhysicalReg Reg) {
+        if(dest instanceof VirtualReg) dest = Reg;
     }
 }

@@ -259,7 +259,7 @@ public class XIRBuilder implements ASTVisitor {
 
         for(Variable_Declaration X : node.params){
             VISIT(X);
-            curFunc.ArgRegs.add(X.reg);
+            curFunc.ArgRegs.add((VirtualReg) X.reg);
         }
 
         Root.Functions.put(node.name, curFunc);

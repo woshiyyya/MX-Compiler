@@ -2,6 +2,7 @@ package XYXCompiler.XIR.CFG;
 
 import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.FrontEnd.ASTNode.Type.Func_Type;
+import XYXCompiler.XIR.Instruction.Arithmatic.Arithmatic;
 import XYXCompiler.XIR.Instruction.Instruction;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.Register;
@@ -12,7 +13,7 @@ import java.util.*;
 
 public class Function {
     public String name;
-    public List<Register> ArgRegs = new LinkedList<>();
+    public List<VirtualReg> ArgRegs = new LinkedList<>();
     public List<BasicBlock> RetBlks = new LinkedList<>();
     public Register ReturnReg;
     public int retsize;
@@ -36,7 +37,7 @@ public class Function {
     public int Pos_LocalVar;
     public int Pos_CalleeSaved;
     public int totalFrameSize;
-    public Map<VirtualReg, FrameSlice> VRegSliceMap = new HashMap<>();
+    public Map<VirtualReg, FrameSlice> ArgSliceMap = new HashMap<>(); // Help params find their location in Frame
     public List<FrameSlice> frameSlice = new ArrayList<>();
     public Set<PhysicalReg> usedPregs = new HashSet<>();
     public Set<PhysicalReg> usedCallerSavedRegs = new HashSet<>();
@@ -44,6 +45,16 @@ public class Function {
 
     public Function() {
         StartBB = new BasicBlock(this,"Start BB");
+    }
+
+    public void Initialize_FrameInfo(){
+        // Warning: without consider param > 6
+        int num = ArgRegs.size() % 7;
+        for(int i = 0; i < num; i++){
+            FrameSlice slice= new FrameSlice(this, "param" + i);
+            frameSlice.add(slice);
+            ArgSliceMap.put(ArgRegs.get(i), slice);
+        }
     }
 
     private void Construct_PostOrder(BasicBlock blk){
@@ -65,7 +76,9 @@ public class Function {
     // delete unreachable blocks
     public void Update_Info(){
         Construct_PostOrder(StartBB);
+        visit.clear();
         Construct_ReverseOrder(EndBB);
+        visit.clear();
         for(int i = 0; i < PostOrder.size(); i++)
             if(!ReverseOrder.contains(PostOrder.get(i)))
                 PostOrder.remove(PostOrder.get(i));

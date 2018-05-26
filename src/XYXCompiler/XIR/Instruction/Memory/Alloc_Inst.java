@@ -2,10 +2,18 @@ package XYXCompiler.XIR.Instruction.Memory;
 
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
+import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
 public class Alloc_Inst extends Memory {
+    /*
+        int* A = new int[10];
+
+        mov     edi, 40
+        call    _Znam
+        mov     qword [rbp-8H], rax
+    */
     public Register dest; // the memory address
     public DataSrc size;
 
@@ -25,4 +33,15 @@ public class Alloc_Inst extends Memory {
 
         this.ifupdated = true;
     }
+
+    @Override
+    public void Reset_OperandRegs(VirtualReg VReg, PhysicalReg PReg) {
+        if(size.equals(VReg)) size = PReg;
+    }
+
+    @Override
+    public void Reset_DestRegs(PhysicalReg Reg) {
+        if(dest instanceof VirtualReg) dest = Reg;
+    }
+
 }

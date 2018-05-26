@@ -1,9 +1,12 @@
 package XYXCompiler.XIR.Instruction;
 
 import XYXCompiler.XIR.CFG.BasicBlock;
+import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public abstract class Instruction {
@@ -58,4 +61,6 @@ public abstract class Instruction {
     }
 
     public abstract void Update_UseDef();
+    public abstract void Reset_OperandRegs(VirtualReg VReg, PhysicalReg PReg);
+    public abstract void Reset_DestRegs(PhysicalReg Reg);
 }
