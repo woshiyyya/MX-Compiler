@@ -1,0 +1,12 @@
+func main {
+%Entry:
+	$a = move 5
+	$b = move 0
+	$b = move $a
+	$V305 = mul $a 2
+	$V306 = add $V305 $b
+	$c = move $V306
+	ret $c
+	ret 0
+
+}

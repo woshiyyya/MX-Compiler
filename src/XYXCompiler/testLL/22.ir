@@ -1,0 +1,26 @@
+func min $a $b {
+%Start BB:
+	$V165 = sle $a $b
+	br $V165 %ThenBody0 %AfterIF1
+
+%ThenBody0:
+	$rax = move $a
+	jump %Merged_Return2
+
+%Merged_Return2:
+	ret $rax
+
+%AfterIF1:
+	$rax = move $b
+	jump %Merged_Return2
+
+}
+func main {
+%Entry:
+	$x = move 10
+	$y = move 20
+	$minret = call min $x $y 
+	ret $minret
+	ret 0
+
+}

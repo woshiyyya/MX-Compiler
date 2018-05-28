@@ -14,7 +14,7 @@ public class Expression extends Node {
 
     //Actual Memory Location
     public DataSrc baseaddr = null;
-    public DataSrc offset = null;
+    public int offset = 0;
 
     //Short-Circuit Evaluation
     public BasicBlock ifTrue = null;

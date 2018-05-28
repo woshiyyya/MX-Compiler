@@ -6,7 +6,11 @@ import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class UnaryOp_Inst extends Arithmatic {
+
     public enum unaryop{
         NEG, NOT
     }
@@ -40,5 +44,18 @@ public class UnaryOp_Inst extends Arithmatic {
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {
         if(dest instanceof VirtualReg) dest = Reg;
+    }
+
+    @Override
+    public void Print() {
+        System.out.println("\t" + op.name() + " " + dest.getString() + " " + operand.getString());
+    }
+
+    @Override
+    public void LLPrint() {
+        Map<unaryop, String> rename = new HashMap<>();
+        rename.put(unaryop.NEG, "neg");
+        rename.put(unaryop.NOT, "not");
+        System.out.println("\t" + dest.getString() + " = " + rename.get(op) + " "  + operand.getString());
     }
 }

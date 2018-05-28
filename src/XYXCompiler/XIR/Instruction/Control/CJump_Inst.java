@@ -7,6 +7,8 @@ import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
 import javax.xml.crypto.Data;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CJump_Inst extends Control{
 
@@ -43,4 +45,31 @@ public class CJump_Inst extends Control{
 
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {}
+
+    @Override
+    public void Print() {
+        System.out.println("\tCMP\t" + L_operand.getString() + " " + R_operand.getString());
+        System.out.println("\tCJump\t" + op.name() + " " + ifTrue.getLabel() + " " + ifFalse.getLabel());
+    }
+
+    @Override
+    public void LLPrint() {
+        Map<RelationOp_Inst.CmpOp, String> rename = new HashMap<>();
+        rename.put(RelationOp_Inst.CmpOp.LS, "slt");
+        rename.put(RelationOp_Inst.CmpOp.LE, "sle");
+        rename.put(RelationOp_Inst.CmpOp.GT, "sgt");
+        rename.put(RelationOp_Inst.CmpOp.GE, "sge");
+        rename.put(RelationOp_Inst.CmpOp.EQ, "seq");
+        rename.put(RelationOp_Inst.CmpOp.NE, "sne");
+        String ans = "";
+        if(op != RelationOp_Inst.CmpOp.Z){
+            VirtualReg tem = new VirtualReg(null);
+            ans += "\t" + tem.getString() + " = " + rename.get(op) + " " + L_operand.getString() + " " + R_operand.getString() + "\n";
+            ans += "\tbr " + tem.getString() + " " + ifTrue.getLabel() + " " + ifFalse.getLabel();
+        }else{
+            ans += "\tbr " + L_operand.getString() + " " + ifTrue.getLabel() + " " + ifFalse.getLabel();
+        }
+        System.out.println(ans);
+    }
+
 }

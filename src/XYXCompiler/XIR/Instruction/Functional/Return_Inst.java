@@ -27,4 +27,15 @@ public class Return_Inst extends Functional {
 
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {}
+
+    @Override
+    public void Print() {
+        System.out.println("\tReturn\t" + retval.getString());
+    }
+
+    @Override
+    public void LLPrint() {
+        String ans = "\tret " + (retval == null ? "" :retval.getString());
+        System.out.println(ans);
+    }
 }

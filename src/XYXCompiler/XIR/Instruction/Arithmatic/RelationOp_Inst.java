@@ -6,9 +6,12 @@ import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class RelationOp_Inst extends Arithmatic {
     public enum CmpOp{
-        LS, LE, GT, GE, EQ, NE
+        LS, LE, GT, GE, EQ, NE, Z
     }
 
     public Register dest;
@@ -50,5 +53,22 @@ public class RelationOp_Inst extends Arithmatic {
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {
         if(dest instanceof VirtualReg) dest = Reg;
+    }
+
+    @Override
+    public void Print() {
+        System.out.println("\t" + op.name() + " " + dest.getString() + " " + L_operand.getString() + " " + R_operand.getString());
+    }
+
+    @Override
+    public void LLPrint() {
+        Map<CmpOp, String> rename = new HashMap<>();
+        rename.put(CmpOp.LS, "slt");
+        rename.put(CmpOp.LE, "sle");
+        rename.put(CmpOp.GT, "sgt");
+        rename.put(CmpOp.GE, "sge");
+        rename.put(CmpOp.EQ, "seq");
+        rename.put(CmpOp.NE, "sne");
+        System.out.println("\t" + dest.getString() + " = "+ rename.get(op) + " " + L_operand.getString() + " " + R_operand.getString());
     }
 }

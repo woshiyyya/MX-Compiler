@@ -21,7 +21,7 @@ public class Class_info {
         for(String X: membernameList){
             cnt++;
             if(name.equals(X))
-                return cnt;
+                return (cnt-1) * intsize;
         }
         return -1;
     }

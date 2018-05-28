@@ -1,0 +1,51 @@
+func main {
+%Entry:
+	$la = move 5
+	$new = mul $la 8
+	$new = alloc $new
+	$a = move $new
+	$cnt = move 0
+	$i = move 0
+	$i = move 0
+	jump %ForCond1
+
+%ForCond1:
+	$V109 = slt $i $la
+	br $V109 %ForBody1 %ForAfter1
+
+%ForBody1:
+	$V100 = mul $i 8
+	$V100 = add $a $V100
+	$cnt = add $cnt 1
+	store 8 $V100 $cnt 0
+	jump %ForUpdate1
+
+%ForUpdate1:
+	$i = add $i 1
+	jump %ForCond1
+
+%ForAfter1:
+	$sum = move 0
+	$i = move 0
+	jump %ForCond2
+
+%ForCond2:
+	$V110 = slt $i $la
+	br $V110 %ForBody2 %ForAfter2
+
+%ForBody2:
+	$V106 = mul $i 8
+	$V106 = add $a $V106
+	$V105 = load 8 $V106 0
+	$V107 = add $sum $V105
+	$sum = move $V107
+	jump %ForUpdate2
+
+%ForUpdate2:
+	$i = add $i 1
+	jump %ForCond2
+
+%ForAfter2:
+	ret $sum
+
+}

@@ -1,0 +1,121 @@
+func main {
+%Entry:
+	$la = move 5
+	$lb = move 10
+	$a = move 0
+	$new = mul $lb 8
+	$new = alloc $new
+	$b = move $new
+	$new = alloc 16
+	$c = move $new
+	$new = mul $la 8
+	$new = alloc $new
+	$a = move $new
+	store 8 $c $a 0
+	store 8 $c $b 8
+	$cnt = move 0
+	$i = move 0
+	$j = move 0
+	$i = move 0
+	jump %ForCond1
+
+%ForCond1:
+	$V147 = slt $i 2
+	br $V147 %ForBody1 %ForAfter1
+
+%ForBody1:
+	$j = move 0
+	jump %ForCond2
+
+%ForCond2:
+	$V148 = slt $j $la
+	br $V148 %ForBody2 %ForAfter2
+
+%ForBody2:
+	$V125 = mul $i 8
+	$V125 = add $c $V125
+	$V124 = load 8 $V125 0
+	$V126 = mul $j 8
+	$V126 = add $V124 $V126
+	$cnt = add $cnt 1
+	store 8 $V126 $cnt 0
+	jump %ForUpdate2
+
+%ForUpdate2:
+	$j = add $j 1
+	jump %ForCond2
+
+%ForAfter2:
+	jump %ForUpdate1
+
+%ForUpdate1:
+	$i = add $i 1
+	jump %ForCond1
+
+%ForAfter1:
+	$j = move $la
+	jump %ForCond3
+
+%ForCond3:
+	$V149 = slt $j $lb
+	br $V149 %ForBody3 %ForAfter3
+
+%ForBody3:
+	$V132 = mul 1 8
+	$V132 = add $c $V132
+	$V131 = load 8 $V132 0
+	$V133 = mul $j 8
+	$V133 = add $V131 $V133
+	$cnt = add $cnt 1
+	store 8 $V133 $cnt 0
+	jump %ForUpdate3
+
+%ForUpdate3:
+	$j = add $j 1
+	jump %ForCond3
+
+%ForAfter3:
+	$sum = move 0
+	$i = move 0
+	jump %ForCond4
+
+%ForCond4:
+	$V150 = slt $i $la
+	br $V150 %ForBody4 %ForAfter4
+
+%ForBody4:
+	$V139 = mul $i 8
+	$V139 = add $a $V139
+	$V138 = load 8 $V139 0
+	$V140 = add $sum $V138
+	$sum = move $V140
+	jump %ForUpdate4
+
+%ForUpdate4:
+	$i = add $i 1
+	jump %ForCond4
+
+%ForAfter4:
+	$i = move 0
+	jump %ForCond5
+
+%ForCond5:
+	$V151 = slt $i $lb
+	br $V151 %ForBody5 %ForAfter5
+
+%ForBody5:
+	$V144 = mul $i 8
+	$V144 = add $b $V144
+	$V143 = load 8 $V144 0
+	$V145 = add $sum $V143
+	$sum = move $V145
+	jump %ForUpdate5
+
+%ForUpdate5:
+	$i = add $i 1
+	jump %ForCond5
+
+%ForAfter5:
+	ret $sum
+
+}

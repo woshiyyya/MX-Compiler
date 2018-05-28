@@ -63,4 +63,10 @@ public abstract class Instruction {
     public abstract void Update_UseDef();
     public abstract void Reset_OperandRegs(VirtualReg VReg, PhysicalReg PReg);
     public abstract void Reset_DestRegs(PhysicalReg Reg);
+    public abstract void Print();
+    public abstract void LLPrint();
+
+    public String Error(){
+        return " is NUll----- in " + BB_Scope.getLabel();
+    }
 }

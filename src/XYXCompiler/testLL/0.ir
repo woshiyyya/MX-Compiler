@@ -1,0 +1,43 @@
+func main {
+%Entry:
+	$n = move 5
+	$sum = move 0
+	$i = move 0
+	$j = move 0
+	$i = move 1
+	jump %ForCond1
+
+%ForCond1:
+	$V10 = sle $i $n
+	br $V10 %ForBody1 %ForAfter1
+
+%ForBody1:
+	$j = move 1
+	jump %ForCond2
+
+%ForCond2:
+	$V11 = sle $j $n
+	br $V11 %ForBody2 %ForAfter2
+
+%ForBody2:
+	$V6 = add $sum $i
+	$sum = move $V6
+	jump %ForUpdate2
+
+%ForUpdate2:
+	$j = add $j 1
+	jump %ForCond2
+
+%ForAfter2:
+	$V8 = add $sum 1
+	$sum = move $V8
+	jump %ForUpdate1
+
+%ForUpdate1:
+	$i = add $i 1
+	jump %ForCond1
+
+%ForAfter1:
+	ret $sum
+
+}

@@ -22,7 +22,6 @@ public class TypeTable {
     public Map<String, STRING> StringLiteralTable;
     public Map<String, Class_info> ClassInfoTable;  //for IR
 
-
     public TypeTable() {
         table = new LinkedHashMap<>();
         ClassScopeMap = new LinkedHashMap<>();

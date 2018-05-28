@@ -34,4 +34,22 @@ public class Move_Inst extends Memory {
     public void Reset_DestRegs(PhysicalReg Reg) {
         if(dest instanceof VirtualReg) dest = Reg;
     }
+
+    @Override
+    public void Print() {
+        if(dest == null)
+            System.out.println("dest" + Error());
+        if(Source == null)
+            System.out.println("source" + Error());
+        System.out.println("\tMove\t" + dest.getString() + " " + Source.getString());
+    }
+
+    @Override
+    public void LLPrint() {
+        if(dest == null)
+            System.out.println("dest" + Error());
+        if(Source == null)
+            System.out.println("source" + Error());
+        System.out.println("\t" + dest.getString() + " = move " + Source.getString());
+    }
 }

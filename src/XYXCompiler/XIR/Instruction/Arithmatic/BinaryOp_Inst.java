@@ -6,6 +6,9 @@ import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class BinaryOp_Inst extends Arithmatic {
     public static enum binaryop{
         Add, Sub, Mul, Div, Mod, Lsh, Rsh, And, Or, Xor
@@ -50,5 +53,26 @@ public class BinaryOp_Inst extends Arithmatic {
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {
         if(dest instanceof VirtualReg) dest = Reg;
+    }
+
+    @Override
+    public void Print() {
+        System.out.println("\t" + op.name() + "\t" + dest.getString() + " " + L_operand.getString() + " " + R_operand.getString());
+    }
+
+    @Override
+    public void LLPrint() {
+        Map<binaryop, String> rename = new HashMap<>();
+        rename.put(binaryop.Add, "add");
+        rename.put(binaryop.Sub, "sub");
+        rename.put(binaryop.Mul, "mul");
+        rename.put(binaryop.Div, "div");
+        rename.put(binaryop.Mod, "rem");
+        rename.put(binaryop.Lsh, "lsh");
+        rename.put(binaryop.Rsh, "rsh");
+        rename.put(binaryop.And, "and");
+        rename.put(binaryop.Or, "or");
+        rename.put(binaryop.Xor, "xor");
+        System.out.println("\t" + dest.getString() + " = " + rename.get(op) + " " + L_operand.getString() + " " + R_operand.getString());
     }
 }

@@ -44,4 +44,13 @@ public class Alloc_Inst extends Memory {
         if(dest instanceof VirtualReg) dest = Reg;
     }
 
+    @Override
+    public void Print() {
+        System.out.println("\tAlloc\t" + dest.getString() + " " + size.getString());
+    }
+
+    @Override
+    public void LLPrint() {
+        System.out.println("\t" + dest.getString() + " = alloc " + size.getString());
+    }
 }

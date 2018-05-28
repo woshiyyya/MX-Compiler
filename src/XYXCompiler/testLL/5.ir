@@ -1,0 +1,68 @@
+func main {
+%Entry:
+	$a = move 5
+	$b = move 0
+	$c = move 0
+	$V40 = sne $b 0
+	br $V40 %[&&]Lhs_IfTrue0 %Vardecl_RHS_Iffalse
+
+%[&&]Lhs_IfTrue0:
+	$V31 = div $a $b
+	$V41 = sne $V31 1
+	br $V41 %Vardecl_RHS_Iftrue %Vardecl_RHS_Iffalse
+
+%Vardecl_RHS_Iftrue:
+	$V32 = move 1
+	jump %Merge_Binary1
+
+%Merge_Binary1:
+	$d = move $V32
+	br $d %ThenBody2 %ElseBody4
+
+%ThenBody2:
+	$c = move 10
+	jump %AfterIF3
+
+%AfterIF3:
+	$e = move 0
+	$V42 = seq $c 10
+	br $V42 %[&&]Lhs_IfTrue6 %logical_iffalse
+
+%[&&]Lhs_IfTrue6:
+	$V36 = div $a $b
+	$V43 = seq $V36 0
+	br $V43 %[&&]Lhs_IfTrue5 %logical_iffalse
+
+%[&&]Lhs_IfTrue5:
+	$V44 = seq $a 5
+	br $V44 %logical_iftrue %logical_iffalse
+
+%logical_iftrue:
+	$V38 = move 1
+	jump %Merge_Binary7
+
+%Merge_Binary7:
+	$V39 = not $V38
+	$e = move $V39
+	br $e %ThenBody8 %AfterIF9
+
+%ThenBody8:
+	$c = move 30
+	jump %AfterIF9
+
+%AfterIF9:
+	ret $c
+
+%logical_iffalse:
+	$V38 = move 0
+	jump %Merge_Binary7
+
+%ElseBody4:
+	$c = move 20
+	jump %AfterIF3
+
+%Vardecl_RHS_Iffalse:
+	$V32 = move 0
+	jump %Merge_Binary1
+
+}

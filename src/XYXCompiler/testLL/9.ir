@@ -1,0 +1,32 @@
+func main {
+%Entry:
+	$takret = call tak 18 12 6 
+	ret $takret
+	ret 0
+
+}
+func tak $x $y $z {
+%Start BB:
+	$V88 = slt $y $x
+	br $V88 %ThenBody0 %ElseBody2
+
+%ThenBody0:
+	$V81 = sub $x 1
+	$takret = call tak $V81 $y $z 
+	$V83 = sub $y 1
+	$takret = call tak $V83 $z $x 
+	$V85 = sub $z 1
+	$takret = call tak $V85 $x $y 
+	$takret = call tak $takret $takret $takret 
+	$V86 = add 1 $takret
+	$rax = move $V86
+	jump %Merged_Return3
+
+%Merged_Return3:
+	ret $rax
+
+%ElseBody2:
+	$rax = move $z
+	jump %Merged_Return3
+
+}

@@ -1,0 +1,29 @@
+func main {
+%Entry:
+	$n = move 10
+	$f0 = move 0
+	$f1 = move 1
+	$f2 = move 0
+	$i = move 0
+	$i = move 1
+	jump %ForCond1
+
+%ForCond1:
+	$V327 = slt $i $n
+	br $V327 %ForBody1 %ForAfter1
+
+%ForBody1:
+	$V325 = add $f0 $f1
+	$f2 = move $V325
+	$f0 = move $f1
+	$f1 = move $f2
+	jump %ForUpdate1
+
+%ForUpdate1:
+	$i = add $i 1
+	jump %ForCond1
+
+%ForAfter1:
+	ret $f2
+
+}

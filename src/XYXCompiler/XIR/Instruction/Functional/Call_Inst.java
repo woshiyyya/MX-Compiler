@@ -1,4 +1,5 @@
 package XYXCompiler.XIR.Instruction.Functional;
+import XYXCompiler.FrontEnd.ASTNode.Type.Void_Type;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.CFG.Function;
 import XYXCompiler.XIR.Operand.DataSrc;
@@ -40,4 +41,23 @@ public class Call_Inst extends Functional {
 
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {}
+
+    @Override
+    public void Print() {
+        String ans = "\tCall\t" + dest.getString() + " ";
+        for(DataSrc X: ArgLocs)
+            ans = ans + X.getString() + " ";
+        System.out.println(ans);
+    }
+
+    @Override
+    public void LLPrint() {
+        String ans = "\t";
+        if(!(function.func_info.returntype instanceof Void_Type))
+            ans += dest.getString() + " = ";
+        ans += "call " + function.name +  " ";
+        for(DataSrc X: ArgLocs)
+            ans = ans + X.getString() + " ";
+        System.out.println(ans);
+    }
 }

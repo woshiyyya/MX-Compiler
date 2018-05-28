@@ -1,0 +1,54 @@
+func main {
+%Entry:
+	$a = move 5
+	$b = move 0
+	$c = move 0
+	$V57 = sne $b 0
+	br $V57 %[&&]Lhs_IfTrue3 %ElseBody2
+
+%[&&]Lhs_IfTrue3:
+	$V50 = div $a $b
+	$V58 = sne $V50 1
+	br $V58 %ThenBody0 %ElseBody2
+
+%ThenBody0:
+	$c = move 10
+	jump %AfterIF1
+
+%AfterIF1:
+	$V59 = seq $c 10
+	br $V59 %[&&]Lhs_IfTrue7 %logical_iffalse
+
+%[&&]Lhs_IfTrue7:
+	$V53 = div $a $b
+	$V60 = seq $V53 0
+	br $V60 %[&&]Lhs_IfTrue6 %logical_iffalse
+
+%[&&]Lhs_IfTrue6:
+	$V61 = seq $a 5
+	br $V61 %logical_iftrue %logical_iffalse
+
+%logical_iftrue:
+	$V55 = move 1
+	jump %Merge_Binary8
+
+%Merge_Binary8:
+	$V56 = not $V55
+	br $V56 %ThenBody4 %AfterIF5
+
+%ThenBody4:
+	$c = move 30
+	jump %AfterIF5
+
+%AfterIF5:
+	ret $c
+
+%logical_iffalse:
+	$V55 = move 0
+	jump %Merge_Binary8
+
+%ElseBody2:
+	$c = move 20
+	jump %AfterIF1
+
+}

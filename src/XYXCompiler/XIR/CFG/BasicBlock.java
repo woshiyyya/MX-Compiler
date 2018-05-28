@@ -20,15 +20,15 @@ public class BasicBlock {
     public Return_Inst ret = null;
     public boolean If_closed = false;
     public int cnt;
-    public String name;
+    public String label;
 
     public BasicBlock(Function func_Scope) {
         Func_Scope = func_Scope;
     }
 
-    public BasicBlock(Function func_Scope, String name) {
+    public BasicBlock(Function func_Scope, String label) {
         Func_Scope = func_Scope;
-        this.name = name;
+        this.label = label;
     }
 
     public void add_Pred(BasicBlock Pred){
@@ -57,9 +57,12 @@ public class BasicBlock {
         add(ret);
         this.ret = ret;
         Func_Scope.RetBlks.add(this);
+        If_closed = true;
     }
 
     public void Close_J(BasicBlock end){
+        if(If_closed)
+            return;
         Jump_Inst jmp = new Jump_Inst(this, end);
         add(jmp);
         add_Succ(end);
@@ -68,6 +71,8 @@ public class BasicBlock {
     }
 
     public void Close_B(DataSrc lhs, DataSrc rhs, RelationOp_Inst.CmpOp op, BasicBlock ifTrue, BasicBlock ifFalse){
+        if(If_closed)
+            return;
         CJump_Inst jmp = new CJump_Inst(this, lhs, rhs, op, ifTrue, ifFalse);
         add(jmp);
         add_Succ(ifTrue);
@@ -87,8 +92,11 @@ public class BasicBlock {
         If_closed = true;
     }
 
-    public void setName(String n){
-        name = n;
+    public void setLabel(String label){
+        this.label = label;
+    }
+    public String getLabel(){
+        return "%" + this.label;
     }
 
 }

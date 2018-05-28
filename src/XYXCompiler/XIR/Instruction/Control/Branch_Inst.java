@@ -31,4 +31,14 @@ public class Branch_Inst extends Control {
     public void Reset_DestRegs(PhysicalReg Reg) {
 
     }
+
+    @Override
+    public void Print() {
+        System.out.println("\tDrop");
+    }
+
+    @Override
+    public void LLPrint() {
+
+    }
 }

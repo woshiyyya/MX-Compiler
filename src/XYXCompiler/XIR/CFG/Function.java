@@ -25,6 +25,7 @@ public class Function {
     public BasicBlock EndBB = null;
 
     //for Liveness Analysis
+    public List<BasicBlock> PreOrder = new LinkedList<>();
     public List<BasicBlock> PostOrder = new LinkedList<>();
     private Set<BasicBlock> visit = new HashSet<>();
     public Set<BasicBlock> ReverseOrder = new HashSet<>();
@@ -57,6 +58,14 @@ public class Function {
         }
     }
 
+    private void Construct_PreOrder(BasicBlock blk){
+        if(visit.contains(blk)) return;
+        visit.add(blk);
+        PreOrder.add(blk);
+        for(BasicBlock X: blk.successor)
+            Construct_PreOrder(X);
+    }
+
     private void Construct_PostOrder(BasicBlock blk){
         if(visit.contains(blk)) return;
         visit.add(blk);
@@ -75,6 +84,8 @@ public class Function {
 
     // delete unreachable blocks
     public void Update_Info(){
+        Construct_PreOrder(StartBB);
+        visit.clear();
         Construct_PostOrder(StartBB);
         visit.clear();
         Construct_ReverseOrder(EndBB);

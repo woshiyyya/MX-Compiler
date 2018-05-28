@@ -9,10 +9,11 @@ import XYXCompiler.XIR.Operand.Register.VirtualReg;
 public class Load_Inst extends Memory {
     public Register dest;
     public DataSrc addr;
-    public DataSrc offset;
+    public int offset = 0;
     public int size;
 
-    public Load_Inst(BasicBlock BB_Scope, Register dest, DataSrc addr, DataSrc offset, int size) {
+
+    public Load_Inst(BasicBlock BB_Scope, Register dest, DataSrc addr, int offset, int size) {
         super(BB_Scope);
         this.dest = dest;
         this.addr = addr;
@@ -26,8 +27,6 @@ public class Load_Inst extends Memory {
             this.Def = (VirtualReg) dest;
         if(addr instanceof VirtualReg)
             this.Used.add((VirtualReg) addr);
-        if(offset instanceof VirtualReg)
-            this.Used.add((VirtualReg) offset);
 
         this.ifupdated = true;
     }
@@ -35,11 +34,22 @@ public class Load_Inst extends Memory {
     @Override
     public void Reset_OperandRegs(VirtualReg VReg, PhysicalReg PReg) {
         if(addr != null && addr.equals(VReg)) addr = PReg;
-        if(offset != null && offset.equals(VReg)) offset = PReg;
     }
 
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {
         if(dest instanceof VirtualReg) dest = Reg;
+    }
+
+    @Override
+    public void Print() {
+        String ans = "\tLoad\t" + dest.getString() + " [" + addr.getString() + " + " + offset + "]";
+        System.out.println(ans);
+    }
+
+    @Override
+    public void LLPrint() {
+        String ans = "\t" + dest.getString() + " = load " + "8 " + addr.getString() +  " " + offset;
+        System.out.println(ans);
     }
 }

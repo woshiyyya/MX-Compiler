@@ -1,0 +1,123 @@
+func qsrt $l $r {
+%Start BB:
+	$i = move $l
+	$j = move $r
+	$V334 = add $l $r
+	$V335 = div $V334 2
+	$V337 = mul $V335 8
+	$V337 = add $a $V337
+	$V336 = load 8 $V337 0
+	$x = move $V336
+	jump %WhileCond1
+
+%WhileCond1:
+	$V373 = sle $i $j
+	br $V373 %WhileBody1 %WhileAfter1
+
+%WhileBody1:
+	jump %WhileCond2
+
+%WhileCond2:
+	$V341 = mul $i 8
+	$V341 = add $a $V341
+	$V340 = load 8 $V341 0
+	$V374 = slt $V340 $x
+	br $V374 %WhileBody2 %WhileAfter2
+
+%WhileBody2:
+	$backup = move $i
+	$i = add $i 1
+	jump %WhileCond2
+
+%WhileAfter2:
+	jump %WhileCond3
+
+%WhileCond3:
+	$V346 = mul $j 8
+	$V346 = add $a $V346
+	$V345 = load 8 $V346 0
+	$V375 = sgt $V345 $x
+	br $V375 %WhileBody3 %WhileAfter3
+
+%WhileBody3:
+	$backup = move $j
+	$j = sub $j 1
+	jump %WhileCond3
+
+%WhileAfter3:
+	$V376 = sle $i $j
+	br $V376 %ThenBody9 %AfterIF10
+
+%ThenBody9:
+	$V352 = mul $i 8
+	$V352 = add $a $V352
+	$V351 = load 8 $V352 0
+	$temp = move $V351
+	$V353 = mul $i 8
+	$V353 = add $a $V353
+	$V355 = mul $j 8
+	$V355 = add $a $V355
+	$V354 = load 8 $V355 0
+	store 8 $V353 $V354 0
+	$V356 = mul $j 8
+	$V356 = add $a $V356
+	store 8 $V356 $temp 0
+	$backup = move $i
+	$i = add $i 1
+	$backup = move $j
+	$j = sub $j 1
+	jump %AfterIF10
+
+%AfterIF10:
+
+%WhileAfter1:
+	$V377 = slt $l $j
+	br $V377 %ThenBody11 %AfterIF12
+
+%ThenBody11:
+	$qsrtret = call qsrt $l $j 
+	jump %AfterIF12
+
+%AfterIF12:
+	$V378 = slt $i $r
+	br $V378 %ThenBody13 %AfterIF14
+
+%ThenBody13:
+	$qsrtret = call qsrt $i $r 
+	jump %AfterIF14
+
+%AfterIF14:
+	ret 0
+
+}
+func main {
+%Entry:
+	$new = alloc 80800
+	$a = move $new
+	$n = move 10000
+	$i = move 0
+	$i = move 1
+	jump %ForCond4
+
+%ForCond4:
+	$V379 = sle $i $n
+	br $V379 %ForBody4 %ForAfter4
+
+%ForBody4:
+	$V367 = mul $i 8
+	$V367 = add $a $V367
+	$V368 = add $n 1
+	$V369 = sub $V368 $i
+	store 8 $V367 $V369 0
+	jump %ForUpdate4
+
+%ForUpdate4:
+	$backup = move $i
+	$i = add $i 1
+	jump %ForCond4
+
+%ForAfter4:
+	$qsrtret = call qsrt 1 $n 
+	ret $qsrtret
+
+}

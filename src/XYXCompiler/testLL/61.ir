@@ -1,0 +1,20 @@
+func main {
+%Start BB:
+	call __GlobalInit__ 
+	$V3 = mul 19 8
+	$V3 = add $c $V3
+	$V2 = load 8 $V3 0
+	$a = move $V2
+	ret 0
+
+}
+void __GlobalInit__ {
+%Start BB:
+	$a = move 10
+	$V0 = add $a 80
+	$b = move $V0
+	$new = alloc 160
+	$c = move $new
+	ret 0
+
+}

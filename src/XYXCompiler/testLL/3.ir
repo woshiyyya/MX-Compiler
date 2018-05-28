@@ -1,0 +1,10 @@
+func main {
+%Entry:
+	$x = move 10
+	$y = move 20
+	$V13 = add $x $y
+	$c = move $V13
+	ret $c
+	ret 0
+
+}

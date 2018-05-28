@@ -22,4 +22,14 @@ public class Jump_Inst extends Control {
 
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {}
+
+    @Override
+    public void Print() {
+        System.out.println("\tJump\t" + target.getLabel());
+    }
+
+    @Override
+    public void LLPrint() {
+        System.out.println("\tjump " + target.getLabel());
+    }
 }

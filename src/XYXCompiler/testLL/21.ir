@@ -1,0 +1,22 @@
+func main {
+%Entry:
+	$n = move 20
+	$sum = move 0
+	$i = move 1
+	jump %WhileCond1
+
+%WhileCond1:
+	$V158 = sle $i $n
+	br $V158 %WhileBody1 %WhileAfter1
+
+%WhileBody1:
+	$V156 = add $sum $i
+	$sum = move $V156
+	$V157 = add $i 1
+	$i = move $V157
+	jump %WhileCond1
+
+%WhileAfter1:
+	ret $sum
+
+}

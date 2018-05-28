@@ -1,0 +1,16 @@
+func main {
+%Entry:
+	$x = move 10
+	$y = move $x
+	$V301 = seq $x 10
+	br $V301 %ThenBody0 %AfterIF1
+
+%ThenBody0:
+	$x = move 20
+	$y = move $x
+	jump %AfterIF1
+
+%AfterIF1:
+	ret $y
+
+}

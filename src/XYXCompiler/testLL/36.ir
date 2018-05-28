@@ -1,0 +1,16 @@
+func main {
+%Entry:
+	$new = alloc 32
+	$obj = move $new
+	store 8 $obj 10 8
+	store 8 $obj 20 16
+	store 8 $obj 40 24
+	$V314 = load 8 $obj 8
+	$V315 = load 8 $obj 16
+	$V316 = add $V314 $V315
+	$V317 = load 8 $obj 24
+	$V318 = add $V316 $V317
+	ret $V318
+	ret 0
+
+}

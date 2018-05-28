@@ -16,7 +16,6 @@ public class LivenessAnalyser {
 
     public void Initialize(XIRRoot root){
         for(Function func: root.Functions.values()){
-            func.Update_Info();
             Set<VirtualReg> In = new HashSet<>();
             Set<VirtualReg> Out = new HashSet<>();
             boolean Converge;

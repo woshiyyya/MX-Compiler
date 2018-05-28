@@ -41,7 +41,7 @@ public class OnTheFly_Allocator {
             DataSrc X = inst.ArgLocs.get(i);
             if(X instanceof VirtualReg)
                 X = VRegSliceMap.get(X);
-            inst.prepend(new Load_Inst(inst.BB_Scope, paramRags.get(id++), X,null,8));
+            inst.prepend(new Load_Inst(inst.BB_Scope, paramRags.get(id++), X,0,8));
         }
     }
 
@@ -69,7 +69,7 @@ public class OnTheFly_Allocator {
                                 FrameSlice sliceX = new FrameSlice(func, VReg.Name);
                                 VRegSliceMap.put(VReg, sliceX);
                                 func.frameSlice.add(sliceX);
-                                inst.prepend(new Load_Inst(Blk, PReg, sliceX, new Immediate(0), 8));
+                                inst.prepend(new Load_Inst(Blk, PReg, sliceX, 0, 8));
                             }
                         }
 
@@ -84,7 +84,7 @@ public class OnTheFly_Allocator {
                                 FrameSlice sliceX = new FrameSlice(func, inst.Def.Name);
                                 VRegSliceMap.put(inst.Def, sliceX);
                                 func.frameSlice.add(sliceX);
-                                inst.append(new Store_Inst(Blk, sliceX, null, 0, PReg,8));
+                                inst.append(new Store_Inst(Blk, PReg, 8, sliceX, 0));
                                 inst = inst.next;
                             }
                         }

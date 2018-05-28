@@ -1,0 +1,126 @@
+func gcd $x $y {
+%Start BB:
+	$V3 = rem $x $y
+	$V37 = seq $V3 0
+	br $V37 %ThenBody0 %ElseBody2
+
+%ThenBody0:
+	$rax = move $y
+	jump %Merged_Return3
+
+%Merged_Return3:
+	ret $rax
+
+%ElseBody2:
+	$V5 = rem $x $y
+	$gcd5ret = call gcd5 $y $V5 
+	$rax = move $gcd5ret
+	jump %Merged_Return3
+
+}
+func gcd1 $x $y {
+%Start BB:
+	$V9 = rem $x $y
+	$V38 = seq $V9 0
+	br $V38 %ThenBody4 %ElseBody6
+
+%ThenBody4:
+	$rax = move $y
+	jump %Merged_Return7
+
+%Merged_Return7:
+	ret $rax
+
+%ElseBody6:
+	$V11 = rem $x $y
+	$gcdret = call gcd $y $V11 
+	$rax = move $gcdret
+	jump %Merged_Return7
+
+}
+func gcd2 $x $y {
+%Start BB:
+	$V15 = rem $x $y
+	$V39 = seq $V15 0
+	br $V39 %ThenBody8 %ElseBody10
+
+%ThenBody8:
+	$rax = move $y
+	jump %Merged_Return11
+
+%Merged_Return11:
+	ret $rax
+
+%ElseBody10:
+	$V17 = rem $x $y
+	$gcd1ret = call gcd1 $y $V17 
+	$rax = move $gcd1ret
+	jump %Merged_Return11
+
+}
+func main {
+%Start BB:
+	$gcdret = call gcd 2907 1539 
+	ret $gcdret
+
+}
+func gcd3 $x $y {
+%Start BB:
+	$V21 = rem $x $y
+	$V40 = seq $V21 0
+	br $V40 %ThenBody12 %ElseBody14
+
+%ThenBody12:
+	$rax = move $y
+	jump %Merged_Return15
+
+%Merged_Return15:
+	ret $rax
+
+%ElseBody14:
+	$V23 = rem $x $y
+	$gcd2ret = call gcd2 $y $V23 
+	$rax = move $gcd2ret
+	jump %Merged_Return15
+
+}
+func gcd4 $x $y {
+%Start BB:
+	$V27 = rem $x $y
+	$V41 = seq $V27 0
+	br $V41 %ThenBody16 %ElseBody18
+
+%ThenBody16:
+	$rax = move $y
+	jump %Merged_Return19
+
+%Merged_Return19:
+	ret $rax
+
+%ElseBody18:
+	$V29 = rem $x $y
+	$gcdret = call gcd $y $V29 
+	$rax = move $gcdret
+	jump %Merged_Return19
+
+}
+func gcd5 $x $y {
+%Start BB:
+	$V33 = rem $x $y
+	$V42 = seq $V33 0
+	br $V42 %ThenBody20 %ElseBody22
+
+%ThenBody20:
+	$rax = move $y
+	jump %Merged_Return23
+
+%Merged_Return23:
+	ret $rax
+
+%ElseBody22:
+	$V35 = rem $x $y
+	$gcd2ret = call gcd2 $y $V35 
+	$rax = move $gcd2ret
+	jump %Merged_Return23
+
+}
