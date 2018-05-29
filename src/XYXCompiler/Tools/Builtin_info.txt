@@ -1,0 +1,20 @@
+void println(String str)
+
+String getString()
+
+int getInt()
+
+int string.parseInt(Stirng this)
+
+int string.length(String this)
+    String 未存size
+int string.ord(string this, int pos)
+
+int string.substring(String this ,int left ,int right)
+
+string toString(int i)
+
+int array.size(Array this)
+    #Array 首地址-8 存size
+
+

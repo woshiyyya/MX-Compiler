@@ -1,5 +1,6 @@
 package XYXCompiler.FrontEnd.Builder;
 
+import Test.Fuck;
 import XYXCompiler.FrontEnd.ASTNode.ASTRoot;
 import XYXCompiler.FrontEnd.ASTNode.Declaration.*;
 import XYXCompiler.FrontEnd.ASTNode.Expression.Binary_Expression;
@@ -35,6 +36,7 @@ import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Static.Literal;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.StringLiteral;
+import XYXCompiler.XIR.Tools.BuiltinFunctionInserter;
 
 import java.lang.reflect.Array;
 import java.util.HashMap;
@@ -86,12 +88,12 @@ public class XIRBuilder implements ASTVisitor {
         // Construct the CFG from <node> to <node.ifTrue> and <node.ifFalse>
         if(node.op == Binary_Expression.BinaryOP.LogicalAnd){
             node.lhs.ifFalse = node.ifFalse;
-            node.lhs.ifTrue = new BasicBlock(curFunc, "[&&]Lhs_IfTrue" + Blknum++);
+            node.lhs.ifTrue = new BasicBlock(curFunc, "And_Lhs_IfTrue" + Blknum++);
             VISIT(node.lhs);
             curBlk = node.lhs.ifTrue;
         }else if(node.op == Binary_Expression.BinaryOP.LogicalOr){
             node.lhs.ifTrue = node.ifTrue;
-            node.lhs.ifFalse = new BasicBlock(curFunc,"[||]Lhs_IfFalse" + Blknum++);
+            node.lhs.ifFalse = new BasicBlock(curFunc,"Or_Lhs_IfFalse" + Blknum++);
             VISIT(node.lhs);
             curBlk = node.lhs.ifFalse;
         }
@@ -260,6 +262,8 @@ public class XIRBuilder implements ASTVisitor {
     @Override
     public void visit(ASTRoot node) {
         astRoot = node;
+        BuiltinFunctionInserter inserter = new BuiltinFunctionInserter(Root, this);
+        inserter.Insert();
         Collect_Functions(node);
         for(Declaration X: node.declarations){
             if(X instanceof Class_Declaration)
@@ -381,17 +385,21 @@ public class XIRBuilder implements ASTVisitor {
     @Override
     public void visit(Global_Variable_Declaration node) {
         //only considered the LHS is literal value
-        Literal literal = null;
         GlobalVar space = new GlobalVar(node.name, node.size);
+        VISIT(node.RHS);
+        if(node.RHS != null)
+            curBlk.add(new Move_Inst(curBlk, space, node.RHS.datasrc));
+        /*
         if(node.RHS instanceof STRING){
             STRING rhs = (STRING) node.RHS;
-            literal = new StringLiteral(rhs.value);
+            rhs.datasrc = new StringLiteral(rhs.value);
+            Root.LiteralDataPool.add((StringLiteral) rhs.datasrc);
+            curBlk.add(new Move_Inst(curBlk, space, node.RHS.datasrc));
         }else if(node.RHS != null){
             VISIT(node.RHS);
             curBlk.add(new Move_Inst(curBlk, space, node.RHS.datasrc));
         }
-        if(literal != null)
-            Root.LiteralDataPool.put(node.name, literal);
+        */
         Root.StaticSpace.add(space);
         node.dataSrc = space;
     }
@@ -729,7 +737,9 @@ public class XIRBuilder implements ASTVisitor {
 
     @Override
     public void visit(STRING node) {
-        node.datasrc = new StringLiteral(node.value);
+        StringLiteral literal = new StringLiteral(node.value);
+        node.datasrc = literal;
+        Root.LiteralDataPool.add(literal);
     }
 
     private void Construct_Alloc(Register Headaddr, DataSrc nextdim){
@@ -817,10 +827,6 @@ public class XIRBuilder implements ASTVisitor {
         curBlk = ForAfter;
     }
 
-    private boolean NeedCF(Array_Type node, int dim){
-        return (node.getBasetype() instanceof Class_Type && dim == node.getDim());
-    }
-
     @Override
     public void visit(Array_Type node) {
         VISIT(node.size);
@@ -871,22 +877,38 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.name);
         exitAddr(backup);
 
+        //if mul int int
+        int offset = (node.index.datasrc instanceof Immediate) ? ((Immediate) node.index.datasrc).value * 8 : -1;
+        //if baseaddr is global
+        Register bodyAddr;
+        if(node.name.datasrc instanceof GlobalVar){
+            bodyAddr = new VirtualReg(null);
+            curBlk.add(new Move_Inst(curBlk, bodyAddr, node.name.datasrc));
+        }else{
+            bodyAddr = (VirtualReg)node.name.datasrc;
+        }
+
+
         if(curIfAddr){
-            if(node.index.datasrc instanceof Immediate){
-                node.baseaddr = node.name.datasrc;
-                node.offset = ((Immediate) node.index.datasrc).value * 8;
+            if(offset != -1){
+                node.baseaddr = bodyAddr;
+                node.offset = offset;
             }else{
                 VirtualReg PreciseAddr = new VirtualReg(null);
                 curBlk.add(new BinaryOp_Inst(curBlk, PreciseAddr, node.index.datasrc, new Immediate(8), binaryop.Mul));
-                curBlk.add(new BinaryOp_Inst(curBlk, PreciseAddr, node.name.datasrc, PreciseAddr, binaryop.Add));
+                curBlk.add(new BinaryOp_Inst(curBlk, PreciseAddr, bodyAddr, PreciseAddr, binaryop.Add));
                 node.baseaddr = PreciseAddr;
-                node.offset = 0;
             }
         }else{
             node.datasrc = new VirtualReg(null);
             VirtualReg PreciseAddr = new VirtualReg(null);
-            curBlk.add(new BinaryOp_Inst(curBlk, PreciseAddr, node.index.datasrc, new Immediate(8), binaryop.Mul));
-            curBlk.add(new BinaryOp_Inst(curBlk, PreciseAddr, node.name.datasrc, PreciseAddr, binaryop.Add));
+
+            if(offset != -1)
+                curBlk.add(new Move_Inst(curBlk, PreciseAddr, new Immediate(offset)));
+            else
+                curBlk.add(new BinaryOp_Inst(curBlk, PreciseAddr, node.index.datasrc, new Immediate(8), binaryop.Mul));
+
+            curBlk.add(new BinaryOp_Inst(curBlk, PreciseAddr, bodyAddr, PreciseAddr, binaryop.Add));
             curBlk.add(new Load_Inst(curBlk, (Register)(node.datasrc), PreciseAddr, 0, intsize));
             if(hasBranch(node)){
                 curBlk.Close_B(node.datasrc,new Immediate(0), CmpOp.Z, node.ifTrue, node.ifFalse);

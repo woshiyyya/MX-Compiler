@@ -16,11 +16,10 @@ import XYXCompiler.XIR.Instruction.Memory.*;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.GlobalVar;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
-import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.Immediate;
-import XYXCompiler.XIR.Operand.Static.StaticData;
+import XYXCompiler.XIR.Operand.Static.StringLiteral;
 
-import java.io.PrintStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,19 +34,6 @@ public class X86Printer implements XIRVisitor {
             System.setOut(stream);
     }
 
-    public static String getAssembly() {
-        /*
-        StringBuilder str = new StringBuilder();
-        str.append(getGlobalFunction());
-        str.append("extern printf, malloc, strcpy, scanf, strlen, sscanf, sprintf, memcpy, strcmp, puts\n");
-        str.append(getDefinedDataSection());
-        str.append(getReservedDataSection());
-        str.append(getTextSection());
-        str.append(BuiltinFunction.getAssembly());
-        return str.toString();
-        */
-        return null;
-    }
     private int BBNum = 0;
 
     private String getBBLabel(BasicBlock BB){
@@ -59,23 +45,69 @@ public class X86Printer implements XIRVisitor {
         return name;
     }
 
-    @Override
-    public void visit(XIRRoot node) {
-        for(GlobalVar X: node.StaticSpace)
+    private void Print_Extern(){
+        String extern
+                =   "extern puts\nextern getchar\nextern putchar\nextern sprintf\n" +
+                    "extern __stack_chk_fail\nextern malloc\nextern printf\n" +
+                    "extern strlen\nextern memcpy\nextern scanf\n";
+        System.out.println(extern);
+    }
+
+    private void Print_Global(XIRRoot node){
+        for (GlobalVar X : node.StaticSpace)
             System.out.println("global " + X.name);
-        for(Function X: node.Functions.values())
+        for (Function X : node.Functions.values())
             System.out.println("global " + X.name);
+    }
+
+    private void Print_Text(XIRRoot node){
         System.out.println("SECTION .text");
-
-        for(Function X: node.Functions.values())
+        for (Function X : node.Functions.values())
             visit(X);
+    }
 
+    private void Print_StaticData(XIRRoot node){
         System.out.println("SECTION .data    align = 8");
-        for(GlobalVar X: node.StaticSpace){
-            System.out.println(X.name + ": dq 000000000000000AH");
+        for (GlobalVar X : node.StaticSpace) {
+            System.out.println(X.name + ":\n\t dq 000000000000000AH");
         }
 
-        System.out.println("SECTION .bss");
+        for(StringLiteral X: node.LiteralDataPool){
+            System.out.println(X.label);
+            System.out.println("\tdq " + X.length);
+            System.out.println("\tdb " + X.toInt());
+        }
+        System.out.println(
+                "intbuffer:\n\tdq 0\n" +
+                "format1:\n\tdb\"%lld\",0\n" +
+                "format2:\n\tdb\"%s\",0\n\n" +
+                "SECTION .bss\nstringbuffer:\n\tresb 256\n");
+    }
+
+    private void Print_builtin()throws IOException {
+        StringBuffer sb = new StringBuffer("");
+        FileReader reader = new FileReader("src/XYXCompiler/Tools/BuiltinFunction.asm");
+        BufferedReader br = new BufferedReader(reader);
+        String str;
+        while((str = br.readLine()) != null) {
+            sb.append(str).append("\n");
+        }
+        System.out.println(sb.toString());
+        br.close();
+        reader.close();
+    }
+
+    @Override
+    public void visit(XIRRoot node) {
+        try {
+            Print_Extern();
+            Print_Global(node);
+            Print_Text(node);
+            Print_builtin();
+            Print_StaticData(node);
+        }catch (Exception ex){
+            System.err.println("Read file error!");
+        }
     }
 
     @Override
@@ -239,6 +271,8 @@ public class X86Printer implements XIRVisitor {
             return "" + ((Immediate) reg).value;
         }else if(reg instanceof GlobalVar){
             return "qword [" + ((GlobalVar) reg).name + "]";
+        }else if(reg instanceof StringLiteral){
+            return ((StringLiteral) reg).label;
         }else
             assert false;
         return "FUCK!!!" + reg.getClass().getSimpleName();
