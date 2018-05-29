@@ -720,16 +720,4 @@ Llege_021:  mov     eax, 1
 Llege_022:  pop     rbp
 	ret
 
-SECTION .data    align = 8
-a: dq 000000000000000AH
-intbuffer:
-	dq 0
-format1:
-	db"%lld",0
-format2:
-	db"%s",0
-
-SECTION .bss
-stringbuffer:
-	resb 256
 
