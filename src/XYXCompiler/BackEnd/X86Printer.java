@@ -234,6 +234,8 @@ public class X86Printer implements XIRVisitor {
             return ((PhysicalReg)reg).name;
         else if(reg instanceof Immediate) {
             return "" + ((Immediate) reg).value;
+        }else if(reg instanceof GlobalVar){
+            return "qword [" + ((GlobalVar) reg).name + "]";
         }else
             assert false;
         return "FUCK!!!" + reg.getClass().getSimpleName();
