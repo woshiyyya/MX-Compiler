@@ -70,7 +70,10 @@ public class X86Printer implements XIRVisitor {
         for(Function X: node.Functions.values())
             visit(X);
 
-        System.out.println("SECTION .data");
+        System.out.println("SECTION .data    align = 8");
+        for(GlobalVar X: node.StaticSpace){
+            System.out.println(X.name + ": dq 000000000000000AH");
+        }
 
         System.out.println("SECTION .bss");
     }
