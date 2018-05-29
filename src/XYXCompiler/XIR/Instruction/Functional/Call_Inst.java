@@ -1,4 +1,5 @@
 package XYXCompiler.XIR.Instruction.Functional;
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.FrontEnd.ASTNode.Type.Void_Type;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.CFG.Function;
@@ -59,5 +60,9 @@ public class Call_Inst extends Functional {
         for(DataSrc X: ArgLocs)
             ans = ans + X.getString() + " ";
         System.out.println(ans);
+    }
+
+    public void accept(XIRVisitor visitor){
+        visitor.visit(this);
     }
 }

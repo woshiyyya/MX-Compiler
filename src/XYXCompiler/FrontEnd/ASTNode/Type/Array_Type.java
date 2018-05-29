@@ -32,6 +32,17 @@ public class Array_Type extends Base_Type {
             return ((Array_Type)this.basetype).getBasetype();
     }
 
+    public int getDim(){
+        return getDim_(this);
+    }
+
+    private int getDim_(Array_Type node){
+        if(!(basetype instanceof Array_Type))
+            return 1;
+        else
+            return getDim_((Array_Type) basetype) + 1 ;
+    }
+
     public int getSize(){
         return 8;
     }

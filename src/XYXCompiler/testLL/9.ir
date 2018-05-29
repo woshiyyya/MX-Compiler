@@ -1,8 +1,7 @@
 func main {
-%Entry:
+%Start BB:
 	$takret = call tak 18 12 6 
 	ret $takret
-	ret 0
 
 }
 func tak $x $y $z {

@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Arithmatic;
 
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
@@ -70,5 +71,9 @@ public class RelationOp_Inst extends Arithmatic {
         rename.put(CmpOp.EQ, "seq");
         rename.put(CmpOp.NE, "sne");
         System.out.println("\t" + dest.getString() + " = "+ rename.get(op) + " " + L_operand.getString() + " " + R_operand.getString());
+    }
+
+    public void accept(XIRVisitor visitor){
+        visitor.visit(this);
     }
 }

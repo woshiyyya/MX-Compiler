@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Control;
 
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
@@ -31,5 +32,9 @@ public class Jump_Inst extends Control {
     @Override
     public void LLPrint() {
         System.out.println("\tjump " + target.getLabel());
+    }
+
+    public void accept(XIRVisitor visitor){
+        visitor.visit(this);
     }
 }

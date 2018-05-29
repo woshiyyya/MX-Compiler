@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Memory;
 
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
@@ -52,5 +53,9 @@ public class Alloc_Inst extends Memory {
     @Override
     public void LLPrint() {
         System.out.println("\t" + dest.getString() + " = alloc " + size.getString());
+    }
+
+    public void accept(XIRVisitor visitor){
+        visitor.visit(this);
     }
 }

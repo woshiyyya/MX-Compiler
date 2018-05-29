@@ -1,9 +1,9 @@
 func main {
-%Entry:
+%Start BB:
 	$x = move 10
 	$y = move $x
-	$V301 = seq $x 10
-	br $V301 %ThenBody0 %AfterIF1
+	$V177 = seq $x 10
+	br $V177 %ThenBody0 %AfterIF1
 
 %ThenBody0:
 	$x = move 20

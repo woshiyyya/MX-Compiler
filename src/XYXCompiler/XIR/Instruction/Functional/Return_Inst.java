@@ -1,4 +1,5 @@
 package XYXCompiler.XIR.Instruction.Functional;
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
@@ -37,5 +38,9 @@ public class Return_Inst extends Functional {
     public void LLPrint() {
         String ans = "\tret " + (retval == null ? "" :retval.getString());
         System.out.println(ans);
+    }
+
+    public void accept(XIRVisitor visitor){
+        visitor.visit(this);
     }
 }

@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Memory;
 
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
@@ -51,5 +52,9 @@ public class Move_Inst extends Memory {
         if(Source == null)
             System.out.println("source" + Error());
         System.out.println("\t" + dest.getString() + " = move " + Source.getString());
+    }
+
+    public void accept(XIRVisitor visitor){
+        visitor.visit(this);
     }
 }

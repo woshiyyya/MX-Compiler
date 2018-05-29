@@ -1,8 +1,7 @@
 func main {
-%Entry:
+%Start BB:
 	$x = move 10
 	$x = move 20
 	ret $x
-	ret 0
 
 }

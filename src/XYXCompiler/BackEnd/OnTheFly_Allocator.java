@@ -19,10 +19,10 @@ import java.util.*;
 
 public class OnTheFly_Allocator {
     List<FrameSlice> slices = new LinkedList<>();
-    Map<VirtualReg, FrameSlice> VRegSliceMap = new HashMap<>();
-    List<PhysicalReg> AvailableRegs;
-    X86Registers x86Registers;
-    XIRRoot root;
+    private Map<VirtualReg, FrameSlice> VRegSliceMap = new HashMap<>();
+    private List<PhysicalReg> AvailableRegs;
+    private X86Registers x86Registers;
+    private XIRRoot root;
 
     public OnTheFly_Allocator(XIRRoot root,X86Registers x86Registers) {
         this.root = root;
@@ -53,7 +53,7 @@ public class OnTheFly_Allocator {
             VRegSliceMap.putAll(func.ArgSliceMap);
             for(BasicBlock Blk: func.ReverseOrder){
                 for(Instruction inst = Blk.Entry; inst != null; inst = inst.next){
-                    System.out.println(inst.getClass().getSimpleName());
+                    //System.err.println(inst.getClass().getSimpleName());
                     int id = 0;
                     if(inst instanceof Call_Inst){
                         Handle_Call_Params(func, (Call_Inst) inst);
@@ -63,30 +63,31 @@ public class OnTheFly_Allocator {
                             PhysicalReg PReg = AvailableRegs.get(id++);
                             func.usedPregs.add(PReg);
                             inst.Reset_OperandRegs(VReg, PReg);
-                            System.out.println("[" + VReg.Num + "->" + PReg.name + "]");
-
-                            if(VRegSliceMap.get(VReg) == null){
-                                FrameSlice sliceX = new FrameSlice(func, VReg.Name);
+                            //System.out.println("[" + VReg.Num + "->" + PReg.name + "]");
+                            FrameSlice sliceX = VRegSliceMap.get(VReg);
+                            if(sliceX == null){
+                                sliceX = new FrameSlice(func, VReg.Name);
                                 VRegSliceMap.put(VReg, sliceX);
                                 func.frameSlice.add(sliceX);
-                                inst.prepend(new Load_Inst(Blk, PReg, sliceX, 0, 8));
                             }
+                            inst.prepend(new Load_Inst(Blk, PReg, sliceX, 0, 8));
                         }
 
 
                         //Handle Dest Reg
                         if(inst.Def != null){
-                            PhysicalReg PReg = AvailableRegs.get(id++);
+                            PhysicalReg PReg = AvailableRegs.get(id);
                             func.usedPregs.add(PReg);
                             inst.Reset_DestRegs(PReg);
-                            System.out.println("[" + inst.Def.Num + "->" + PReg.name + "]");
-                            if(VRegSliceMap.get(inst.Def) == null){
-                                FrameSlice sliceX = new FrameSlice(func, inst.Def.Name);
+                            //System.out.println("[" + inst.Def.Num + "->" + PReg.name + "]");
+                            FrameSlice sliceX = VRegSliceMap.get(inst.Def);
+                            if(sliceX == null){
+                                sliceX = new FrameSlice(func, inst.Def.Name);
                                 VRegSliceMap.put(inst.Def, sliceX);
                                 func.frameSlice.add(sliceX);
-                                inst.append(new Store_Inst(Blk, PReg, 8, sliceX, 0));
-                                inst = inst.next;
                             }
+                            inst.append(new Store_Inst(Blk, PReg, 8, sliceX, 0));
+                            inst = inst.next;
                         }
                     }
                 }

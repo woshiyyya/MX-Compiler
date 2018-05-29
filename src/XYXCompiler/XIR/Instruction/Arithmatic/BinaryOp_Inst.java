@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Arithmatic;
 
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
@@ -74,5 +75,9 @@ public class BinaryOp_Inst extends Arithmatic {
         rename.put(binaryop.Or, "or");
         rename.put(binaryop.Xor, "xor");
         System.out.println("\t" + dest.getString() + " = " + rename.get(op) + " " + L_operand.getString() + " " + R_operand.getString());
+    }
+
+    public void accept(XIRVisitor visitor){
+        visitor.visit(this);
     }
 }

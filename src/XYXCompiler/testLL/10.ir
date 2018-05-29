@@ -1,5 +1,5 @@
 func main {
-%Entry:
+%Start BB:
 	$new = alloc 8
 	$a = move $new
 	store 8 $a 10 0
@@ -8,6 +8,5 @@ func main {
 	$V91 = load 8 $V92 0
 	$V93 = add $V91 20
 	ret $V93
-	ret 0
 
 }

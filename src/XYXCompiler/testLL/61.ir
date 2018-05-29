@@ -1,20 +1,20 @@
-func main {
+func func $__THIS__ {
 %Start BB:
-	call __GlobalInit__ 
-	$V3 = mul 19 8
-	$V3 = add $c $V3
-	$V2 = load 8 $V3 0
-	$a = move $V2
-	ret 0
+	$c = move 10
+	$this.b = load 8 $__THIS__ 16
+	$V3 = add $this.b 10
+	store 8 $__THIS__ $V3 8
+	$this.a = load 8 $__THIS__ 8
+	ret $this.a
 
 }
-void __GlobalInit__ {
-%Start BB:
-	$a = move 10
-	$V0 = add $a 80
-	$b = move $V0
-	$new = alloc 160
-	$c = move $new
+func main {
+%Entry:
+	$new = alloc 24
+	$test = move $new
+	$funcret = call func $test 
+	$fuck = move $funcret
+	ret $fuck
 	ret 0
 
 }

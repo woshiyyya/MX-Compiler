@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Control;
 
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Instruction.Arithmatic.RelationOp_Inst;
 import XYXCompiler.XIR.Operand.DataSrc;
@@ -70,6 +71,10 @@ public class CJump_Inst extends Control{
             ans += "\tbr " + L_operand.getString() + " " + ifTrue.getLabel() + " " + ifFalse.getLabel();
         }
         System.out.println(ans);
+    }
+
+    public void accept(XIRVisitor visitor){
+        visitor.visit(this);
     }
 
 }

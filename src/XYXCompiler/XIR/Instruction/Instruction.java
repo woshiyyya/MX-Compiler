@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction;
 
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
@@ -65,6 +66,7 @@ public abstract class Instruction {
     public abstract void Reset_DestRegs(PhysicalReg Reg);
     public abstract void Print();
     public abstract void LLPrint();
+    public abstract void accept(XIRVisitor visitor);
 
     public String Error(){
         return " is NUll----- in " + BB_Scope.getLabel();

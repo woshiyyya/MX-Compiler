@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Arithmatic;
 
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
@@ -57,5 +58,9 @@ public class UnaryOp_Inst extends Arithmatic {
         rename.put(unaryop.NEG, "neg");
         rename.put(unaryop.NOT, "not");
         System.out.println("\t" + dest.getString() + " = " + rename.get(op) + " "  + operand.getString());
+    }
+
+    public void accept(XIRVisitor visitor){
+        visitor.visit(this);
     }
 }

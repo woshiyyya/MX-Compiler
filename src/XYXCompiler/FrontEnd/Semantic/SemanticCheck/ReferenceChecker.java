@@ -25,6 +25,7 @@ public class ReferenceChecker implements ASTVisitor {
     //      3.Check break/continue statement in Loops
 
     private Stack<Node> LoopStack = new Stack<>();
+    private boolean inClass = false;
 
     private void VISIT(Node node){
         if(node != null){

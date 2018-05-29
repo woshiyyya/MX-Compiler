@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Operand;
 
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.Operand.Register.GlobalVar;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
@@ -21,4 +22,5 @@ public class DataSrc {
         }else
             return "MEM";
     }
+
 }

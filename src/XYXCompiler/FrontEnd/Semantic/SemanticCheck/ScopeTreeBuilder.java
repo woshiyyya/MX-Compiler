@@ -129,9 +129,15 @@ public class ScopeTreeBuilder implements ASTVisitor {
         typeTable.LinkClassScope(node.name, currentScope);
 
         //Class Function support Forwarding reference
+        boolean have_CF = false;
         for(Declaration X: node.Members){
-                currentScope.put(X);
+            if(X instanceof Construct_Function)
+                have_CF = true;
+            currentScope.put(X);
         }
+
+        if(!have_CF)
+            node.Members.add(new Construct_Function(currentClass));
 
         for(Declaration X: node.Members){       // ** Did not check num of CF
             VISIT(X);   //TROUBLE~!!!  Solved at Line167

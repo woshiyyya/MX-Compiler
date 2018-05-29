@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Memory;
 
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
@@ -51,5 +52,9 @@ public class Load_Inst extends Memory {
     public void LLPrint() {
         String ans = "\t" + dest.getString() + " = load " + "8 " + addr.getString() +  " " + offset;
         System.out.println(ans);
+    }
+
+    public void accept(XIRVisitor visitor){
+        visitor.visit(this);
     }
 }

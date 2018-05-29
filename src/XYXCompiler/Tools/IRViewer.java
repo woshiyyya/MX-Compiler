@@ -19,6 +19,7 @@ public class IRViewer {
 
     public void View(){
         for(Function func: root.Functions.values()){
+            System.out.println("[" + func.name + "]");
             for(BasicBlock BB: func.PreOrder){
                 System.out.println(BB.label);
                 for(Instruction inst = BB.Entry; inst != null; inst = inst.next){
@@ -34,7 +35,7 @@ public class IRViewer {
         System.setOut(OUT);
 
         for(Function func: root.Functions.values()){
-            String funchead = (func.func_info.returntype instanceof Void_Type) ? "void " : "func ";
+            String funchead =  "func ";
             funchead += func.name + " ";
             for(VirtualReg X: func.ArgRegs)
                 funchead += X.getString() + " ";

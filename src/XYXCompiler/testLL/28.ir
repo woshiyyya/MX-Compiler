@@ -1,12 +1,11 @@
 func main {
-%Entry:
+%Start BB:
 	$a = move 5
 	$b = move 0
 	$b = move $a
-	$V305 = mul $a 2
-	$V306 = add $V305 $b
-	$c = move $V306
+	$V181 = mul $a 2
+	$V182 = add $V181 $b
+	$c = move $V182
 	ret $c
-	ret 0
 
 }

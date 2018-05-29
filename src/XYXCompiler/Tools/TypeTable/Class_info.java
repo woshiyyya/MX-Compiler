@@ -17,17 +17,17 @@ public class Class_info {
     }
 
     public int getOffset(String name){
-        int cnt = 0;
+        int cnt = -1; //manually add this
         for(String X: membernameList){
             cnt++;
             if(name.equals(X))
-                return (cnt-1) * intsize;
+                return (cnt - 1) * intsize;
         }
         return -1;
     }
 
     public int getSize(){
-        return membernameList.size() * intsize;
+        return (membernameList.size() - 1)* intsize;
     }
 
 }

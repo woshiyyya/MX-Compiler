@@ -36,6 +36,7 @@ import XYXCompiler.XIR.Operand.Static.Literal;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.StringLiteral;
 
+import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,17 +47,19 @@ import static XYXCompiler.XIR.Tools.ConstVal.intsize;
 
 public class XIRBuilder implements ASTVisitor {
     public XIRRoot Root = new XIRRoot();
+    public ASTRoot astRoot = null;
     private BasicBlock curBlk = null;
     private Function curFunc = null;
-    private Function GlobalInit = null;
     private BasicBlock preLoopUpdate;
     private BasicBlock preLoopAfter;
     private BasicBlock CurLoopUpdate;
     private BasicBlock CurLoopAfter;
-    private boolean curIfAddr = false;
+    private VirtualReg THISPOINTER = null;
+    private Class_info curClassInfo = null;
     public Map<String, Function> FuncMap = new HashMap<>();
     public List<Array_Type> NewDimList = new LinkedList<>();
     public TypeTable typeTable;
+    private boolean curIfAddr = false;
     private int Blknum = 0;
     private int Loopnum = 0;
 
@@ -204,99 +207,120 @@ public class XIRBuilder implements ASTVisitor {
     }
 
     private boolean IfNeedMem(Node node){
-        return (node instanceof Accessing || node instanceof Indexing);
+        return (node instanceof Accessing || node instanceof Indexing)
+                || (THISPOINTER != null && node instanceof ID);
+    }
+
+    private void StoreFuncMap(String name, Function func){
+        Root.Functions.put(name, func);
+        FuncMap.put(name, func);
     }
 
     private void Collect_Functions(Node node){
         List<Declaration> declarations;
-        if(node instanceof ASTRoot)
+        boolean inClass = false;
+        if(node instanceof ASTRoot){
             declarations = ((ASTRoot) node).declarations;
-        else
+        }else{
             declarations = ((Class_Declaration) node).Members;
+            inClass = true;
+        }
 
         for(Declaration X: declarations){
             if(X instanceof Function_Declaration){
                 Function func = new Function();
                 func.name = X.name;
+                func.inClass = inClass;
                 func.func_info = ((Function_Declaration)X).functype;
                 func.retsize = ((Function_Declaration)X).returntype.size;   //size: to be done
-                FuncMap.put(func.name, func);
+                StoreFuncMap(func.name, func);
             }else if(X instanceof Construct_Function){
                 Function func = new Function();
                 func.name = X.name;
-                FuncMap.put(func.name, func);
+                func.inClass = inClass;
+                StoreFuncMap(func.name, func);
             }
         }
     }
 
-    private void Construct_GlobalVar_InitFunc(ASTRoot node){
-        GlobalInit = new Function();
-        GlobalInit.name = "__GlobalInit__";
-
-        curFunc = GlobalInit;
-        curBlk = curFunc.StartBB;
-        curBlk.label = "Entry";
+    private void Initialize_GlobalVar(ASTRoot node){
         for(Declaration X : node.declarations){
             if(X instanceof Global_Variable_Declaration)
                 VISIT(X);
         }
-        curFunc.EndBB = curBlk;
-        curFunc = null;
-        curBlk = null;
+    }
+
+    private void Initialize_ClassMem(Class_Declaration node){
+        for(Declaration X : node.Members){
+            if(X instanceof Variable_Declaration)
+                VISIT(X);
+        }
     }
 
     @Override
     public void visit(ASTRoot node) {
-        Construct_GlobalVar_InitFunc(node);
+        astRoot = node;
         Collect_Functions(node);
+        for(Declaration X: node.declarations){
+            if(X instanceof Class_Declaration)
+                Collect_Functions(X);
+        }
 
         for(Declaration X: node.declarations){
-            if(X instanceof Function_Declaration)
+            if(X instanceof Function_Declaration || X instanceof Class_Declaration)
                 VISIT(X);
         }
     }
 
     @Override
     public void visit(Class_Declaration node) {
+        curClassInfo = typeTable.ClassInfoTable.get(node.name);
         Collect_Functions(node);
         for(Declaration X: node.Members){
             if(X instanceof Function_Declaration || X instanceof Construct_Function)
                 VISIT(X);
         }
+        curClassInfo = null;
     }
 
     @Override
     public void visit(Construct_Function node) {
         curFunc = FuncMap.get(node.name);
         //Warning: without adding parameters
-        VirtualReg THIS = new VirtualReg("this");
-        Class_info class_info = typeTable.getInfo(node.name);
-        curFunc.ArgRegs.add(THIS);
+        THISPOINTER = new VirtualReg("this");
+        curClassInfo = typeTable.getInfo(node.name);
+
+        curFunc.ArgRegs.add(THISPOINTER);
         curBlk = curFunc.StartBB;
-        curBlk.add(new Alloc_Inst(curBlk, THIS, new Immediate(class_info.getSize())));
+
         VISIT(node.body);
-        curBlk.add(new Return_Inst(curBlk, THIS));
+
+        curBlk.add(new Return_Inst(curBlk, THISPOINTER));
         curFunc.EndBB = curBlk;
+        THISPOINTER = null;
+        curClassInfo = null;
     }
 
 //-----Function Part---------------------------------------------------------
     @Override
     public void visit(Function_Declaration node) {
         curFunc = FuncMap.get(node.name);
-        if(node.name.equals("main")){
-            //Inject Global Initialization
-            curFunc.StartBB = GlobalInit.StartBB;
-            curBlk = curFunc.EndBB;
+
+        // A.func(this, param_1, ..., param_n)
+        if(curFunc.inClass){
+            THISPOINTER = new VirtualReg("__THIS__");
+            curFunc.ArgRegs.add(THISPOINTER);
         }
 
         for(Variable_Declaration X : node.params){
             VISIT(X);
             curFunc.ArgRegs.add((VirtualReg) X.reg);
         }
-
-        Root.Functions.put(node.name, curFunc);
         curBlk = curFunc.StartBB;
-        // Add Global Variable Initialization
+
+        if(node.name.equals("main"))
+            Initialize_GlobalVar(astRoot);
+
         VISIT(node.body);
 
         //Merge multiple return block
@@ -307,11 +331,12 @@ public class XIRBuilder implements ASTVisitor {
                 curFunc.EndBB = curBlk;
                 curBlk.If_closed = true;
                 break;
+
             case 1:
                 curFunc.EndBB = curFunc.RetBlks.get(0);
                 break;
-            default:{
-                //create and merge All return BB
+
+            default:{ //create and merge All return BB
                 curFunc.EndBB = new BasicBlock(curFunc,"Merged_Return" + Blknum++);
                 curFunc.EndBB.add(new Return_Inst(curFunc.EndBB, rax));
                 for(BasicBlock X: curFunc.RetBlks){
@@ -322,6 +347,8 @@ public class XIRBuilder implements ASTVisitor {
                 }
             }
         }
+
+        THISPOINTER = null;
     }
 
     @Override
@@ -380,10 +407,11 @@ public class XIRBuilder implements ASTVisitor {
                 node.RHS.ifTrue = new BasicBlock(curFunc, "Vardecl_RHS_Iftrue");
                 node.RHS.ifFalse = new BasicBlock(curFunc, "Vardecl_RHS_Iffalse");
             }
+
             VISIT(node.RHS);
+
             if(logical)
                 MergeCircuit((Binary_Expression) node.RHS);
-
             curBlk.add(new Move_Inst(curBlk, reg, node.RHS.datasrc));
         }else{
             curBlk.add(new Move_Inst(curBlk, reg, new Immediate(0)));
@@ -549,13 +577,25 @@ public class XIRBuilder implements ASTVisitor {
 //-----Primary Part-----------------------------------------------------------
     @Override
     public void visit(ID node) {
-        Node Entity = node.entity;
-        if(Entity instanceof Global_Variable_Declaration)
-            node.datasrc = ((Global_Variable_Declaration) Entity).dataSrc;
-        if(Entity instanceof Variable_Declaration)
-            node.datasrc = ((Variable_Declaration) Entity).reg;
-        if(Entity instanceof Variable_Declaration_Statement)
-            node.datasrc = ((Variable_Declaration_Statement) Entity).reg;
+        if(curClassInfo != null && curClassInfo.membernameList.contains(node.name)){
+            //Need This.
+            int offset = curClassInfo.getOffset(node.name);
+            if(curIfAddr){
+                //Need its addr
+                node.setAddr(THISPOINTER, offset);
+            }else{
+                node.datasrc = new VirtualReg("this." + node.name);
+                curBlk.add(new Load_Inst(curBlk, (Register) (node.datasrc), THISPOINTER, offset, 8));
+            }
+        }else{ //Not class Member
+            Node Entity = node.entity;
+            if(Entity instanceof Global_Variable_Declaration)
+                node.datasrc = ((Global_Variable_Declaration) Entity).dataSrc;
+            if(Entity instanceof Variable_Declaration)
+                node.datasrc = ((Variable_Declaration) Entity).reg;
+            if(Entity instanceof Variable_Declaration_Statement)
+                node.datasrc = ((Variable_Declaration_Statement) Entity).reg;
+        }
         if(hasBranch(node))
             curBlk.Close_B(node.datasrc, new Immediate(0), CmpOp.Z, node.ifTrue, node.ifFalse);
     }
@@ -777,9 +817,12 @@ public class XIRBuilder implements ASTVisitor {
         curBlk = ForAfter;
     }
 
+    private boolean NeedCF(Array_Type node, int dim){
+        return (node.getBasetype() instanceof Class_Type && dim == node.getDim());
+    }
+
     @Override
     public void visit(Array_Type node) {
-
         VISIT(node.size);
         VISIT(node.basetype);
         if(node.size == null)
@@ -794,6 +837,7 @@ public class XIRBuilder implements ASTVisitor {
             NewDimList.clear();
             VISIT(node.type);
             node.datasrc = dest;
+            //only one diM
             if(NewDimList.size() == 1){
                 DataSrc Size = NewDimList.get(0).size.datasrc;
                 if(Size instanceof Immediate){
@@ -803,12 +847,16 @@ public class XIRBuilder implements ASTVisitor {
                     curBlk.add(new BinaryOp_Inst(curBlk, dest, Size, new Immediate(8), binaryop.Mul));
                     curBlk.add(new Alloc_Inst(curBlk, dest, dest));
                 }
-            }else
+
+
+            }else // Language-Sugar
                 Construct_Forloop(node.datasrc, new Immediate(1), 0);
         }else if(node.type instanceof Class_Type){
             int size = (typeTable.getInfo(((Class_Type) node.type).name)).getSize();
             node.datasrc = dest;
             curBlk.add(new Alloc_Inst(curBlk, dest, new Immediate(size)));
+            //Call Construct Function
+
         }else{
             node.datasrc = dest;
             curBlk.add(new Alloc_Inst(curBlk, dest, new Immediate(8)));
@@ -870,7 +918,11 @@ public class XIRBuilder implements ASTVisitor {
 
     @Override
     public void visit(Class_Method node) {
+        boolean backup = curIfAddr;
+        enterAddr(false);
         VISIT(node.body);
+        exitAddr(backup);
+
         //WARNING: Class Method might have the same name as Function!!
         Function func = FuncMap.get(node.Func_Name);
         Register reg = new VirtualReg(func.name + "ret");

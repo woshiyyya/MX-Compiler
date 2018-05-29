@@ -29,12 +29,14 @@ public class X86Registers {
     public static PhysicalReg r14 = new PhysicalReg("r14",false,true);
     public static PhysicalReg r15 = new PhysicalReg("r15",false,true);
 
-    public Set<PhysicalReg> CallerSavedRegs = new HashSet<>();
-    public Set<PhysicalReg> CalleeSavedRegs = new HashSet<>();
-    public List<PhysicalReg> GeneralRegs = new LinkedList<>();
-    public List<PhysicalReg> FuncParamRegs = new LinkedList<>();
+    public static Set<PhysicalReg> CallerSavedRegs = new HashSet<>();
+    public static Set<PhysicalReg> CalleeSavedRegs = new HashSet<>();
+    public static List<PhysicalReg> GeneralRegs = new LinkedList<>();
+    public static List<PhysicalReg> FuncParamRegs = new LinkedList<>();
 
-    public X86Registers() {
+    public X86Registers() {}
+
+    public void Initialize() {
         // 9
         CallerSavedRegs.add(rax);
         CallerSavedRegs.add(rdi);
@@ -55,11 +57,7 @@ public class X86Registers {
         CalleeSavedRegs.add(r14);
         CalleeSavedRegs.add(r15);
 
-        GeneralRegs.add(rax);
-        GeneralRegs.add(rdi);
-        GeneralRegs.add(rsi);
-        GeneralRegs.add(rdx);
-        GeneralRegs.add(rcx);
+        //GeneralRegs.add(rax); // reserved for specific use
         GeneralRegs.add(r8);
         GeneralRegs.add(r9);
         GeneralRegs.add(r10);
@@ -69,6 +67,10 @@ public class X86Registers {
         GeneralRegs.add(r13);
         GeneralRegs.add(r14);
         GeneralRegs.add(r15);
+        GeneralRegs.add(rdi);
+        GeneralRegs.add(rsi);
+        GeneralRegs.add(rdx);
+        GeneralRegs.add(rcx);
 
         FuncParamRegs.add(rdi);
         FuncParamRegs.add(rsi);

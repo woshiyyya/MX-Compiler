@@ -1,10 +1,9 @@
 func main {
-%Entry:
+%Start BB:
 	$x = move 10
 	$y = move 20
 	$V13 = add $x $y
 	$c = move $V13
 	ret $c
-	ret 0
 
 }

@@ -23,4 +23,9 @@ public class Expression extends Node {
     public void setType(Base_Type type){
         this.type = type;
     }
+
+    public void setAddr(DataSrc baseaddr, int offset){
+        this.baseaddr = baseaddr;
+        this.offset = offset;
+    }
 }

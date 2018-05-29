@@ -1,5 +1,5 @@
 func main {
-%Entry:
+%Start BB:
 	$a = move 5
 	$b = move 0
 	$c = move 0
@@ -10,6 +10,5 @@ func main {
 	$V171 = add $b $c
 	$V172 = add $V171 $a
 	ret $V172
-	ret 0
 
 }

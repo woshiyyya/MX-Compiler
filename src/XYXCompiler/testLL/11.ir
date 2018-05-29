@@ -1,5 +1,5 @@
 func main {
-%Entry:
+%Start BB:
 	$la = move 5
 	$new = mul $la 8
 	$new = alloc $new

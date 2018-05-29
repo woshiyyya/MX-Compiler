@@ -16,11 +16,10 @@ func min $a $b {
 
 }
 func main {
-%Entry:
+%Start BB:
 	$x = move 10
 	$y = move 20
 	$minret = call min $x $y 
 	ret $minret
-	ret 0
 
 }

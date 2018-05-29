@@ -1,7 +1,6 @@
 package XYXCompiler.XIR.CFG;
 
 import XYXCompiler.XIR.Instruction.Arithmatic.RelationOp_Inst;
-import XYXCompiler.XIR.Instruction.Control.Branch_Inst;
 import XYXCompiler.XIR.Instruction.Control.CJump_Inst;
 import XYXCompiler.XIR.Instruction.Control.Jump_Inst;
 import XYXCompiler.XIR.Instruction.Functional.Return_Inst;
@@ -74,16 +73,6 @@ public class BasicBlock {
         if(If_closed)
             return;
         CJump_Inst jmp = new CJump_Inst(this, lhs, rhs, op, ifTrue, ifFalse);
-        add(jmp);
-        add_Succ(ifTrue);
-        add_Succ(ifFalse);
-        ifTrue.add_Pred(this);
-        ifFalse.add_Pred(this);
-        If_closed = true;
-    }
-
-    public void Close_B_reduced(DataSrc cond, BasicBlock ifTrue, BasicBlock ifFalse){
-        Branch_Inst jmp = new Branch_Inst(this, cond, ifTrue, ifFalse);
         add(jmp);
         add_Succ(ifTrue);
         add_Succ(ifFalse);

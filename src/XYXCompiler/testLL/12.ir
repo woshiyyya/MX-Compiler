@@ -1,5 +1,5 @@
 func main {
-%Entry:
+%Start BB:
 	$la = move 5
 	$lb = move 10
 	$a = move 0

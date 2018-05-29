@@ -23,6 +23,7 @@ public class Function {
     public Map<String, VirtualReg> VirtualRegMap = new HashMap<>();
     public BasicBlock StartBB;
     public BasicBlock EndBB = null;
+    public boolean inClass = false;
 
     //for Liveness Analysis
     public List<BasicBlock> PreOrder = new LinkedList<>();
@@ -31,28 +32,20 @@ public class Function {
     public Set<BasicBlock> ReverseOrder = new HashSet<>();
 
     //for StackFrame Allocator
-    public int Pos_LastParam;
-    public int Pos_CallerSaved;
-    public int Pos_RetAddr;
-    public int Pos_FirstParam;
-    public int Pos_LocalVar;
-    public int Pos_CalleeSaved;
-    public int totalFrameSize;
     public Map<VirtualReg, FrameSlice> ArgSliceMap = new HashMap<>(); // Help params find their location in Frame
     public List<FrameSlice> frameSlice = new ArrayList<>();
     public Set<PhysicalReg> usedPregs = new HashSet<>();
-    public Set<PhysicalReg> usedCallerSavedRegs = new HashSet<>();
-    public Set<PhysicalReg> usedCalleeSavedregs = new HashSet<>();
+    public List<PhysicalReg> usedCallerSavedRegs = new LinkedList<>();
+    public List<PhysicalReg> usedCalleeSavedregs = new LinkedList<>();
 
     public Function() {
-        StartBB = new BasicBlock(this,"Start BB");
+        StartBB = new BasicBlock(this,"Start_BB");
     }
 
     public void Initialize_FrameInfo(){
         // Warning: without consider param > 6
-        int num = ArgRegs.size() % 7;
-        for(int i = 0; i < num; i++){
-            FrameSlice slice= new FrameSlice(this, "param" + i);
+        for(int i = 0; i < ArgRegs.size(); i++){
+            FrameSlice slice = new FrameSlice(this, "param" + i);
             frameSlice.add(slice);
             ArgSliceMap.put(ArgRegs.get(i), slice);
         }

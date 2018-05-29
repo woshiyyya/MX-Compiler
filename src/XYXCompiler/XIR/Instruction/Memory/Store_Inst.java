@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Memory;
 
+import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
@@ -43,10 +44,7 @@ public class Store_Inst extends Memory {
 
     @Override
     public void Print() {
-        String ans = "\tStore\t" + datasize+ " [" + addr.getString();
-        if(offset != 0)
-            ans += " + " + offset;
-        ans += "] " + source.getString();
+        String ans = "\tStore\t" + datasize+ " [" + addr.getString() + " + " + offset + "] " + source.getString();
         System.out.println(ans);
     }
 
@@ -54,5 +52,9 @@ public class Store_Inst extends Memory {
     public void LLPrint() {
         String ans = "\tstore " + "8 " + addr.getString() + " " + source.getString() + " " + offset;
         System.out.println(ans);
+    }
+
+    public void accept(XIRVisitor visitor){
+        visitor.visit(this);
     }
 }
