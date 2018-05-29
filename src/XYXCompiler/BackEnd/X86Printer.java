@@ -53,7 +53,7 @@ public class X86Printer implements XIRVisitor {
     private String getBBLabel(BasicBlock BB){
         String name = BBNameMap.get(BB);
         if(name == null){
-            name = BB.label + "." + (BBNum++) + ":";
+            name = BB.label + "." + (BBNum++);
             BBNameMap.put(BB, name);
         }
         return name;
@@ -86,7 +86,7 @@ public class X86Printer implements XIRVisitor {
 
     @Override
     public void visit(BasicBlock node) {
-        System.out.println(getBBLabel(node));
+        System.out.println(getBBLabel(node) + ":");
         for(Instruction inst = node.Entry; inst != null; inst = inst.next){
             inst.accept(this);
         }
@@ -107,7 +107,8 @@ public class X86Printer implements XIRVisitor {
             case Or:  asm = asm + "or";  break;
             case Xor: asm = asm + "xor"; break;
         }
-        asm = asm + " \t" + visit(node.L_operand) + ", " + visit(node.R_operand);
+        asm = asm + " \t" + visit(node.L_operand) + ", " + visit(node.R_operand) + "\n";
+        asm = asm + "\tmov \t" + visit(node.dest) + ", " + visit(node.L_operand);
         System.out.println(asm);
     }
 
@@ -151,13 +152,13 @@ public class X86Printer implements XIRVisitor {
     public void visit(CJump_Inst node) {
         String asm = "\tcmp \t" + visit(node.L_operand) + ", " + visit(node.R_operand) + "\n";
         switch (node.op){
-            case Z: asm = asm + "\tjz \t" + getBBLabel(node.ifFalse); break;
-            case EQ:asm = asm + "\tje \t" + getBBLabel(node.ifTrue);  break;
-            case NE:asm = asm + "\tjne\t" + getBBLabel(node.ifTrue);  break;
-            case LS:asm = asm + "\tjl \t" + getBBLabel(node.ifTrue);  break;
-            case LE:asm = asm + "\tjle\t" + getBBLabel(node.ifTrue);  break;
-            case GE:asm = asm + "\tjge\t" + getBBLabel(node.ifTrue);  break;
-            case GT:asm = asm + "\tjg \t" + getBBLabel(node.ifTrue);  break;
+            case Z: asm = asm + "\tjz \t"  + getBBLabel(node.ifFalse); break;
+            case EQ:asm = asm + "\tjne\t"  + getBBLabel(node.ifFalse);  break;
+            case NE:asm = asm + "\tje \t"  + getBBLabel(node.ifFalse);  break;
+            case LS:asm = asm + "\tjge\t"  + getBBLabel(node.ifFalse);  break;
+            case LE:asm = asm + "\tjg \t"  + getBBLabel(node.ifFalse);  break;
+            case GE:asm = asm + "\tjl \t"  + getBBLabel(node.ifFalse);  break;
+            case GT:asm = asm + "\tjle\t"  + getBBLabel(node.ifFalse);  break;
         }
         System.out.println(asm);
     }
@@ -191,7 +192,7 @@ public class X86Printer implements XIRVisitor {
     @Override
     public void visit(Load_Inst node) {
         String asm = "\tmov \t";
-        asm = asm + visit(node.dest) + ", dword [" + visit(node.addr);
+        asm = asm + visit(node.dest) + ", qword [" + visit(node.addr);
         if(node.offset < 0){
             asm = asm + node.offset + "]";
         }else{
@@ -208,7 +209,7 @@ public class X86Printer implements XIRVisitor {
     @Override
     public void visit(Store_Inst node) {
 
-        String asm = "\tmov \tdword [" + visit(node.addr);
+        String asm = "\tmov \tqword [" + visit(node.addr);
         if(node.offset < 0){
             asm = asm + node.offset + "]";
         }else{
@@ -221,6 +222,11 @@ public class X86Printer implements XIRVisitor {
     @Override
     public void visit(Push node) {
         System.out.println("\tpush \t" + visit(node.source));
+    }
+
+    @Override
+    public void visit(Pop node) {
+        System.out.println("\tpop \t" + visit(node.dest));
     }
 
     private String visit(DataSrc reg){

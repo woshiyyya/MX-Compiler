@@ -29,4 +29,5 @@ public interface XIRVisitor {
     void visit(Move_Inst node);
     void visit(Store_Inst node);
     void visit(Push node);
+    void visit(Pop node);
 }

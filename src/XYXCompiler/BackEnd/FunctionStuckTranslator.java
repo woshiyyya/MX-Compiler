@@ -8,11 +8,9 @@ import XYXCompiler.XIR.CFG.Function;
 import XYXCompiler.XIR.CFG.XIRRoot;
 import XYXCompiler.XIR.Instruction.Arithmatic.BinaryOp_Inst;
 import XYXCompiler.XIR.Instruction.Functional.Call_Inst;
+import XYXCompiler.XIR.Instruction.Functional.Return_Inst;
 import XYXCompiler.XIR.Instruction.Instruction;
-import XYXCompiler.XIR.Instruction.Memory.Load_Inst;
-import XYXCompiler.XIR.Instruction.Memory.Move_Inst;
-import XYXCompiler.XIR.Instruction.Memory.Push;
-import XYXCompiler.XIR.Instruction.Memory.Store_Inst;
+import XYXCompiler.XIR.Instruction.Memory.*;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Static.Immediate;
@@ -95,6 +93,7 @@ public class FunctionStuckTranslator {
         }
 
         Exit.prepend(new BinaryOp_Inst(curBB, rsp, rsp, new Immediate(Info.Totalsize),BinaryOp_Inst.binaryop.Add));
+        Exit.prepend(new Pop(curBB, rbp));
         //Write:
         //      mov rax RET
         //      ret
