@@ -1,6 +1,5 @@
 package XYXCompiler.FrontEnd.Builder;
 
-import Test.Fuck;
 import XYXCompiler.FrontEnd.ASTNode.ASTRoot;
 import XYXCompiler.FrontEnd.ASTNode.Declaration.*;
 import XYXCompiler.FrontEnd.ASTNode.Expression.Binary_Expression;
@@ -33,12 +32,10 @@ import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.GlobalVar;
 import XYXCompiler.XIR.Operand.Static.Immediate;
 import XYXCompiler.XIR.Operand.Register.Register;
-import XYXCompiler.XIR.Operand.Static.Literal;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.StringLiteral;
 import XYXCompiler.XIR.Tools.BuiltinFunctionInserter;
 
-import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
