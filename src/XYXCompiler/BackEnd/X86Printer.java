@@ -20,6 +20,7 @@ import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.Immediate;
 import XYXCompiler.XIR.Operand.Static.StringLiteral;
 
+import javax.xml.crypto.Data;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -148,6 +149,11 @@ public class X86Printer implements XIRVisitor {
                 case Xor: asm = asm + (Lval ^ Rval); break;
             }
         }else{
+            if(node.L_operand instanceof Immediate){
+                DataSrc tem = node.L_operand;
+                node.L_operand = node.R_operand;
+                node.R_operand = tem;
+            }
             if(node.op == BinaryOp_Inst.binaryop.Div){
                 asm += "mov \trax ," + visit(node.L_operand) + "\n";
                 asm += "\tidiv \t" + visit(node.R_operand) + "\n";
