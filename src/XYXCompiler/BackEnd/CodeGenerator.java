@@ -29,17 +29,17 @@ public class CodeGenerator {
         LivenessAnalyser analyser = new LivenessAnalyser();
         analyser.Initialize(xirRoot);
         IRViewer viewer = new IRViewer(xirRoot);
-        //if(mod)
-        //    viewer.View();
+        if(mod)
+            viewer.View();
         //else
-        //    viewer.LLView(LLfilename);
+        //viewer.LLView(LLfilename);
         OnTheFly_Allocator Allocator = new OnTheFly_Allocator(xirRoot, x86Registers);
         Allocator.Allocate();
         FunctionStuckTranslator Translator = new FunctionStuckTranslator(xirRoot);
         Translator.Transform();
-        //Translator.Transform();
-        //viewer.View();
-        X86Printer printer = new X86Printer(null);
-        printer.visit(xirRoot);
+        if(!mod){
+            X86Printer printer = new X86Printer(null);
+            printer.visit(xirRoot);
+        }
     }
 }

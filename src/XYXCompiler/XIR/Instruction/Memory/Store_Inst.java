@@ -44,7 +44,7 @@ public class Store_Inst extends Memory {
 
     @Override
     public void Print() {
-        String ans = "\tStore\t" + datasize+ " [" + addr.getString() + " + " + offset + "] " + source.getString();
+        String ans = "\tStore\t" +  " [" + addr.getString() + " + " + offset + "] " + source.getString();
         System.out.println(ans);
     }
 

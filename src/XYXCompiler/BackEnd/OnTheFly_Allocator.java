@@ -30,7 +30,7 @@ public class OnTheFly_Allocator {
         AvailableRegs = new LinkedList<>(x86Registers.GeneralRegs);
     }
 
-    public void Handle_Call_Params(Function caller, Call_Inst inst){
+    public void Res_Handle_Call_Params(Function caller, Call_Inst inst){
         int id = 0;
         int Argnum = inst.ArgLocs.size();
         List<PhysicalReg> paramRags = x86Registers.FuncParamRegs;
@@ -45,6 +45,21 @@ public class OnTheFly_Allocator {
         }
     }
 
+    public void Handle_Call_Params(Function caller, Call_Inst inst){
+        for(int i = 0;i < inst.ArgLocs.size();i++){
+            DataSrc X = inst.ArgLocs.get(i);
+            if(X instanceof VirtualReg){
+                VirtualReg VReg = (VirtualReg)X;
+                FrameSlice sliceX = VRegSliceMap.get(VReg);
+                if(sliceX == null){
+                    sliceX = new FrameSlice(caller, VReg.Name);
+                    VRegSliceMap.put(VReg, sliceX);
+                    caller.frameSlice.add(sliceX);
+                }
+                inst.ArgLocs.set(i, sliceX);
+            }
+        }
+    }
 
     public void Allocate(){
         for(Function func: root.Functions.values()){

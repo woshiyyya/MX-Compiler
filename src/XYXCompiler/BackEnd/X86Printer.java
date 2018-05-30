@@ -16,6 +16,7 @@ import XYXCompiler.XIR.Instruction.Memory.*;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.GlobalVar;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
+import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.Immediate;
 import XYXCompiler.XIR.Operand.Static.StringLiteral;
 
@@ -99,15 +100,15 @@ public class X86Printer implements XIRVisitor {
 
     @Override
     public void visit(XIRRoot node) {
+        Print_Extern();
+        Print_Global(node);
+        Print_Text(node);
         try {
-            Print_Extern();
-            Print_Global(node);
-            Print_Text(node);
             Print_builtin();
-            Print_StaticData(node);
         }catch (Exception ex){
             System.err.println("Read file error!");
         }
+        Print_StaticData(node);
     }
 
     @Override
@@ -130,20 +131,38 @@ public class X86Printer implements XIRVisitor {
     @Override
     public void visit(BinaryOp_Inst node) {
         String asm = "\t";
-        switch (node.op){
-            case Add: asm = asm + "add"; break;
-            case Sub: asm = asm + "sub"; break;
-            case Mul: asm = asm +"imul"; break;
-            case Div: asm = asm + "div"; break;
-            case Mod: asm = asm + "mod"; break;
-            case Lsh: asm = asm + "shl"; break;
-            case Rsh: asm = asm + "shr"; break;
-            case And: asm = asm + "and";break;
-            case Or:  asm = asm + "or";  break;
-            case Xor: asm = asm + "xor"; break;
+        if(node.L_operand instanceof Immediate && node.R_operand instanceof Immediate){
+            int Lval = ((Immediate) node.L_operand).value;
+            int Rval = ((Immediate) node.R_operand).value;
+            asm = asm + "mov \t" + visit(node.dest) + ", ";
+            switch (node.op){
+                case Add: asm = asm + (Lval + Rval); break;
+                case Sub: asm = asm + (Lval - Rval); break;
+                case Mul: asm = asm + (Lval * Rval); break;
+                case Div: asm = asm + (Lval / Rval); break;
+                case Mod: asm = asm + (Lval % Rval); break;
+                case Lsh: asm = asm + (Lval << Rval); break;
+                case Rsh: asm = asm + (Lval >> Rval); break;
+                case And: asm = asm + (Lval & Rval);break;
+                case Or:  asm = asm + (Lval | Rval);  break;
+                case Xor: asm = asm + (Lval ^ Rval); break;
+            }
+        }else{
+            switch (node.op){
+                case Add: asm = asm + "add"; break;
+                case Sub: asm = asm + "sub"; break;
+                case Mul: asm = asm +"imul"; break;
+                case Div: asm = asm + "div"; break;
+                case Mod: asm = asm + "mod"; break;
+                case Lsh: asm = asm + "shl"; break;
+                case Rsh: asm = asm + "shr"; break;
+                case And: asm = asm + "and";break;
+                case Or:  asm = asm + "or";  break;
+                case Xor: asm = asm + "xor"; break;
+            }
+            asm = asm + " \t" + visit(node.L_operand) + ", " + visit(node.R_operand) + "\n";
+            asm = asm + "\tmov \t" + visit(node.dest) + ", " + visit(node.L_operand);
         }
-        asm = asm + " \t" + visit(node.L_operand) + ", " + visit(node.R_operand) + "\n";
-        asm = asm + "\tmov \t" + visit(node.dest) + ", " + visit(node.L_operand);
         System.out.println(asm);
     }
 
@@ -238,7 +257,8 @@ public class X86Printer implements XIRVisitor {
 
     @Override
     public void visit(Move_Inst node) {
-        System.out.println("\tmov \t" + visit(node.dest) + ", " + visit(node.Source));
+        if(node.dest != node.Source)
+            System.out.println("\tmov \t" + visit(node.dest) + ", " + visit(node.Source));
     }
 
     @Override
@@ -275,6 +295,6 @@ public class X86Printer implements XIRVisitor {
             return ((StringLiteral) reg).label;
         }else
             assert false;
-        return "FUCK!!!" + reg.getClass().getSimpleName();
+        return "FUCK!!!" + reg.getClass().getSimpleName() + ((VirtualReg)reg).Name;
     }
 }

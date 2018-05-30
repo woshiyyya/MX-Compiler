@@ -5,9 +5,12 @@ import XYXCompiler.XIR.CFG.Function;
 import XYXCompiler.XIR.CFG.XIRRoot;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class BuiltinFunctionInserter {
-    XIRRoot xirRoot;
-    XIRBuilder builder;
+    private XIRRoot xirRoot;
+    private XIRBuilder builder;
 
     public BuiltinFunctionInserter(XIRRoot xirRoot, XIRBuilder builder) {
         this.xirRoot = xirRoot;
@@ -54,5 +57,9 @@ public class BuiltinFunctionInserter {
 
         Function arraySize = CreateFunc("size","array.size");
         addArgs(arraySize, "baseaddr");
+    }
+
+    public boolean ifbuiltin(String name){
+        return builder.FuncMap.containsKey(name);
     }
 }

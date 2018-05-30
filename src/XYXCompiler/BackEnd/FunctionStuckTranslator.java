@@ -13,8 +13,10 @@ import XYXCompiler.XIR.Instruction.Instruction;
 import XYXCompiler.XIR.Instruction.Memory.*;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
+import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.Immediate;
 import javafx.geometry.Pos;
+import org.antlr.v4.runtime.BailErrorStrategy;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,12 +43,12 @@ public class FunctionStuckTranslator {
         |    | [rbp - 20H]  (4th argument #rcx)
         |    | [rbp - 28H]  (5th argument #r8)
         |    | [rbp - 30H]  (6th argument #r9)
-        |    | [rbp - 38H]  (Local Vars)                 rbp - Pos_LocalVar
+        |    | [rbp - 38H]  (Callee-Saved Start)
         :    :
+        |    | [rbp - ?H]   (Local Vars)                 rbp - Pos_LocalVar
         :    :
-        |    | [rbp - ?]  (Local Vars)                  rbp - Pos_CalleeSaved
-        :    :
-        |    | []         (Volatile Var)
+        |    | []           (Caller-Saved Start)
+        |    | []         (call)
         |    | [rbp - X]  (esp - the current stack pointer. The use of push / pop is valid now)
     */
 
@@ -62,11 +64,11 @@ public class FunctionStuckTranslator {
         int ReducedArgnum = (Argnum > 6) ? 6 : Argnum;
         Info.RetAddr                = 8;
         Info.LastParam              = Info.RetAddr              + 8 * (Argnum - ReducedArgnum);
-        Info.CallerSavedStart       = Info.LastParam            + 8 * func.usedCallerSavedRegs.size();
         Info.FirstParam             = -8;
-        Info.LocalVariableStart     = Info.FirstParam           - 8 * (ReducedArgnum);
-        Info.CalleeSavedStart       = Info.LocalVariableStart   - 8 * func.frameSlice.size();
-        Info.Totalsize              = (Info.CalleeSavedStart    - 8 * func.usedCalleeSavedregs.size())*(-1);
+        Info.CalleeSavedStart       = Info.FirstParam           - 8 * (ReducedArgnum);
+        Info.LocalVariableStart     = Info.CalleeSavedStart     - 8 * func.usedCalleeSavedregs.size();
+        Info.CallerSavedStart       = Info.LocalVariableStart   - 8 * func.frameSlice.size();
+        Info.Totalsize              = (Info.CallerSavedStart    - 8 * func.usedCallerSavedRegs.size())*(-1);
 
         Info.updateLocalVariablePosition();
         Info.updateParameterPosition();
@@ -116,6 +118,20 @@ public class FunctionStuckTranslator {
         }
     }
 
+    private void StoreCallerSavedRegs(FrameInfo Info, BasicBlock curBB, Instruction inst){
+        for(int i = 0; i < Info.UsedCallerSavedReg.size(); i++){
+            inst.prepend(new Store_Inst(curBB, Info.UsedCallerSavedReg.get(i),
+                    8,rbp,Info.CallerSavedStart + i*8));
+        }
+    }
+
+    private void ReloadCallerSavedRegs(FrameInfo Info, BasicBlock curBB, Instruction inst){
+        for(int i = 0; i < Info.UsedCallerSavedReg.size(); i++){
+            inst.append(new Load_Inst(curBB, Info.UsedCallerSavedReg.get(i),
+                    rbp,Info.CallerSavedStart + i*8,8));
+        }
+    }
+
     private void TransformCall(Function func, Instruction inst){
         FrameInfo Info = InfoMap.get(func);
         BasicBlock curBB = inst.BB_Scope;
@@ -124,11 +140,7 @@ public class FunctionStuckTranslator {
             Call_Inst Inst = (Call_Inst) inst;
 
             //Store Caller-Saved
-            for(int i = 0; i < Info.UsedCallerSavedReg.size(); i++){
-                inst.prepend(new Store_Inst(curBB, Info.UsedCallerSavedReg.get(i),
-                        8,rbp,Info.CallerSavedStart + i*8));
-            }
-
+            StoreCallerSavedRegs(Info, curBB ,Inst);
             //Handle Parameters
             int paramnum = Inst.ArgLocs.size();
             for(int i = paramnum - 1; i >= 0; i--){
@@ -142,15 +154,19 @@ public class FunctionStuckTranslator {
                     }
                 }else{
                     PhysicalReg reg = FuncParamRegs.get(i);
-                    Inst.prepend(new Move_Inst(curBB, reg, source));
-                    Inst.prepend(new Push(curBB, reg));
+                    if(source instanceof FrameSlice)
+                        Inst.prepend(new Load_Inst(curBB, reg, rbp, Info.FrameSliceOffset.get(source),8));
+                    else
+                        Inst.prepend(new Move_Inst(curBB, reg, source));
                 }
             }
 
-            //reLoad Caller-Saved
-            for(int i = 0; i < Info.UsedCallerSavedReg.size(); i++){
-                inst.append(new Load_Inst(curBB, Info.UsedCallerSavedReg.get(i),
-                        rbp,Info.CallerSavedStart + i*8,8));
+
+            ReloadCallerSavedRegs(Info, curBB, Inst);
+
+            //Pop stack
+            for(int i = paramnum;i >= 6;i--){
+                inst.append(new Pop(curBB, rax));
             }
         }
     }

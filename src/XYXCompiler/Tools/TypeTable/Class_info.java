@@ -9,6 +9,7 @@ import static XYXCompiler.XIR.Tools.ConstVal.intsize;
 
 public class Class_info {
     public String name;
+    public boolean hasCF = false;
     public List<Base_Type> membertypeList = new LinkedList<>();
     public List<String> membernameList = new LinkedList<>();
 

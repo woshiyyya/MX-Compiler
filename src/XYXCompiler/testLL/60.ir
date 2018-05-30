@@ -8,16 +8,16 @@ func main {
 	jump %for_cond
 
 %for_cond:
-	$V23 = slt $cnt 4
-	br $V23 %for_body %for_after
+	$V19 = slt $cnt 4
+	br $V19 %for_body %for_after
 
 %for_body:
 	$pointer = mul $cnt 8
 	$pointer = add $new $pointer
-	$headaddr = mul 3 8
+	$headaddr = mul 5 8
 	$headaddr = add $headaddr 8
 	$headaddr = alloc $headaddr
-	store 8 $headaddr 3 0
+	store 8 $headaddr 5 0
 	store 8 $pointer $headaddr 8
 	jump %for_update
 
@@ -26,19 +26,13 @@ func main {
 	jump %for_cond
 
 %for_after:
-	$a = move $new
-	$V16 = mul 2 8
-	$V16 = add $a $V16
-	$V16 = load 8 $V16 8
-	$V18 = mul 2 8
-	$V18 = add $V16 $V18
-	store 8 $V18 10 8
-	$V20 = mul 2 8
-	$V20 = add $a $V20
-	$V20 = load 8 $V20 8
-	$V22 = mul 2 8
-	$V22 = add $V20 $V22
-	$V22 = load 8 $V22 8
-	ret $V22
+	$M1 = move $new
+	$V17 = mul 2 8
+	$V17 = add $M1 $V17
+	$V17 = load 8 $V17 8
+	$M = move $V17
+	$size = call array.size $M 
+	$size = move $rax
+	ret $size
 
 }

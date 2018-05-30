@@ -54,7 +54,10 @@ public class Call_Inst extends Functional {
     @Override
     public void LLPrint() {
         String ans = "\t";
-        if(!(function.func_info.returntype instanceof Void_Type))
+
+        //if(!(function.func_info.returntype instanceof Void_Type))
+        //    ans += dest.getString() + " = ";
+        if(dest != null)
             ans += dest.getString() + " = ";
         ans += "call " + function.name +  " ";
         for(DataSrc X: ArgLocs)

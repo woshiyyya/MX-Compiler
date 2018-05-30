@@ -45,6 +45,7 @@ import static XYXCompiler.BackEnd.X86_64.X86Registers.rax;
 import static XYXCompiler.XIR.Tools.ConstVal.intsize;
 
 public class XIRBuilder implements ASTVisitor {
+    private BuiltinFunctionInserter inserter;
     public XIRRoot Root = new XIRRoot();
     public ASTRoot astRoot = null;
     private BasicBlock curBlk = null;
@@ -65,6 +66,7 @@ public class XIRBuilder implements ASTVisitor {
 
     public XIRBuilder(TypeTable typeTable) {
         this.typeTable = typeTable;
+        inserter = new BuiltinFunctionInserter(Root, this);
     }
 
     public void VISIT(Node node){
@@ -231,7 +233,7 @@ public class XIRBuilder implements ASTVisitor {
                 func.name = X.name;
                 func.inClass = inClass;
                 func.func_info = ((Function_Declaration)X).functype;
-                func.retsize = ((Function_Declaration)X).returntype.size;   //size: to be done
+                func.retsize = ((Function_Declaration)X).returntype instanceof Void_Type ? 0 : 8;
                 StoreFuncMap(func.name, func);
             }else if(X instanceof Construct_Function){
                 Function func = new Function();
@@ -739,6 +741,59 @@ public class XIRBuilder implements ASTVisitor {
         Root.LiteralDataPool.add(literal);
     }
 
+    private void Construct_Array(Register reg, int level){
+        int dim = NewDimList.size();
+        if(level == dim) return;
+        Array_Type type = NewDimList.get(level);
+        Expression index = type.size;
+        if(level == 0){
+            curBlk.add(new BinaryOp_Inst(curBlk, reg, index.datasrc, new Immediate(8), binaryop.Mul));
+            curBlk.add(new BinaryOp_Inst(curBlk, reg, reg, new Immediate(8), binaryop.Add));
+            curBlk.add(new Alloc_Inst(curBlk, reg, reg));
+            curBlk.add(new Store_Inst(curBlk, index.datasrc,8, reg,0));
+            Construct_Array(reg, level + 1);
+        }else{
+            Array_Type pretype = NewDimList.get(level - 1);
+            Expression preindex = pretype.size;
+            BasicBlock ForCond = new BasicBlock(curFunc,"for_cond");
+            BasicBlock ForUpdate = new BasicBlock(curFunc,"for_update");
+            BasicBlock ForBody = new BasicBlock(curFunc,"for_body");
+            BasicBlock ForAfter = new BasicBlock(curFunc,"for_after");
+
+            //init
+            VirtualReg cnt = new VirtualReg("cnt");
+            curBlk.add(new Move_Inst(curBlk, cnt, new Immediate(0)));
+            curBlk.Close_J(ForCond);
+
+            //cond
+            curBlk = ForCond;
+            curBlk.Close_B(cnt, preindex.datasrc, CmpOp.LS, ForBody, ForAfter);
+
+            //body
+            curBlk = ForBody;
+            //pointer is where the newArray's addr located
+            VirtualReg Pointer = new VirtualReg("pointer");
+            curBlk.add(new BinaryOp_Inst(curBlk, Pointer, cnt, new Immediate(8),binaryop.Mul));
+            curBlk.add(new BinaryOp_Inst(curBlk, Pointer, reg, Pointer, binaryop.Add));
+
+            VirtualReg HeadAddr = new VirtualReg("headaddr");
+            curBlk.add(new BinaryOp_Inst(curBlk, HeadAddr, index.datasrc, new Immediate(8),binaryop.Mul));
+            curBlk.add(new BinaryOp_Inst(curBlk, HeadAddr, HeadAddr, new Immediate(8),binaryop.Add));
+            curBlk.add(new Alloc_Inst(curBlk, HeadAddr, HeadAddr));
+            curBlk.add(new Store_Inst(curBlk, index.datasrc,8, HeadAddr,0));
+            curBlk.add(new Store_Inst(curBlk, HeadAddr,8,Pointer,8));
+            curBlk.Close_J(ForUpdate);
+
+            //Update
+            curBlk = ForUpdate;
+            curBlk.add(new BinaryOp_Inst(curBlk, cnt, cnt, new Immediate(1), binaryop.Add));
+            curBlk.Close_J(ForCond);
+            //After
+            curBlk = ForAfter;
+            Construct_Array(HeadAddr, level + 1);
+        }
+    }
+/*
     private void Construct_Alloc(Register Headaddr, DataSrc nextdim){
         if(nextdim instanceof Immediate){
             curBlk.add(new Alloc_Inst(curBlk, Headaddr, new Immediate(((Immediate) nextdim).value*8)));
@@ -769,24 +824,7 @@ public class XIRBuilder implements ASTVisitor {
         BasicBlock ForUpdate = new BasicBlock(curFunc,"Dim_ForUpdate" + Loopnum);
         BasicBlock ForAfter  = new BasicBlock(curFunc, "Dim_ForAfter" + Loopnum);
         enterLoop(ForUpdate, ForAfter);
-        /*
-            (init)
-            jmp -> _Cond
 
-        _ForCond:
-            cmp c, 0
-            jz _After
-
-        _ForBody:
-            (Loop body)
-
-        _ForUpdate:
-            (update)
-            jmp -> _Cond
-
-         _ForAfter:
-
-         */
         //prepare for loop
         Register cnt = new VirtualReg("cnt" + Loopnum);
         Register Headaddr = new VirtualReg("Headaddr" + Loopnum);
@@ -823,6 +861,8 @@ public class XIRBuilder implements ASTVisitor {
         exitLoop();
         curBlk = ForAfter;
     }
+*/
+
 
     @Override
     public void visit(Array_Type node) {
@@ -834,36 +874,18 @@ public class XIRBuilder implements ASTVisitor {
     }
 
     @Override
-    public void visit(Newexpr node) {
+    public void visit(Newexpr node){
         VirtualReg dest = new VirtualReg("new");
         if(node.type instanceof Array_Type){
             NewDimList.clear();
-            VISIT(node.type);
-            node.datasrc = dest;
-            //only one diM
-            if(NewDimList.size() == 1){
-                DataSrc Size = NewDimList.get(0).size.datasrc;
-                if(Size instanceof Immediate){
-                    ((Immediate) Size).value *= 8;
-                    curBlk.add(new Alloc_Inst(curBlk, dest, Size));
-                }else{
-                    curBlk.add(new BinaryOp_Inst(curBlk, dest, Size, new Immediate(8), binaryop.Mul));
-                    curBlk.add(new Alloc_Inst(curBlk, dest, dest));
-                }
-
-
-            }else // Language-Sugar
-                Construct_Forloop(node.datasrc, new Immediate(1), 0);
+            visit((Array_Type) node.type);
+            Construct_Array(dest, 0);
         }else if(node.type instanceof Class_Type){
-            int size = (typeTable.getInfo(((Class_Type) node.type).name)).getSize();
-            node.datasrc = dest;
-            curBlk.add(new Alloc_Inst(curBlk, dest, new Immediate(size)));
-            //Call Construct Function
-
-        }else{
-            node.datasrc = dest;
-            curBlk.add(new Alloc_Inst(curBlk, dest, new Immediate(8)));
+            String classname = ((Class_Type) node.type).name;
+            curBlk.add(new Alloc_Inst(curBlk,dest,new Immediate(8)));
+            curBlk.add(new Call_Inst(curBlk, FuncMap.get(classname), null));
         }
+        node.datasrc = dest;
     }
 
     @Override
@@ -874,42 +896,28 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.name);
         exitAddr(backup);
 
-        //if mul int int
-        int offset = (node.index.datasrc instanceof Immediate) ? ((Immediate) node.index.datasrc).value * 8 : -1;
         //if baseaddr is global
-        Register bodyAddr;
-        if(node.name.datasrc instanceof GlobalVar){
-            bodyAddr = new VirtualReg(null);
+        VirtualReg bodyAddr = new VirtualReg(null);
+        if(node.name.datasrc instanceof GlobalVar)
             curBlk.add(new Move_Inst(curBlk, bodyAddr, node.name.datasrc));
-        }else{
-            bodyAddr = (VirtualReg)node.name.datasrc;
-        }
+        else
+            bodyAddr = (VirtualReg)(node.name.datasrc);
+
+        VirtualReg reg = new VirtualReg(null);
+        curBlk.add(new BinaryOp_Inst(curBlk, reg, node.index.datasrc, new Immediate(8),binaryop.Mul));
+        curBlk.add(new BinaryOp_Inst(curBlk, reg, bodyAddr, reg, binaryop.Add));
 
 
         if(curIfAddr){
-            if(offset != -1){
-                node.baseaddr = bodyAddr;
-                node.offset = offset;
-            }else{
-                VirtualReg PreciseAddr = new VirtualReg(null);
-                curBlk.add(new BinaryOp_Inst(curBlk, PreciseAddr, node.index.datasrc, new Immediate(8), binaryop.Mul));
-                curBlk.add(new BinaryOp_Inst(curBlk, PreciseAddr, bodyAddr, PreciseAddr, binaryop.Add));
-                node.baseaddr = PreciseAddr;
-            }
+            node.baseaddr = reg;
+            node.offset = 8;
         }else{
-            node.datasrc = new VirtualReg(null);
-            VirtualReg PreciseAddr = new VirtualReg(null);
+            curBlk.add(new Load_Inst(curBlk, reg, reg,8,8));
+            node.datasrc = reg;
+        }
 
-            if(offset != -1)
-                curBlk.add(new Move_Inst(curBlk, PreciseAddr, new Immediate(offset)));
-            else
-                curBlk.add(new BinaryOp_Inst(curBlk, PreciseAddr, node.index.datasrc, new Immediate(8), binaryop.Mul));
-
-            curBlk.add(new BinaryOp_Inst(curBlk, PreciseAddr, bodyAddr, PreciseAddr, binaryop.Add));
-            curBlk.add(new Load_Inst(curBlk, (Register)(node.datasrc), PreciseAddr, 0, intsize));
-            if(hasBranch(node)){
-                curBlk.Close_B(node.datasrc,new Immediate(0), CmpOp.Z, node.ifTrue, node.ifFalse);
-            }
+        if(hasBranch(node)){
+            curBlk.Close_B(node.datasrc, new Immediate(0), CmpOp.Z, node.ifTrue, node.ifFalse);
         }
     }
 
@@ -935,6 +943,78 @@ public class XIRBuilder implements ASTVisitor {
         }
     }
 
+    private void HandleClassBuiltinFunction(Class_Method node){
+        String name = node.Func_Name;
+        Function func = FuncMap.get(name);
+        VirtualReg reg = null;
+        if(name.equals("size")){
+            reg = new VirtualReg("size");
+            //curBlk.add(new Load_Inst(curBlk, reg, node.body.datasrc,0,8));
+            Call_Inst call = new Call_Inst(curBlk, func, reg);
+            call.ArgLocs.add(node.body.datasrc);
+            curBlk.add(call);
+        }else if(name.equals("parseInt")){
+            reg = new VirtualReg("parseInt");
+            Call_Inst call = new Call_Inst(curBlk, func, reg);
+            call.ArgLocs.add(node.body.datasrc);
+            curBlk.add(call);
+        }else if(name.equals("length")){
+            reg = new VirtualReg("length");
+            Call_Inst call = new Call_Inst(curBlk, func, reg);
+            call.ArgLocs.add(node.body.datasrc);
+            curBlk.add(call);
+        }else if(name.equals("ord")){
+            reg = new VirtualReg("ord");
+            Call_Inst call = new Call_Inst(curBlk, func, reg);
+            call.ArgLocs.add(node.body.datasrc);
+            call.ArgLocs.add(node.params.get(0).datasrc);
+            curBlk.add(call);
+        }else if(name.equals("subString")){
+            reg = new VirtualReg("subString");
+            Call_Inst call = new Call_Inst(curBlk, func, reg);
+            call.ArgLocs.add(node.body.datasrc);
+            call.ArgLocs.add(node.params.get(0).datasrc);
+            call.ArgLocs.add(node.params.get(1).datasrc);
+            curBlk.add(call);
+        }
+        node.datasrc = reg;
+        if(reg != null)
+            curBlk.add(new Move_Inst(curBlk, reg, rax));
+    }
+
+    private void HandleBuiltinFunction(Function_call node){
+        String name = node.name;
+        Function func = FuncMap.get(name);
+        VirtualReg reg = null;
+        if(name.equals("println")){
+            Call_Inst call = new Call_Inst(curBlk, func, null);
+            call.ArgLocs.add(node.params.get(0).datasrc);
+            curBlk.add(call);
+        }else if(name.equals("getInt")){
+            reg = new VirtualReg("getint");
+            Call_Inst call = new Call_Inst(curBlk, func, reg);
+            curBlk.add(call);
+        }else if(name.equals("getString")){
+            reg = new VirtualReg("getString");
+            Call_Inst call = new Call_Inst(curBlk, func, reg);
+            curBlk.add(call);
+        }else if(name.equals("print")){
+            Call_Inst call = new Call_Inst(curBlk, func, null);
+            call.ArgLocs.add(node.params.get(0).datasrc);
+            curBlk.add(call);
+        }else if(name.equals("toString")){
+            reg = new VirtualReg("toStirng");
+            Call_Inst call = new Call_Inst(curBlk, func, reg);
+            call.ArgLocs.add(node.params.get(0).datasrc);
+            curBlk.add(call);
+        }
+
+        node.datasrc = reg;
+        if(reg != null)
+            curBlk.add(new Move_Inst(curBlk, reg, rax));
+
+    }
+
     @Override
     public void visit(Class_Method node) {
         boolean backup = curIfAddr;
@@ -942,33 +1022,48 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.body);
         exitAddr(backup);
 
-        //WARNING: Class Method might have the same name as Function!!
-        Function func = FuncMap.get(node.Func_Name);
-        Register reg = new VirtualReg(func.name + "ret");
-        Call_Inst inst = new Call_Inst(curBlk, func, reg);
+        if(inserter.ifbuiltin(node.Func_Name)){
+            HandleClassBuiltinFunction(node);
+        }else{
+            //WARNING: Class Method might have the same name as Function!!
+            Function func = FuncMap.get(node.Func_Name);
+            Register reg = (func.retsize == 0) ? null : new VirtualReg(func.name + "_ret");
+            Call_Inst inst = new Call_Inst(curBlk, func, reg);
+            node.datasrc = reg;
+            curBlk.add(inst);
 
-        inst.ArgLocs.add(node.body.datasrc); //ADD this ??
-        for(Expression X: node.params){
-            VISIT(X);
-            inst.ArgLocs.add(X.datasrc);
+            inst.ArgLocs.add(node.body.datasrc); //ADD this ??
+            for(Expression X: node.params){
+                VISIT(X);
+                inst.ArgLocs.add(X.datasrc);
+            }
+
+            if(reg != null)
+                curBlk.add(new Move_Inst(curBlk, reg, rax));
         }
-        curBlk.add(inst);
-        node.datasrc = reg;
     }
 
     @Override
     public void visit(Function_call node) {
         VISIT(node.body);
-        Function func = FuncMap.get(node.name);
-        Register reg = new VirtualReg(func.name + "ret");
-        Call_Inst inst = new Call_Inst(curBlk, func, reg);
 
-        for(Expression X: node.params){
-            VISIT(X);
-            inst.ArgLocs.add(X.datasrc);
+        if(inserter.ifbuiltin(node.name))
+            HandleBuiltinFunction(node);
+        else{
+            Function func = FuncMap.get(node.name);
+            Register reg = (func.retsize == 0) ? null : new VirtualReg(func.name + "_ret");
+            Call_Inst inst = new Call_Inst(curBlk, func, reg);
+            node.datasrc = reg;
+            curBlk.add(inst);
+
+            for(Expression X: node.params){
+                VISIT(X);
+                inst.ArgLocs.add(X.datasrc);
+            }
+
+            if(reg != null)
+                curBlk.add(new Move_Inst(curBlk, reg, rax));
         }
-        curBlk.add(inst);
-        node.datasrc = reg;
     }
 
     @Override
