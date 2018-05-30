@@ -57,13 +57,24 @@ public class Main {
 
             //-----Build CFG
             XIRBuilder XIR = new XIRBuilder(STB.typeTable);
-            XIR.VISIT(builder.Root);
+            try{
+                XIR.VISIT(builder.Root);
+            }catch (Exception IR){
+                System.err.println("IRbuild error!");
+            }
+
 
             //Print Assembly
             CodeGenerator generator = new CodeGenerator(XIR.Root);
-            generator.generate(false);
+            try{
+                generator.generate(false);
+            }catch (Exception ge){
+                System.out.println("Codegen error!");
+            }
+
 
         }catch (Exception e){
+            System.err.println("Runtime Exception!");
             System.exit(1);
         }
     }

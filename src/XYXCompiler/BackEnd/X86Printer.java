@@ -74,8 +74,8 @@ public class X86Printer implements XIRVisitor {
         }
 
         for(StringLiteral X: node.LiteralDataPool){
-            System.out.println(X.label);
             System.out.println("\tdq " + X.length);
+            System.out.println(X.label + ":");
             System.out.println("\tdb " + X.toInt());
         }
         System.out.println(

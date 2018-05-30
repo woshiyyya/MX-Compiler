@@ -947,6 +947,8 @@ public class XIRBuilder implements ASTVisitor {
         String name = node.Func_Name;
         Function func = FuncMap.get(name);
         VirtualReg reg = null;
+        for(Expression X: node.params)
+            VISIT(X);
         if(name.equals("size")){
             reg = new VirtualReg("size");
             //curBlk.add(new Load_Inst(curBlk, reg, node.body.datasrc,0,8));
@@ -969,7 +971,7 @@ public class XIRBuilder implements ASTVisitor {
             call.ArgLocs.add(node.body.datasrc);
             call.ArgLocs.add(node.params.get(0).datasrc);
             curBlk.add(call);
-        }else if(name.equals("subString")){
+        }else if(name.equals("substring")){
             reg = new VirtualReg("subString");
             Call_Inst call = new Call_Inst(curBlk, func, reg);
             call.ArgLocs.add(node.body.datasrc);
@@ -986,6 +988,8 @@ public class XIRBuilder implements ASTVisitor {
         String name = node.name;
         Function func = FuncMap.get(name);
         VirtualReg reg = null;
+        for(Expression X: node.params)
+            VISIT(X);
         if(name.equals("println")){
             Call_Inst call = new Call_Inst(curBlk, func, null);
             call.ArgLocs.add(node.params.get(0).datasrc);
@@ -1020,6 +1024,8 @@ public class XIRBuilder implements ASTVisitor {
         boolean backup = curIfAddr;
         enterAddr(false);
         VISIT(node.body);
+        for(Expression X: node.params)
+            VISIT(X);
         exitAddr(backup);
 
         if(inserter.ifbuiltin(node.Func_Name)){

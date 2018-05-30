@@ -5,6 +5,7 @@ import XYXCompiler.XIR.Operand.Register.GlobalVar;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.Immediate;
+import XYXCompiler.XIR.Operand.Static.StringLiteral;
 
 public class DataSrc {
     public String getString(){
@@ -17,8 +18,10 @@ public class DataSrc {
             return "" + ((Immediate) this).value;
         }else if(this instanceof PhysicalReg) {
             return "$" + ((PhysicalReg) this).name;
-        }else if(this instanceof GlobalVar){
+        }else if(this instanceof GlobalVar) {
             return "$" + ((GlobalVar) this).name;
+        }else if(this instanceof StringLiteral){
+            return ((StringLiteral) this).value;
         }else
             return "MEM";
     }

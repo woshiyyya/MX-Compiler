@@ -45,7 +45,9 @@ public class Call_Inst extends Functional {
 
     @Override
     public void Print() {
-        String ans = "\tCall\t" + dest.getString() + " ";
+        String ans = "\tCall\t";
+        if(dest != null)
+            ans += dest.getString() + " ";
         for(DataSrc X: ArgLocs)
             ans = ans + X.getString() + " ";
         System.out.println(ans);
