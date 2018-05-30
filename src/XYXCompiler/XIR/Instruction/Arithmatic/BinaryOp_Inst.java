@@ -48,6 +48,8 @@ public class BinaryOp_Inst extends Arithmatic {
     @Override
     public void Reset_OperandRegs(VirtualReg VReg, PhysicalReg PReg) {
         if(L_operand.equals(VReg)) L_operand = PReg;
+        if(R_operand == null)
+            System.out.println("fff");
         if(R_operand.equals(VReg)) R_operand = PReg;
     }
 

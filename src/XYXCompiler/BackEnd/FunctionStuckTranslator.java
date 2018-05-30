@@ -76,30 +76,30 @@ public class FunctionStuckTranslator {
 
     private void Prologue(Function func){
         FrameInfo Info = InfoMap.get(func);
-        //write: push rbp
         BasicBlock curBB = func.StartBB;
         Instruction Entry = curBB.Entry;
+
         Entry.prepend(new BinaryOp_Inst(curBB, rsp, rsp, new Immediate(Info.Totalsize),BinaryOp_Inst.binaryop.Sub));
-        for(int i = 0; i < func.usedCalleeSavedregs.size(); i++){
-            Entry.prepend(new Store_Inst(curBB, func.usedCalleeSavedregs.get(i),8,rbp,Info.CalleeSavedStart + 8*i));
-        }
+
+        StoreParametersRegs(Info,curBB,Entry);
+
+        //StoreCalleeSavedRegs(func, curBB, Entry);
     }
+
+
 
     private void Epilogue(Function func){
         FrameInfo Info = InfoMap.get(func);
         BasicBlock curBB = func.EndBB;
         Instruction Exit = curBB.Exit;
 
-        for(int i = 0; i < func.usedCalleeSavedregs.size(); i++){
-            Exit.prepend(new Load_Inst(curBB, func.usedCalleeSavedregs.get(i),rbp,Info.CalleeSavedStart + 8*i,8));
-        }
+        //ReloadCalleeSavedRegs(func, curBB, Exit);
 
         Exit.prepend(new BinaryOp_Inst(curBB, rsp, rsp, new Immediate(Info.Totalsize),BinaryOp_Inst.binaryop.Add));
         Exit.prepend(new Pop(curBB, rbp));
-        //Write:
-        //      mov rax RET
-        //      ret
     }
+
+
 
     private void TransformSlice(Function func, Instruction inst){
         FrameInfo Info = InfoMap.get(func);
@@ -117,6 +117,12 @@ public class FunctionStuckTranslator {
             }
         }
     }
+    private void StoreParametersRegs(FrameInfo Info, BasicBlock curBB, Instruction Inst){
+        Function func = Info.func;
+        for(int i = 0;i < func.ArgRegs.size();i++){
+            Inst.prepend(new Store_Inst(curBB, FuncParamRegs.get(i), 8, rbp, Info.FirstParam - 8*i));
+        }
+    }
 
     private void StoreCallerSavedRegs(FrameInfo Info, BasicBlock curBB, Instruction inst){
         for(int i = 0; i < Info.UsedCallerSavedReg.size(); i++){
@@ -132,6 +138,19 @@ public class FunctionStuckTranslator {
         }
     }
 
+    private void StoreCalleeSavedRegs(Function func, BasicBlock curBB, Instruction Entry){
+        FrameInfo Info = InfoMap.get(func);
+        for(int i = 0; i < func.usedCalleeSavedregs.size(); i++){
+            Entry.prepend(new Store_Inst(curBB, func.usedCalleeSavedregs.get(i),8,rbp,Info.CalleeSavedStart + 8*i));
+        }
+    }
+
+    private void ReloadCalleeSavedRegs(Function func, BasicBlock curBB, Instruction Exit){
+        FrameInfo Info = InfoMap.get(func);
+        for(int i = 0; i < func.usedCalleeSavedregs.size(); i++){
+            Exit.prepend(new Load_Inst(curBB, func.usedCalleeSavedregs.get(i),rbp,Info.CalleeSavedStart + 8*i,8));
+        }
+    }
     private void TransformCall(Function func, Instruction inst){
         FrameInfo Info = InfoMap.get(func);
         BasicBlock curBB = inst.BB_Scope;
@@ -139,9 +158,9 @@ public class FunctionStuckTranslator {
         if(inst instanceof Call_Inst){
             Call_Inst Inst = (Call_Inst) inst;
 
-            //Store Caller-Saved
-            StoreCallerSavedRegs(Info, curBB ,Inst);
-            //Handle Parameters
+
+            //StoreCallerSavedRegs(Info, curBB ,Inst);
+
             int paramnum = Inst.ArgLocs.size();
             for(int i = paramnum - 1; i >= 0; i--){
                 DataSrc source = Inst.ArgLocs.get(i);
@@ -162,7 +181,7 @@ public class FunctionStuckTranslator {
             }
 
 
-            ReloadCallerSavedRegs(Info, curBB, Inst);
+            //ReloadCallerSavedRegs(Info, curBB, Inst);
 
             //Pop stack
             for(int i = paramnum;i >= 6;i--){

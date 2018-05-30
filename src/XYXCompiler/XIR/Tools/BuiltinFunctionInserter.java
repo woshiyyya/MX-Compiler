@@ -11,6 +11,7 @@ import java.util.Map;
 public class BuiltinFunctionInserter {
     private XIRRoot xirRoot;
     private XIRBuilder builder;
+    private Map<String, Function> BuiltinFunc = new HashMap<>();
 
     public BuiltinFunctionInserter(XIRRoot xirRoot, XIRBuilder builder) {
         this.xirRoot = xirRoot;
@@ -22,6 +23,7 @@ public class BuiltinFunctionInserter {
         func.name       = AssemblyName;
         func.isBuiltin  = true;
         builder.FuncMap.put(OriginalName, func);
+        BuiltinFunc.put(OriginalName, func);
         return func;
     }
 
@@ -80,6 +82,6 @@ public class BuiltinFunctionInserter {
     }
 
     public boolean ifbuiltin(String name){
-        return builder.FuncMap.containsKey(name);
+        return BuiltinFunc.containsKey(name);
     }
 }

@@ -69,6 +69,25 @@ public class XIRBuilder implements ASTVisitor {
         inserter = new BuiltinFunctionInserter(Root, this);
     }
 
+    @Override
+    public void visit(ASTRoot node) {
+        astRoot = node;
+        inserter = new BuiltinFunctionInserter(Root, this);
+        inserter.Insert();
+        Collect_Functions(node);
+        for(Declaration X: node.declarations){
+            if(X instanceof Class_Declaration)
+                Collect_Functions(X);
+        }
+
+        Allocate_GlobalVar(node);
+
+        for(Declaration X: node.declarations){
+            if(X instanceof Function_Declaration || X instanceof Class_Declaration)
+                VISIT(X);
+        }
+    }
+
     public void VISIT(Node node){
         if(node != null)
             node.accept(this);
@@ -157,9 +176,16 @@ public class XIRBuilder implements ASTVisitor {
         Inst.ArgLocs.add(node.rhs.datasrc);
         node.datasrc = reg;
         curBlk.add(Inst);
+        curBlk.add(new Move_Inst(curBlk, reg, rax));
     }
 
     private void Construct_Comparation(Binary_Expression node){
+        if(node.lhs.type instanceof String_Type){
+            Handle_StringBuiltinFunction(node);
+            if(hasBranch(node))
+                curBlk.Close_B(node.datasrc,new Immediate(0),CmpOp.Z,node.ifTrue,node.ifFalse);
+            return;
+        }
 
         //specifically for while/for condition expr with compare operator
         RelationOp_Inst inst = new RelationOp_Inst(curBlk, new VirtualReg(null));
@@ -175,9 +201,7 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.lhs);
         VISIT(node.rhs);
 
-        if(node.lhs.type instanceof String_Type){
-            Handle_StringBuiltinFunction(node);
-        }else if(hasBranch(node)){
+        if(hasBranch(node)){
             //for this kind of Branch, we have to write "cmp L_operand R_operand; jle Label"
             curBlk.Close_B(node.lhs.datasrc, node.rhs.datasrc, inst.op, node.ifTrue, node.ifFalse);
         }else{
@@ -189,7 +213,7 @@ public class XIRBuilder implements ASTVisitor {
     }
 
     private void Construct_Arithmatic(Binary_Expression node){
-        if(node.lhs.type instanceof String_Type){
+        if(node.lhs.type instanceof String_Type || node.rhs.type instanceof String_Type){
             Handle_StringBuiltinFunction(node);
             return;
         }
@@ -283,28 +307,22 @@ public class XIRBuilder implements ASTVisitor {
         }
     }
 
-    private void Initialize_ClassMem(Class_Declaration node){
-        for(Declaration X : node.Members){
-            if(X instanceof Variable_Declaration)
-                VISIT(X);
+    private void Allocate_GlobalVar(ASTRoot root) {
+        for (Declaration X : root.declarations) {
+            if (X instanceof Global_Variable_Declaration){
+                Global_Variable_Declaration node = (Global_Variable_Declaration) X;
+                GlobalVar space = new GlobalVar(node.name, node.size);
+                Root.StaticSpace.add(space);
+                node.dataSrc = space;
+            }
         }
     }
 
     @Override
-    public void visit(ASTRoot node) {
-        astRoot = node;
-        BuiltinFunctionInserter inserter = new BuiltinFunctionInserter(Root, this);
-        inserter.Insert();
-        Collect_Functions(node);
-        for(Declaration X: node.declarations){
-            if(X instanceof Class_Declaration)
-                Collect_Functions(X);
-        }
-
-        for(Declaration X: node.declarations){
-            if(X instanceof Function_Declaration || X instanceof Class_Declaration)
-                VISIT(X);
-        }
+    public void visit(Global_Variable_Declaration node) {
+        VISIT(node.RHS);
+        if(node.RHS != null)
+            curBlk.add(new Move_Inst(curBlk, node.dataSrc, node.RHS.datasrc));
     }
 
     @Override
@@ -413,27 +431,7 @@ public class XIRBuilder implements ASTVisitor {
         }
     }
 
-    @Override
-    public void visit(Global_Variable_Declaration node) {
-        //only considered the LHS is literal value
-        GlobalVar space = new GlobalVar(node.name, node.size);
-        VISIT(node.RHS);
-        if(node.RHS != null)
-            curBlk.add(new Move_Inst(curBlk, space, node.RHS.datasrc));
-        /*
-        if(node.RHS instanceof STRING){
-            STRING rhs = (STRING) node.RHS;
-            rhs.datasrc = new StringLiteral(rhs.value);
-            Root.LiteralDataPool.add((StringLiteral) rhs.datasrc);
-            curBlk.add(new Move_Inst(curBlk, space, node.RHS.datasrc));
-        }else if(node.RHS != null){
-            VISIT(node.RHS);
-            curBlk.add(new Move_Inst(curBlk, space, node.RHS.datasrc));
-        }
-        */
-        Root.StaticSpace.add(space);
-        node.dataSrc = space;
-    }
+
 
 
     @Override
@@ -620,7 +618,6 @@ public class XIRBuilder implements ASTVisitor {
             //Need This.
             int offset = curClassInfo.getOffset(node.name);
             if(curIfAddr){
-                //Need its addr
                 node.setAddr(THISPOINTER, offset);
             }else{
                 node.datasrc = new VirtualReg("this." + node.name);
@@ -628,8 +625,11 @@ public class XIRBuilder implements ASTVisitor {
             }
         }else{ //Not class Member
             Node Entity = node.entity;
-            if(Entity instanceof Global_Variable_Declaration)
-                node.datasrc = ((Global_Variable_Declaration) Entity).dataSrc;
+            if(Entity instanceof Global_Variable_Declaration){
+                node.datasrc = new VirtualReg(node.name);
+                DataSrc Gvar = ((Global_Variable_Declaration) Entity).dataSrc;
+                curBlk.add(new Move_Inst(curBlk, node.datasrc, Gvar));
+            }
             if(Entity instanceof Variable_Declaration)
                 node.datasrc = ((Variable_Declaration) Entity).reg;
             if(Entity instanceof Variable_Declaration_Statement)
@@ -768,7 +768,8 @@ public class XIRBuilder implements ASTVisitor {
 
     @Override
     public void visit(STRING node) {
-        StringLiteral literal = new StringLiteral(node.value);
+        String val = node.value;
+        StringLiteral literal = new StringLiteral(val.substring(1, val.length()-1));
         node.datasrc = literal;
         Root.LiteralDataPool.add(literal);
     }
@@ -1084,7 +1085,9 @@ public class XIRBuilder implements ASTVisitor {
     @Override
     public void visit(Function_call node) {
         VISIT(node.body);
-
+        int a;
+        if(node.name.equals("toString"))
+            a = 1;
         if(inserter.ifbuiltin(node.name))
             HandleBuiltinFunction(node);
         else{
@@ -1092,13 +1095,13 @@ public class XIRBuilder implements ASTVisitor {
             Register reg = (func.retsize == 0) ? null : new VirtualReg(func.name + "_ret");
             Call_Inst inst = new Call_Inst(curBlk, func, reg);
             node.datasrc = reg;
-            curBlk.add(inst);
 
             for(Expression X: node.params){
                 VISIT(X);
                 inst.ArgLocs.add(X.datasrc);
             }
 
+            curBlk.add(inst);
             if(reg != null)
                 curBlk.add(new Move_Inst(curBlk, reg, rax));
         }
