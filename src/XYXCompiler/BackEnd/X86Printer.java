@@ -148,20 +148,28 @@ public class X86Printer implements XIRVisitor {
                 case Xor: asm = asm + (Lval ^ Rval); break;
             }
         }else{
-            switch (node.op){
-                case Add: asm = asm + "add"; break;
-                case Sub: asm = asm + "sub"; break;
-                case Mul: asm = asm +"imul"; break;
-                case Div: asm = asm + "div"; break;
-                case Mod: asm = asm + "mod"; break;
-                case Lsh: asm = asm + "shl"; break;
-                case Rsh: asm = asm + "shr"; break;
-                case And: asm = asm + "and";break;
-                case Or:  asm = asm + "or";  break;
-                case Xor: asm = asm + "xor"; break;
+            if(node.op == BinaryOp_Inst.binaryop.Div){
+                asm += "mov \trax ," + visit(node.L_operand) + "\n";
+                asm += "\tidiv \t" + visit(node.R_operand) + "\n";
+                asm += "\tmov \t" + visit(node.dest) + ", rax";
+            }else if(node.op == BinaryOp_Inst.binaryop.Mod){
+                asm += "mov \trax ," + visit(node.L_operand) + "\n";
+                asm += "\tidiv \t " + visit(node.R_operand) + "\n";
+                asm += "\tmov \t" + visit(node.dest) + ", rdx";
+            }else{
+                switch (node.op){
+                    case Add: asm = asm + "add"; break;
+                    case Sub: asm = asm + "sub"; break;
+                    case Mul: asm = asm +"imul"; break;
+                    case Lsh: asm = asm + "shl"; break;
+                    case Rsh: asm = asm + "shr"; break;
+                    case And: asm = asm + "and"; break;
+                    case Or:  asm = asm + "or";  break;
+                    case Xor: asm = asm + "xor"; break;
+                }
+                asm = asm + " \t" + visit(node.L_operand) + ", " + visit(node.R_operand) + "\n";
+                asm = asm + "\tmov \t" + visit(node.dest) + ", " + visit(node.L_operand);
             }
-            asm = asm + " \t" + visit(node.L_operand) + ", " + visit(node.R_operand) + "\n";
-            asm = asm + "\tmov \t" + visit(node.dest) + ", " + visit(node.L_operand);
         }
         System.out.println(asm);
     }

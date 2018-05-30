@@ -67,6 +67,7 @@ public class OnTheFly_Allocator {
             VRegSliceMap.clear();
             VRegSliceMap.putAll(func.ArgSliceMap);
             for(BasicBlock Blk: func.ReverseOrder){
+
                 for(Instruction inst = Blk.Entry; inst != null; inst = inst.next){
                     //System.err.println(inst.getClass().getSimpleName());
                     int id = 0;

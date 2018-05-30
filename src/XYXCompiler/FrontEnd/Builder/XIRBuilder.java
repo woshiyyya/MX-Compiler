@@ -24,6 +24,7 @@ import XYXCompiler.XIR.Instruction.Arithmatic.UnaryOp_Inst.unaryop;
 import XYXCompiler.XIR.Instruction.Control.Jump_Inst;
 import XYXCompiler.XIR.Instruction.Functional.Call_Inst;
 import XYXCompiler.XIR.Instruction.Functional.Return_Inst;
+import XYXCompiler.XIR.Instruction.Instruction;
 import XYXCompiler.XIR.Instruction.Memory.Alloc_Inst;
 import XYXCompiler.XIR.Instruction.Memory.Load_Inst;
 import XYXCompiler.XIR.Instruction.Memory.Move_Inst;
@@ -123,13 +124,22 @@ public class XIRBuilder implements ASTVisitor {
     private void MergeCircuit(Binary_Expression node){
         // Merge the Short Circuit BBs for Expr Value only
         BasicBlock MergeBlk = new BasicBlock(curFunc, "Merge_Binary" + Blknum++);
-        node.datasrc = new VirtualReg(null);
+        node.datasrc = new VirtualReg("merge");
 
-        node.ifTrue.add(new Move_Inst(curBlk, node.datasrc, new Immediate(1)));
-        node.ifFalse.add(new Move_Inst(curBlk, node.datasrc, new Immediate(0)));
+        if(node.ifFalse.Exit != null) node.ifFalse.Exit.remove();
+        if(node.ifTrue.Exit != null) node.ifTrue.Exit.remove();
 
-        node.ifTrue.Close_J(MergeBlk);
-        node.ifFalse.Close_J(MergeBlk);
+        curBlk = node.ifTrue;
+        curBlk.add(new Move_Inst(curBlk, node.datasrc, new Immediate(1)));
+        curBlk.Close_J(MergeBlk);
+
+        curBlk = node.ifFalse;
+        curBlk.add(new Move_Inst(curBlk, node.datasrc, new Immediate(0)));
+        curBlk.Close_J(MergeBlk);
+
+        //node.ifTrue.Close_J(MergeBlk);
+        //node.ifFalse.Close_J(MergeBlk);
+
         curBlk = MergeBlk;//Warning: the curBB has been changed
     }
 
