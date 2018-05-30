@@ -135,7 +135,32 @@ public class XIRBuilder implements ASTVisitor {
         }
     }
 
+    private Function getFunction(String name){
+        return FuncMap.get(name);
+    }
+
+    private void Handle_StringBuiltinFunction(Binary_Expression node){
+        VirtualReg reg = new VirtualReg("StrOp");
+        Function func = null;
+        switch (node.op) {
+            case Equal:         func = getFunction("string.eq");break;
+            case Plus:          func = getFunction("string.add");break;
+            case Less:          func = getFunction("string.s");break;
+            case Greater:       func = getFunction("string.g");break;
+            case LessEqual:     func = getFunction("string.le");break;
+            case GreaterEqual:  func = getFunction("string.ge");break;
+        }
+        VISIT(node.lhs);
+        VISIT(node.rhs);
+        Call_Inst Inst = new Call_Inst(curBlk, func, reg);
+        Inst.ArgLocs.add(node.lhs.datasrc);
+        Inst.ArgLocs.add(node.rhs.datasrc);
+        node.datasrc = reg;
+        curBlk.add(Inst);
+    }
+
     private void Construct_Comparation(Binary_Expression node){
+
         //specifically for while/for condition expr with compare operator
         RelationOp_Inst inst = new RelationOp_Inst(curBlk, new VirtualReg(null));
         switch (node.op) {
@@ -150,7 +175,9 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.lhs);
         VISIT(node.rhs);
 
-        if(hasBranch(node)){
+        if(node.lhs.type instanceof String_Type){
+            Handle_StringBuiltinFunction(node);
+        }else if(hasBranch(node)){
             //for this kind of Branch, we have to write "cmp L_operand R_operand; jle Label"
             curBlk.Close_B(node.lhs.datasrc, node.rhs.datasrc, inst.op, node.ifTrue, node.ifFalse);
         }else{
@@ -162,6 +189,11 @@ public class XIRBuilder implements ASTVisitor {
     }
 
     private void Construct_Arithmatic(Binary_Expression node){
+        if(node.lhs.type instanceof String_Type){
+            Handle_StringBuiltinFunction(node);
+            return;
+        }
+
         BinaryOp_Inst inst = new BinaryOp_Inst(curBlk);
         switch(node.op){
             case Mul:           inst.op = binaryop.Mul; break;

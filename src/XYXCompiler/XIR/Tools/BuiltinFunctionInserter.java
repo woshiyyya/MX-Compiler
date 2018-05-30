@@ -57,6 +57,26 @@ public class BuiltinFunctionInserter {
 
         Function arraySize = CreateFunc("size","array.size");
         addArgs(arraySize, "baseaddr");
+
+        Function string_add = CreateFunc("string.add","string.add");
+        addArgs(string_add, "lhs");
+        addArgs(string_add, "rhs");
+
+        Function string_s = CreateFunc("string.s","string.s");
+        addArgs(string_s, "lhs");
+        addArgs(string_s, "rhs");
+
+        Function string_g = CreateFunc("string.g","string.g");
+        addArgs(string_g, "lhs");
+        addArgs(string_g, "rhs");
+
+        Function string_le = CreateFunc("string.le","string.le");
+        addArgs(string_le, "lhs");
+        addArgs(string_le, "rhs");
+
+        Function string_ge = CreateFunc("string.ge","string.ge");
+        addArgs(string_ge, "lhs");
+        addArgs(string_ge, "rhs");
     }
 
     public boolean ifbuiltin(String name){

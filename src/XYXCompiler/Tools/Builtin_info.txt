@@ -17,4 +17,14 @@ string toString(int i)
 int array.size(Array this)
     #Array 首地址-8 存size
 
+String string.add(lstr, rstr)
 
+int string.eq(lstr, rstr)
+
+int string.s
+
+int string.g
+
+int string.le
+
+int string.ge

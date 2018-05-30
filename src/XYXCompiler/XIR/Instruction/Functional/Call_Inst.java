@@ -48,6 +48,7 @@ public class Call_Inst extends Functional {
         String ans = "\tCall\t";
         if(dest != null)
             ans += dest.getString() + " ";
+        ans += function.name + " ";
         for(DataSrc X: ArgLocs)
             ans = ans + X.getString() + " ";
         System.out.println(ans);
