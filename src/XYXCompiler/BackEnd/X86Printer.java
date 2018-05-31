@@ -214,7 +214,7 @@ public class X86Printer implements XIRVisitor {
         if(node.op == UnaryOp_Inst.unaryop.NEG)
             asm = asm + "neg \t" + visit(node.operand) + "\n";
         else if(node.op == UnaryOp_Inst.unaryop.NOT)
-            asm = asm + "not \t" + visit(node.operand) + "\n";
+            asm = asm + "xor \t" + visit(node.operand) + ", 1\n";
         else
             System.err.println("unary error");
 

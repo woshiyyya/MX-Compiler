@@ -419,10 +419,10 @@ public class XIRBuilder implements ASTVisitor {
                 curFunc.EndBB = curBlk;
                 curBlk.If_closed = true;
                 break;
+            */
             case 1:
                 curFunc.EndBB = curFunc.RetBlks.get(0);
                 break;
-            */
             default:{ //create and merge All return BB
                 curFunc.EndBB = new BasicBlock(curFunc,"Merged_Return" + Blknum++);
                 curFunc.EndBB.add(new Return_Inst(curFunc.EndBB, rax));
@@ -464,8 +464,6 @@ public class XIRBuilder implements ASTVisitor {
             curFunc.VirtualRegMap.put(node.name, reg);
         }
     }
-
-
 
 
     @Override
@@ -687,7 +685,6 @@ public class XIRBuilder implements ASTVisitor {
                         (VirtualReg)node.datasrc, unaryop.NOT, node.body.datasrc));
                 if(hasBranch(node)){
                     curBlk.Close_B(node.datasrc,new Immediate(0), CmpOp.Z, node.ifTrue, node.ifFalse);
-                    curBlk = node.ifTrue;
                 }
                 break;
             case Plus:
@@ -736,7 +733,7 @@ public class XIRBuilder implements ASTVisitor {
         }
 
         VirtualReg dest = new VirtualReg(null);
-        if(curIfAddr || body.baseaddr instanceof GlobalVar) {
+        if(IfNeedMem(body) || body.baseaddr instanceof GlobalVar) {
             curBlk.add(new BinaryOp_Inst(curBlk, dest, body.datasrc, new Immediate(1), op));
             curBlk.add(new Store_Inst(curBlk, dest, 8, body.baseaddr, body.offset));
             if(OriginalVal == null)
