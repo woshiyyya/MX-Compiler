@@ -16,7 +16,7 @@ public class Function {
     public List<VirtualReg> ArgRegs = new LinkedList<>();
     public List<BasicBlock> RetBlks = new LinkedList<>();
     public boolean isBuiltin = false;
-    public int retsize;
+    public int retsize = 0;
 
     //for CFG
     public Func_Type func_info;

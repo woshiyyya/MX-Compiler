@@ -32,6 +32,9 @@ public class BuiltinFunctionInserter {
     }
 
     public void Insert(){
+        Function print = CreateFunc("print","print");
+        addArgs(print, "strout");
+
         Function println = CreateFunc("println","println");
         addArgs(println, "strout");
 

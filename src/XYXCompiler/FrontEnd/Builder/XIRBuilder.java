@@ -37,6 +37,7 @@ import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.StringLiteral;
 import XYXCompiler.XIR.Tools.BuiltinFunctionInserter;
 
+import javax.xml.crypto.Data;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -157,7 +158,7 @@ public class XIRBuilder implements ASTVisitor {
         if(ifLogical(node.rhs))
             MergeCircuit((Binary_Expression) (node.rhs));
 
-        if(IfNeedMem(node.lhs)){
+        if(IfNeedMem(node.lhs) || node.lhs.baseaddr instanceof GlobalVar){
             curBlk.add(new Store_Inst(curBlk, node.rhs.datasrc, intsize, node.lhs.baseaddr, node.lhs.offset));
         }else{
             curBlk.add(new Move_Inst(curBlk, node.lhs.datasrc, node.rhs.datasrc));
@@ -245,6 +246,13 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.rhs);
         inst.L_operand = node.lhs.datasrc;
         inst.R_operand = node.rhs.datasrc;
+
+        //idiv cannot support imm
+        if(inst.R_operand instanceof Immediate && (inst.op == binaryop.Mod||inst.op == binaryop.Div)){
+            VirtualReg reg = new VirtualReg(null);
+            curBlk.add(new Move_Inst(curBlk, reg, inst.R_operand));
+            inst.R_operand = reg;
+        }
         node.datasrc = inst.dest = new VirtualReg(null);
         curBlk.add(inst);
     }
@@ -331,8 +339,10 @@ public class XIRBuilder implements ASTVisitor {
     @Override
     public void visit(Global_Variable_Declaration node) {
         VISIT(node.RHS);
-        if(node.RHS != null)
-            curBlk.add(new Move_Inst(curBlk, node.dataSrc, node.RHS.datasrc));
+        if(node.RHS != null){
+            //curBlk.add(new Move_Inst(curBlk, node.dataSrc, node.RHS.datasrc));
+            curBlk.add(new Store_Inst(curBlk, node.RHS.datasrc,8,node.dataSrc,0));
+        }
     }
 
     @Override
@@ -605,7 +615,7 @@ public class XIRBuilder implements ASTVisitor {
 
         curBlk = thenbody;
         VISIT(node.body);
-        thenbody.Close_J(afterIF);
+        curBlk.Close_J(afterIF);
 
         if(node.Else_body != null){
             curBlk = elsebody;
@@ -636,9 +646,11 @@ public class XIRBuilder implements ASTVisitor {
         }else{ //Not class Member
             Node Entity = node.entity;
             if(Entity instanceof Global_Variable_Declaration){
-                node.datasrc = new VirtualReg(node.name);
+                VirtualReg reg = new VirtualReg(node.name);
                 DataSrc Gvar = ((Global_Variable_Declaration) Entity).dataSrc;
-                curBlk.add(new Move_Inst(curBlk, node.datasrc, Gvar));
+                curBlk.add(new Load_Inst(curBlk, reg, Gvar,0,8));
+                node.datasrc  =  reg;
+                node.baseaddr = Gvar;
             }
             if(Entity instanceof Variable_Declaration)
                 node.datasrc = ((Variable_Declaration) Entity).reg;
@@ -671,7 +683,11 @@ public class XIRBuilder implements ASTVisitor {
             case Minus:
                 VISIT(node.body);
                 node.datasrc = new VirtualReg(null);
-                curBlk.add(new UnaryOp_Inst(curBlk,
+                if(node.body.datasrc instanceof Immediate){
+                    ((Immediate) node.body.datasrc).value *= -1;
+                    curBlk.add(new Move_Inst(curBlk, node.datasrc, node.body.datasrc));
+                }else
+                    curBlk.add(new UnaryOp_Inst(curBlk,
                         (VirtualReg)node.datasrc, unaryop.NEG, node.body.datasrc));
                 break;
             case PlusPlus:
@@ -700,14 +716,13 @@ public class XIRBuilder implements ASTVisitor {
         exitAddr(backup);
 
         VirtualReg OriginalVal = null;
-        if(!(node instanceof Unary_Expression)){
-            // a++;
+        if(!(node instanceof Unary_Expression)){ // a++;
             OriginalVal = new VirtualReg("backup");
             curBlk.add(new Move_Inst(curBlk, OriginalVal, body.datasrc));
         }
 
         VirtualReg dest = new VirtualReg(null);
-        if(curIfAddr) {
+        if(curIfAddr || body.baseaddr instanceof GlobalVar) {
             curBlk.add(new BinaryOp_Inst(curBlk, dest, body.datasrc, new Immediate(1), op));
             curBlk.add(new Store_Inst(curBlk, dest, 8, body.baseaddr, body.offset));
             if(OriginalVal == null)
@@ -925,7 +940,8 @@ public class XIRBuilder implements ASTVisitor {
             Construct_Array(dest, 0);
         }else if(node.type instanceof Class_Type){
             String classname = ((Class_Type) node.type).name;
-            curBlk.add(new Alloc_Inst(curBlk,dest,new Immediate(8)));
+            int size = typeTable.ClassInfoTable.get(classname).getSize();
+            curBlk.add(new Alloc_Inst(curBlk,dest,new Immediate(size)));
             curBlk.add(new Call_Inst(curBlk, FuncMap.get(classname), null));
         }
         node.datasrc = dest;
@@ -941,12 +957,14 @@ public class XIRBuilder implements ASTVisitor {
 
         //if baseaddr is global
         VirtualReg bodyAddr = new VirtualReg(null);
-        if(node.name.datasrc instanceof GlobalVar)
-            curBlk.add(new Move_Inst(curBlk, bodyAddr, node.name.datasrc));
-        else
+        VirtualReg reg = new VirtualReg(null);
+        //globalvar as addr
+        //if(node.name.datasrc instanceof GlobalVar)
+        //    curBlk.add(new Load_Inst(curBlk, bodyAddr, node.name.datasrc,0,8));
+        //else
             bodyAddr = (VirtualReg)(node.name.datasrc);
 
-        VirtualReg reg = new VirtualReg(null);
+        //bodyAddr = (VirtualReg)(node.name.datasrc);
         curBlk.add(new BinaryOp_Inst(curBlk, reg, node.index.datasrc, new Immediate(8),binaryop.Mul));
         curBlk.add(new BinaryOp_Inst(curBlk, reg, bodyAddr, reg, binaryop.Add));
 
@@ -1095,9 +1113,7 @@ public class XIRBuilder implements ASTVisitor {
     @Override
     public void visit(Function_call node) {
         VISIT(node.body);
-        int a;
-        if(node.name.equals("toString"))
-            a = 1;
+
         if(inserter.ifbuiltin(node.name))
             HandleBuiltinFunction(node);
         else{

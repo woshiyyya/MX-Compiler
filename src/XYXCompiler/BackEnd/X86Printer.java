@@ -195,7 +195,8 @@ public class X86Printer implements XIRVisitor {
             case EQ: asm = asm + "\tsete" ; break;
             case NE: asm = asm + "\tsetne"; break;
         }
-        asm = asm + " \t" + visit(node.dest);
+        asm += " \t" + visit(node.dest) + "b\n";
+        asm += "\tmovzx\t" + visit(node.dest) + ", " + visit(node.dest) + "b";
         System.out.println(asm);
     }
 
@@ -243,7 +244,9 @@ public class X86Printer implements XIRVisitor {
 
     @Override
     public void visit(Return_Inst node) {
-        if(node.retval != rax)
+        if(node.retval instanceof GlobalVar)
+            System.out.println("\tmov \trax, " + "qword [" + visit(node.retval) +"]");
+        else if(node.retval != rax)
             System.out.println("\tmov \trax, " + visit(node.retval));
         System.out.println("\tret");
     }
@@ -304,7 +307,7 @@ public class X86Printer implements XIRVisitor {
         else if(reg instanceof Immediate) {
             return "" + ((Immediate) reg).value;
         }else if(reg instanceof GlobalVar){
-            return "qword [" + ((GlobalVar) reg).name + "]";
+            return ((GlobalVar) reg).name;
         }else if(reg instanceof StringLiteral){
             return ((StringLiteral) reg).label;
         }else

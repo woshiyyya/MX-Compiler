@@ -190,6 +190,12 @@ public class FunctionStuckTranslator {
         }
     }
 
+    private void EliminateUselessCode(Instruction inst){
+        if(inst instanceof Move_Inst)
+            if(((Move_Inst) inst).dest == ((Move_Inst) inst).Source)
+                inst.remove();
+    }
+
     public void Transform(){
         for(Function func: xirRoot.Functions.values()){
             processFunctionFrame(func);
@@ -197,6 +203,7 @@ public class FunctionStuckTranslator {
             Epilogue(func);
             for(BasicBlock X: func.PreOrder){
                 for(Instruction inst = X.Entry;inst != null;inst = inst.next){
+                    EliminateUselessCode(inst);
                     TransformCall(func, inst);
                     TransformSlice(func, inst);
                 }
