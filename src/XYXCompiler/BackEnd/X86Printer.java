@@ -30,13 +30,15 @@ import static XYXCompiler.BackEnd.X86_64.X86Registers.rax;
 public class X86Printer implements XIRVisitor {
 
     private Map<BasicBlock, String> BBNameMap = new HashMap<>();
+    private Function curFunc;
+    private BasicBlock AdjacentBlk;
+    private int BBNum = 0;
+    private int BlkId = 0;
 
     public X86Printer(PrintStream stream) {
         if(stream != null)
             System.setOut(stream);
     }
-
-    private int BBNum = 0;
 
     private String getBBLabel(BasicBlock BB){
         String name = BBNameMap.get(BB);
@@ -117,11 +119,15 @@ public class X86Printer implements XIRVisitor {
 
     @Override
     public void visit(Function node) {
+        curFunc = node;
         System.out.println(node.name + ":");
         System.out.println("\tpush \trbp");
         System.out.println("\tmov \trbp, rsp");
-        for(BasicBlock X: node.PreOrder)
+        for(BasicBlock X: node.PreOrder) {
             visit(X);
+            this.BlkId++;
+        }
+        this.BlkId = 0;
     }
 
     @Override
@@ -222,6 +228,23 @@ public class X86Printer implements XIRVisitor {
         System.out.println(asm);
     }
 
+    private void TryReverseBlockOrder(CJump_Inst node){
+        AdjacentBlk = (BlkId + 1 < curFunc.PreOrder.size()) ? curFunc.PreOrder.get(BlkId + 1) : null;
+        if(node.ifTrue == AdjacentBlk){
+            node.ifTrue = node.ifFalse;
+            node.ifFalse = AdjacentBlk;
+            switch (node.op){
+                case Z: node.op = RelationOp_Inst.CmpOp.NZ;  break;
+                case EQ:node.op = RelationOp_Inst.CmpOp.NE;  break;
+                case NE:node.op = RelationOp_Inst.CmpOp.EQ;  break;
+                case LS:node.op = RelationOp_Inst.CmpOp.GE;  break;
+                case LE:node.op = RelationOp_Inst.CmpOp.GT;  break;
+                case GE:node.op = RelationOp_Inst.CmpOp.LS;  break;
+                case GT:node.op = RelationOp_Inst.CmpOp.LE;  break;
+            }
+        }
+    }
+
     @Override
     public void visit(CJump_Inst node) {
         String asm = "";
@@ -231,6 +254,10 @@ public class X86Printer implements XIRVisitor {
         }else {
             asm += "\tcmp \t" + visit(node.L_operand) + ", " + visit(node.R_operand) + "\n";
         }
+
+        TryReverseBlockOrder(node);
+
+        /*
         switch (node.op){
             case Z: asm = asm + "\tjz \t"  + getBBLabel(node.ifFalse); break;
             case EQ:asm = asm + "\tjne\t"  + getBBLabel(node.ifFalse);  break;
@@ -240,6 +267,19 @@ public class X86Printer implements XIRVisitor {
             case GE:asm = asm + "\tjl \t"  + getBBLabel(node.ifFalse);  break;
             case GT:asm = asm + "\tjle\t"  + getBBLabel(node.ifFalse);  break;
         }
+        */
+
+        switch (node.op){
+            case Z :asm = asm + "\tjnz\t"  + getBBLabel(node.ifTrue); break;
+            case NZ:asm = asm + "\tjz \t"  + getBBLabel(node.ifTrue); break;
+            case EQ:asm = asm + "\tje \t"  + getBBLabel(node.ifTrue);  break;
+            case NE:asm = asm + "\tjne\t"  + getBBLabel(node.ifTrue);  break;
+            case LS:asm = asm + "\tjl \t"  + getBBLabel(node.ifTrue);  break;
+            case LE:asm = asm + "\tjle\t"  + getBBLabel(node.ifTrue);  break;
+            case GE:asm = asm + "\tjge\t"  + getBBLabel(node.ifTrue);  break;
+            case GT:asm = asm + "\tjg \t"  + getBBLabel(node.ifTrue);  break;
+        }
+
         System.out.println(asm);
     }
 

@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class RelationOp_Inst extends Arithmatic {
     public enum CmpOp{
-        LS, LE, GT, GE, EQ, NE, Z
+        LS, LE, GT, GE, EQ, NE, Z, NZ
     }
 
     public Register dest;

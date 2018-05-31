@@ -858,8 +858,9 @@ public class XIRBuilder implements ASTVisitor {
             curBlk.add(new BinaryOp_Inst(curBlk, cnt, cnt, new Immediate(1), binaryop.Add));
             curBlk.Close_J(ForCond);
             //After
-            curBlk = ForAfter;
+
             Construct_Array(HeadAddr, level + 1);
+            curBlk = ForAfter;
         }
     }
 /*
