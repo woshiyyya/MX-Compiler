@@ -71,6 +71,10 @@ public class BuiltinFunctionInserter {
         addArgs(string_s, "lhs");
         addArgs(string_s, "rhs");
 
+        Function string_eq = CreateFunc("string.eq","string.eq");
+        addArgs(string_eq, "lhs");
+        addArgs(string_eq, "rhs");
+
         Function string_g = CreateFunc("string.g","string.g");
         addArgs(string_g, "lhs");
         addArgs(string_g, "rhs");

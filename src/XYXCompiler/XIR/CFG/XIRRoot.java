@@ -8,5 +8,6 @@ import java.util.*;
 public class XIRRoot {
     public Map<String, Function> Functions = new HashMap<>();
     public List<GlobalVar> StaticSpace = new LinkedList<>();
+    public List<GlobalVar> ReservedSpace = new LinkedList<>();
     public List<StringLiteral> LiteralDataPool = new LinkedList<>();
 }

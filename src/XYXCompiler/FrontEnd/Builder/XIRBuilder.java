@@ -329,8 +329,14 @@ public class XIRBuilder implements ASTVisitor {
         for (Declaration X : root.declarations) {
             if (X instanceof Global_Variable_Declaration){
                 Global_Variable_Declaration node = (Global_Variable_Declaration) X;
-                GlobalVar space = new GlobalVar("_" + node.name, node.size);
-                Root.StaticSpace.add(space);
+                GlobalVar space;
+                if(node.RHS != null){
+                    space = new GlobalVar("_" + node.name, node.size);
+                    Root.StaticSpace.add(space);
+                }else{
+                    space  = new GlobalVar("@" + node.name, node.size);
+                    Root.ReservedSpace.add(space);
+                }
                 node.dataSrc = space;
             }
         }
@@ -1051,6 +1057,8 @@ public class XIRBuilder implements ASTVisitor {
         node.datasrc = reg;
         if(reg != null)
             curBlk.add(new Move_Inst(curBlk, reg, rax));
+        if(hasBranch(node))
+            curBlk.Close_B(node.datasrc,new Immediate(0),CmpOp.Z,node.ifTrue,node.ifFalse);
     }
 
     private void HandleBuiltinFunction(Function_call node){
@@ -1085,7 +1093,8 @@ public class XIRBuilder implements ASTVisitor {
         node.datasrc = reg;
         if(reg != null)
             curBlk.add(new Move_Inst(curBlk, reg, rax));
-
+        if(hasBranch(node))
+            curBlk.Close_B(node.datasrc,new Immediate(0),CmpOp.Z,node.ifTrue,node.ifFalse);
     }
 
     @Override
@@ -1115,6 +1124,8 @@ public class XIRBuilder implements ASTVisitor {
 
             if(reg != null)
                 curBlk.add(new Move_Inst(curBlk, reg, rax));
+            if(hasBranch(node))
+                curBlk.Close_B(node.datasrc,new Immediate(0),CmpOp.Z,node.ifTrue,node.ifFalse);
         }
     }
 
@@ -1138,6 +1149,8 @@ public class XIRBuilder implements ASTVisitor {
             curBlk.add(inst);
             if(reg != null)
                 curBlk.add(new Move_Inst(curBlk, reg, rax));
+            if(hasBranch(node))
+                curBlk.Close_B(node.datasrc,new Immediate(0),CmpOp.Z,node.ifTrue,node.ifFalse);
         }
     }
 

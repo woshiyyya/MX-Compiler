@@ -82,8 +82,11 @@ public class X86Printer implements XIRVisitor {
         System.out.println(
                 "intbuffer:\n\tdq 0\n" +
                 "format1:\n\tdb\"%lld\",0\n" +
-                "format2:\n\tdb\"%s\",0\n\n" +
-                "SECTION .bss\nstringbuffer:\n\tresb 256\n");
+                "format2:\n\tdb\"%s\",0\n\n");
+
+        System.out.println("SECTION .bss \nstringbuffer:\n\tresb 256\n");
+        for (GlobalVar X : node.ReservedSpace)
+            System.out.println(X.name + ":\n\tresq\t1");
     }
 
     private void Print_builtin()throws IOException {
