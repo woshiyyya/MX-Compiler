@@ -329,7 +329,7 @@ public class XIRBuilder implements ASTVisitor {
         for (Declaration X : root.declarations) {
             if (X instanceof Global_Variable_Declaration){
                 Global_Variable_Declaration node = (Global_Variable_Declaration) X;
-                GlobalVar space = new GlobalVar(node.name, node.size);
+                GlobalVar space = new GlobalVar("_" + node.name, node.size);
                 Root.StaticSpace.add(space);
                 node.dataSrc = space;
             }
@@ -397,18 +397,26 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.body);
 
         //Merge multiple return block
+
+        if(!(curBlk.Exit instanceof Return_Inst)){  //Must be void type function
+            curBlk.ret = new Return_Inst(curBlk, new Immediate(0));
+            curBlk.add(curBlk.ret);
+            curFunc.RetBlks.add(curBlk);
+        }
+
+
         switch (curFunc.RetBlks.size()){
+            /*
             case 0:
-                //Warning: Assume void == 0
+                //Must not be void type function
                 curBlk.add(new Return_Inst(curBlk, new Immediate(0)));
                 curFunc.EndBB = curBlk;
                 curBlk.If_closed = true;
                 break;
-
             case 1:
                 curFunc.EndBB = curFunc.RetBlks.get(0);
                 break;
-
+            */
             default:{ //create and merge All return BB
                 curFunc.EndBB = new BasicBlock(curFunc,"Merged_Return" + Blknum++);
                 curFunc.EndBB.add(new Return_Inst(curFunc.EndBB, rax));
@@ -427,7 +435,7 @@ public class XIRBuilder implements ASTVisitor {
     @Override
     public void visit(Return node) {
         if(node.returnvalue == null){
-            curBlk.Close_R(new Return_Inst(curBlk, null));
+            curBlk.Close_R(new Return_Inst(curBlk, new Immediate(0)));
         }else{
             if(ifLogical(node.returnvalue)){
                 node.returnvalue.ifTrue = new BasicBlock(curFunc, "retval_iftrue");
@@ -575,7 +583,7 @@ public class XIRBuilder implements ASTVisitor {
 
         curBlk = WhileBody;
         VISIT(node.body);
-        WhileBody.Close_J(WhileCond);
+        curBlk.Close_J(WhileCond);
 
         curBlk = WhileAfter;
         exitLoop();

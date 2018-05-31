@@ -6,6 +6,7 @@ import XYXCompiler.XIR.Instruction.Arithmatic.RelationOp_Inst;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
+import XYXCompiler.XIR.Operand.Static.Immediate;
 
 import javax.xml.crypto.Data;
 import java.util.HashMap;

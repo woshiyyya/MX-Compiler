@@ -43,6 +43,12 @@ public class OnTheFly_Allocator {
                 X = VRegSliceMap.get(X);
             inst.prepend(new Load_Inst(inst.BB_Scope, paramRags.get(id++), X,0,8));
         }
+
+        for(int i = 6;i < caller.ArgRegs.size();i++){
+            VirtualReg param_i = caller.ArgRegs.get(i);
+            FrameSlice sliceX = new FrameSlice(caller, param_i.Name);
+            VRegSliceMap.put(param_i, sliceX);
+        }
     }
 
     public void Handle_Call_Params(Function caller, Call_Inst inst){

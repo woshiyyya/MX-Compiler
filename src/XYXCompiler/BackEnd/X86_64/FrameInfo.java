@@ -43,7 +43,7 @@ public class FrameInfo {
         for(int i = 0;i < paramnum; i++){
             FrameSlice slice = func.ArgSliceMap.get(func.ArgRegs.get(i));
             if(i > 5){
-                FrameSliceOffset.put(slice, LastParam + (paramnum - 1 - i)*8);
+                FrameSliceOffset.put(slice, LastParam - (paramnum - 1 - i)*8);
             }else{
                 FrameSliceOffset.put(slice, FirstParam - i*8);
             }

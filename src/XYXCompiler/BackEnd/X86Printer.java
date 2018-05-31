@@ -155,10 +155,12 @@ public class X86Printer implements XIRVisitor {
                 node.R_operand = tem;
             }
             if(node.op == BinaryOp_Inst.binaryop.Div){
+                asm += "mov \trdx, 0\n";
                 asm += "mov \trax ," + visit(node.L_operand) + "\n";
                 asm += "\tidiv \t" + visit(node.R_operand) + "\n";
                 asm += "\tmov \t" + visit(node.dest) + ", rax";
             }else if(node.op == BinaryOp_Inst.binaryop.Mod){
+                asm += "mov \trdx, 0\n";
                 asm += "mov \trax ," + visit(node.L_operand) + "\n";
                 asm += "\tidiv \t " + visit(node.R_operand) + "\n";
                 asm += "\tmov \t" + visit(node.dest) + ", rdx";
@@ -219,7 +221,13 @@ public class X86Printer implements XIRVisitor {
 
     @Override
     public void visit(CJump_Inst node) {
-        String asm = "\tcmp \t" + visit(node.L_operand) + ", " + visit(node.R_operand) + "\n";
+        String asm = "";
+        if(node.L_operand instanceof Immediate){
+            asm += "\tmov \t rax, 0\n";
+            asm += "\tcmp \t rax, " + visit(node.R_operand) + "\n";
+        }else {
+            asm += "\tcmp \t" + visit(node.L_operand) + ", " + visit(node.R_operand) + "\n";
+        }
         switch (node.op){
             case Z: asm = asm + "\tjz \t"  + getBBLabel(node.ifFalse); break;
             case EQ:asm = asm + "\tjne\t"  + getBBLabel(node.ifFalse);  break;
@@ -239,6 +247,9 @@ public class X86Printer implements XIRVisitor {
 
     @Override
     public void visit(Call_Inst node) {
+        if(node.function == null){
+            System.err.println("fuckinX86");
+        }
         System.out.println("\tcall \t" + node.function.name);
     }
 
@@ -246,7 +257,7 @@ public class X86Printer implements XIRVisitor {
     public void visit(Return_Inst node) {
         if(node.retval instanceof GlobalVar)
             System.out.println("\tmov \trax, " + "qword [" + visit(node.retval) +"]");
-        else if(node.retval != rax)
+        else if(node.retval != rax && node.retval != null)
             System.out.println("\tmov \trax, " + visit(node.retval));
         System.out.println("\tret");
     }

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static XYXCompiler.BackEnd.X86_64.X86Registers.*;
+import static java.lang.Integer.min;
 
 public class FunctionStuckTranslator {
     public XIRRoot xirRoot;
@@ -119,7 +120,7 @@ public class FunctionStuckTranslator {
     }
     private void StoreParametersRegs(FrameInfo Info, BasicBlock curBB, Instruction Inst){
         Function func = Info.func;
-        for(int i = 0;i < func.ArgRegs.size();i++){
+        for(int i = 0;i < min(func.ArgRegs.size(),6);i++){
             Inst.prepend(new Store_Inst(curBB, FuncParamRegs.get(i), 8, rbp, Info.FirstParam - 8*i));
         }
     }
@@ -184,8 +185,8 @@ public class FunctionStuckTranslator {
             //ReloadCallerSavedRegs(Info, curBB, Inst);
 
             //Pop stack
-            for(int i = paramnum;i >= 6;i--){
-                inst.append(new Pop(curBB, rax));
+            for(int i = 0;i < paramnum - 6;i++){
+                inst.next.append(new Pop(curBB, rax));
             }
         }
     }
