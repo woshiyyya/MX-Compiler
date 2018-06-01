@@ -209,7 +209,7 @@ public class X86_Printer implements XIRVisitor {
                 ASM.append(getAssembly("neg", get(node.operand)));
                 break;
             case NOT:
-                ASM.append(getAssembly("xor", get(node.operand)));
+                ASM.append(getAssembly("xor", get(node.operand),1));
                 break;
         }
         ASM.append(getAssembly("mov",get(node.dest), get(node.operand)));
@@ -321,7 +321,7 @@ public class X86_Printer implements XIRVisitor {
 
     private static String get(DataSrc Operand){
         if(Operand instanceof PhysicalReg)      return ((PhysicalReg) Operand).name;
-        if(Operand instanceof Immediate)        return ((Immediate) Operand).Str;
+        if(Operand instanceof Immediate)        return "" + ((Immediate) Operand).value;
         if(Operand instanceof GlobalVar)        return ((GlobalVar) Operand).name;
         if(Operand instanceof StringLiteral)    return ((StringLiteral) Operand).label;
 
