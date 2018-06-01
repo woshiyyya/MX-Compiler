@@ -77,9 +77,10 @@ public class X86Printer implements XIRVisitor {
         }
 
         for(StringLiteral X: node.LiteralDataPool){
+            String data =  X.toInt();
             System.out.println("\tdq " + X.length);
             System.out.println(X.label + ":");
-            System.out.println("\tdb " + X.toInt());
+            System.out.println("\tdb " + data);
         }
         System.out.println(
                 "intbuffer:\n\tdq 0\n" +
@@ -255,18 +256,6 @@ public class X86Printer implements XIRVisitor {
         }
 
         TryReverseBlockOrder(node);
-
-        /*
-        switch (node.op){
-            case Z: asm = asm + "\tjz \t"  + getBBLabel(node.ifFalse); break;
-            case EQ:asm = asm + "\tjne\t"  + getBBLabel(node.ifFalse);  break;
-            case NE:asm = asm + "\tje \t"  + getBBLabel(node.ifFalse);  break;
-            case LS:asm = asm + "\tjge\t"  + getBBLabel(node.ifFalse);  break;
-            case LE:asm = asm + "\tjg \t"  + getBBLabel(node.ifFalse);  break;
-            case GE:asm = asm + "\tjl \t"  + getBBLabel(node.ifFalse);  break;
-            case GT:asm = asm + "\tjle\t"  + getBBLabel(node.ifFalse);  break;
-        }
-        */
 
         switch (node.op){
             case Z :asm = asm + "\tjnz\t"  + getBBLabel(node.ifTrue); break;

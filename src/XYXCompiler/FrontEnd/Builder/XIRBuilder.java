@@ -851,6 +851,9 @@ public class XIRBuilder implements ASTVisitor {
             curBlk.add(new Alloc_Inst(curBlk, HeadAddr, HeadAddr));
             curBlk.add(new Store_Inst(curBlk, index.datasrc,8, HeadAddr,0));
             curBlk.add(new Store_Inst(curBlk, HeadAddr,8,Pointer,8));
+
+            Construct_Array(HeadAddr, level + 1);
+
             curBlk.Close_J(ForUpdate);
 
             //Update
@@ -858,8 +861,6 @@ public class XIRBuilder implements ASTVisitor {
             curBlk.add(new BinaryOp_Inst(curBlk, cnt, cnt, new Immediate(1), binaryop.Add));
             curBlk.Close_J(ForCond);
             //After
-
-            Construct_Array(HeadAddr, level + 1);
             curBlk = ForAfter;
         }
     }

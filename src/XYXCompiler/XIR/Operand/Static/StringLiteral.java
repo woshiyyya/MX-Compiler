@@ -19,6 +19,7 @@ public class StringLiteral extends Literal {
         for (int j = 0; j < n; j++) {
             if (value.charAt(j) == '\\') {
                 ++j;
+                this.length--;
                 if (value.charAt(j) == 'n') {
                     str.append("  10,");
                 }
