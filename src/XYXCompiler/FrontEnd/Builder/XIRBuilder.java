@@ -24,7 +24,6 @@ import XYXCompiler.XIR.Instruction.Arithmatic.UnaryOp_Inst.unaryop;
 import XYXCompiler.XIR.Instruction.Control.Jump_Inst;
 import XYXCompiler.XIR.Instruction.Functional.Call_Inst;
 import XYXCompiler.XIR.Instruction.Functional.Return_Inst;
-import XYXCompiler.XIR.Instruction.Instruction;
 import XYXCompiler.XIR.Instruction.Memory.Alloc_Inst;
 import XYXCompiler.XIR.Instruction.Memory.Load_Inst;
 import XYXCompiler.XIR.Instruction.Memory.Move_Inst;
@@ -37,7 +36,6 @@ import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.StringLiteral;
 import XYXCompiler.XIR.Tools.BuiltinFunctionInserter;
 
-import javax.xml.crypto.Data;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -283,7 +281,7 @@ public class XIRBuilder implements ASTVisitor {
 
     private boolean IfNeedMem(Node node){
         return (node instanceof Accessing || node instanceof Indexing)
-                || (THISPOINTER != null && node instanceof ID);
+                || (THISPOINTER != null && node instanceof ID && curClassInfo.membernameList.contains(((ID) node).name));
     }
 
     private void StoreFuncMap(String name, Function func){
@@ -367,7 +365,6 @@ public class XIRBuilder implements ASTVisitor {
         curFunc = FuncMap.get(node.name);
         //Warning: without adding parameters
         THISPOINTER = new VirtualReg("this");
-        curClassInfo = typeTable.getInfo(node.name);
 
         curFunc.ArgRegs.add(THISPOINTER);
         curBlk = curFunc.StartBB;
@@ -377,7 +374,6 @@ public class XIRBuilder implements ASTVisitor {
         curBlk.add(new Return_Inst(curBlk, THISPOINTER));
         curFunc.EndBB = curBlk;
         THISPOINTER = null;
-        curClassInfo = null;
     }
 
 //-----Function Part---------------------------------------------------------
@@ -648,12 +644,16 @@ public class XIRBuilder implements ASTVisitor {
     public void visit(ID node) {
         if(curClassInfo != null && curClassInfo.membernameList.contains(node.name)){
             //Need This.
-            int offset = curClassInfo.getOffset(node.name);
-            if(curIfAddr){
-                node.setAddr(THISPOINTER, offset);
+            if(node.name.equals("this")){
+                node.datasrc = THISPOINTER;
             }else{
-                node.datasrc = new VirtualReg("this." + node.name);
-                curBlk.add(new Load_Inst(curBlk, (Register) (node.datasrc), THISPOINTER, offset, 8));
+                int offset = curClassInfo.getOffset(node.name);
+                if(curIfAddr){
+                    node.setAddr(THISPOINTER, offset);
+                }else{
+                    node.datasrc = new VirtualReg("this." + node.name);
+                    curBlk.add(new Load_Inst(curBlk, (Register) (node.datasrc), THISPOINTER, offset, 8));
+                }
             }
         }else{ //Not class Member
             Node Entity = node.entity;
@@ -954,7 +954,9 @@ public class XIRBuilder implements ASTVisitor {
             String classname = ((Class_Type) node.type).name;
             int size = typeTable.ClassInfoTable.get(classname).getSize();
             curBlk.add(new Alloc_Inst(curBlk,dest,new Immediate(size)));
-            curBlk.add(new Call_Inst(curBlk, FuncMap.get(classname), null));
+            Call_Inst call = new Call_Inst(curBlk, FuncMap.get(classname), null);
+            call.ArgLocs.add(dest);
+            curBlk.add(call);
         }
         node.datasrc = dest;
     }
@@ -994,8 +996,29 @@ public class XIRBuilder implements ASTVisitor {
         }
     }
 
+    private boolean Handle_ThisAccessing(Accessing node){
+        if(curClassInfo != null && node.body instanceof ID && ((ID) node.body).name.equals("this")){
+            int offset = curClassInfo.getOffset(node.components);
+            if(curIfAddr){
+                node.baseaddr = THISPOINTER;
+                node.offset = offset;
+            }else{
+                VirtualReg reg = new VirtualReg(null);
+                curBlk.add(new Load_Inst(curBlk, reg, THISPOINTER, offset, intsize));
+                node.datasrc = reg;
+                if(hasBranch(node))
+                    curBlk.Close_B(node.datasrc, new Immediate(0), CmpOp.Z, node.ifTrue, node.ifFalse);
+            }
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public void visit(Accessing node) {
+        if(Handle_ThisAccessing(node))
+            return;
+
         boolean backup = curIfAddr;
         enterAddr(false);
         VISIT(node.body);
@@ -1024,7 +1047,6 @@ public class XIRBuilder implements ASTVisitor {
             VISIT(X);
         if(name.equals("size")){
             reg = new VirtualReg("size");
-            //curBlk.add(new Load_Inst(curBlk, reg, node.body.datasrc,0,8));
             Call_Inst call = new Call_Inst(curBlk, func, reg);
             call.ArgLocs.add(node.body.datasrc);
             curBlk.add(call);
@@ -1115,10 +1137,8 @@ public class XIRBuilder implements ASTVisitor {
             curBlk.add(inst);
 
             inst.ArgLocs.add(node.body.datasrc); //ADD this ??
-            for(Expression X: node.params){
-                VISIT(X);
+            for(Expression X: node.params)
                 inst.ArgLocs.add(X.datasrc);
-            }
 
             if(reg != null)
                 curBlk.add(new Move_Inst(curBlk, reg, rax));
@@ -1139,6 +1159,9 @@ public class XIRBuilder implements ASTVisitor {
             Call_Inst inst = new Call_Inst(curBlk, func, reg);
             node.datasrc = reg;
 
+
+            if(THISPOINTER != null && curClassInfo.memberFuncnameList.contains(node.name))
+                inst.ArgLocs.add(THISPOINTER);
             for(Expression X: node.params){
                 VISIT(X);
                 inst.ArgLocs.add(X.datasrc);

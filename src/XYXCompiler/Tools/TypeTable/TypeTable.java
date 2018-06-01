@@ -1,9 +1,6 @@
 package XYXCompiler.Tools.TypeTable;
 
-import XYXCompiler.FrontEnd.ASTNode.Declaration.Class_Declaration;
-import XYXCompiler.FrontEnd.ASTNode.Declaration.Declaration;
-import XYXCompiler.FrontEnd.ASTNode.Declaration.Global_Variable_Declaration;
-import XYXCompiler.FrontEnd.ASTNode.Declaration.Variable_Declaration;
+import XYXCompiler.FrontEnd.ASTNode.Declaration.*;
 import XYXCompiler.FrontEnd.ASTNode.Expression.Primitive.Bool;
 import XYXCompiler.FrontEnd.ASTNode.Expression.Primitive.STRING;
 import XYXCompiler.FrontEnd.ASTNode.Node;
@@ -12,6 +9,7 @@ import XYXCompiler.FrontEnd.Semantic.Scope.GlobalScope;
 import XYXCompiler.FrontEnd.Semantic.Scope.LocalScope;
 import XYXCompiler.Tools.Exceptions.SemanticException;
 import XYXCompiler.Tools.Exceptions.XYXException;
+import XYXCompiler.XIR.CFG.Function;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -62,6 +60,9 @@ public class TypeTable {
             if(X instanceof Variable_Declaration){
                 type.membernameList.add(X.name);
                 type.membertypeList.add(((Variable_Declaration) X).type);
+            }
+            if(X instanceof Function_Declaration){
+                type.memberFuncnameList.add(X.name);
             }
         }
         ClassInfoTable.put(node.name, type);

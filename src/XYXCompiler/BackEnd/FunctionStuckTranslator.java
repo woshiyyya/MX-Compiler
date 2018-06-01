@@ -159,7 +159,6 @@ public class FunctionStuckTranslator {
         if(inst instanceof Call_Inst){
             Call_Inst Inst = (Call_Inst) inst;
 
-
             //StoreCallerSavedRegs(Info, curBB ,Inst);
 
             int paramnum = Inst.ArgLocs.size();

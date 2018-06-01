@@ -289,7 +289,7 @@ public class X86Printer implements XIRVisitor {
 
     @Override
     public void visit(Call_Inst node) {
-        if(node.function == null){
+        if(node.function == null) {
             System.err.println("fuckinX86");
         }
         System.out.println("\tcall \t" + node.function.name);
