@@ -80,9 +80,10 @@ public class X86_Printer implements XIRVisitor {
             ASM.append(X.name).append(":\n\t dq 000000000000000AH\n");
 
         for(StringLiteral X: node.LiteralDataPool){
+            String data = X.toInt();
             ASM.append("\tdq ").append(X.length).append("\n");
             ASM.append(X.label).append(":\n");
-            ASM.append("\tdb ").append(X.toInt()).append("\n");
+            ASM.append("\tdb ").append(data).append("\n");
         }
         ASM.append("intbuffer:\n\tdq 0\nformat1:\n\tdb\"%lld\",0\nformat2:\n\tdb\"%s\",0\n\n");
 
