@@ -159,9 +159,8 @@ public class X86Printer implements XIRVisitor {
             }
         }else{
             if(node.L_operand instanceof Immediate){
-                DataSrc tem = node.L_operand;
-                node.L_operand = node.R_operand;
-                node.R_operand = tem;
+                asm += "\tmov \trax, " + visit(node.L_operand) + "\n";
+                node.L_operand = rax;
             }
             if(node.op == BinaryOp_Inst.binaryop.Div){
                 asm += "mov \trdx, 0\n";
@@ -249,7 +248,7 @@ public class X86Printer implements XIRVisitor {
     public void visit(CJump_Inst node) {
         String asm = "";
         if(node.L_operand instanceof Immediate){
-            asm += "\tmov \t rax, 0\n";
+            asm += "\tmov \t rax, " + visit(node.L_operand) + "\n";
             asm += "\tcmp \t rax, " + visit(node.R_operand) + "\n";
         }else {
             asm += "\tcmp \t" + visit(node.L_operand) + ", " + visit(node.R_operand) + "\n";
