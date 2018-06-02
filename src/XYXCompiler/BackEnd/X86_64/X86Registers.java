@@ -57,20 +57,21 @@ public class X86Registers {
         CalleeSavedRegs.add(r14);
         CalleeSavedRegs.add(r15);
 
+
         //GeneralRegs.add(rax); // reserved for specific use
-        GeneralRegs.add(r8);
-        GeneralRegs.add(r9);
+        //GeneralRegs.add(rdx);
         GeneralRegs.add(r10);
         GeneralRegs.add(r11);
-        GeneralRegs.add(rbx);
         GeneralRegs.add(r12);
         GeneralRegs.add(r13);
         GeneralRegs.add(r14);
         GeneralRegs.add(r15);
-        GeneralRegs.add(rdi);
-        GeneralRegs.add(rsi);
-        GeneralRegs.add(rdx);
+        GeneralRegs.add(rbx);
+        GeneralRegs.add(r9);
+        GeneralRegs.add(r8);
         GeneralRegs.add(rcx);
+        GeneralRegs.add(rsi);
+        GeneralRegs.add(rdi);
 
         FuncParamRegs.add(rdi);
         FuncParamRegs.add(rsi);

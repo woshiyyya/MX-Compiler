@@ -18,7 +18,6 @@ import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.Immediate;
 import XYXCompiler.XIR.Operand.Static.StringLiteral;
-import org.w3c.dom.Node;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -168,21 +167,26 @@ public class X86_Printer implements XIRVisitor {
                 ASM.append(getAssembly("mov","rax",get(node.L_operand)));
                 ASM.append(getAssembly("idiv",get(node.R_operand)));
                 ASM.append(getAssembly("mov",get(node.dest),"rdx"));
+            }else if(node.op == BinaryOp_Inst.binaryop.Lsh){
+                ASM.append(getAssembly("mov","rcx",get(node.R_operand)));
+                ASM.append(getAssembly("sal",get(node.L_operand),"cl"));
+                ASM.append(getAssembly("mov",get(node.dest),get(node.L_operand)));
+            }else if(node.op == BinaryOp_Inst.binaryop.Rsh){
+                ASM.append(getAssembly("mov","rcx",get(node.R_operand)));
+                ASM.append(getAssembly("sar",get(node.L_operand),"cl"));
+                ASM.append(getAssembly("mov",get(node.dest),get(node.L_operand)));
             }else{
                 String Inst = "";
                 switch (node.op){
                     case Add: Inst =  "add"; break;
                     case Sub: Inst =  "sub"; break;
                     case Mul: Inst = "imul"; break;
-                    case Lsh: Inst =  "shl"; break;
-                    case Rsh: Inst =  "shr"; break;
                     case And: Inst =  "and"; break;
                     case Or:  Inst =  "or";  break;
                     case Xor: Inst =  "xor"; break;
                 }
-                ASM.append(getAssembly(Inst,get(node.L_operand), get(node.R_operand)));
-                if(node.dest != node.L_operand)
-                    ASM.append(getAssembly("mov", get(node.dest), get(node.L_operand)));
+                ASM.append(getAssembly(Inst, get(node.L_operand), get(node.R_operand)));
+                ASM.append(getAssembly("mov", get(node.dest), get(node.L_operand)));
             }
         }
     }

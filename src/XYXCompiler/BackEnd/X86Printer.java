@@ -178,7 +178,7 @@ public class X86Printer implements XIRVisitor {
                     case Add: asm = asm + "add"; break;
                     case Sub: asm = asm + "sub"; break;
                     case Mul: asm = asm +"imul"; break;
-                    case Lsh: asm = asm + "shl"; break;
+                    case Lsh: asm = asm + "sal"; break;
                     case Rsh: asm = asm + "shr"; break;
                     case And: asm = asm + "and"; break;
                     case Or:  asm = asm + "or";  break;

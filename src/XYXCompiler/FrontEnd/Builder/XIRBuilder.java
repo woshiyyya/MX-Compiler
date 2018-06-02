@@ -21,6 +21,7 @@ import XYXCompiler.XIR.Instruction.Arithmatic.RelationOp_Inst;
 import XYXCompiler.XIR.Instruction.Arithmatic.RelationOp_Inst.CmpOp;
 import XYXCompiler.XIR.Instruction.Arithmatic.UnaryOp_Inst;
 import XYXCompiler.XIR.Instruction.Arithmatic.UnaryOp_Inst.unaryop;
+import XYXCompiler.XIR.Instruction.Control.CJump_Inst;
 import XYXCompiler.XIR.Instruction.Control.Jump_Inst;
 import XYXCompiler.XIR.Instruction.Functional.Call_Inst;
 import XYXCompiler.XIR.Instruction.Functional.Return_Inst;
@@ -800,6 +801,12 @@ public class XIRBuilder implements ASTVisitor {
     @Override
     public void visit(Bool node) {
         node.datasrc = new Immediate(node.value ? 1 : 0);
+        if(hasBranch(node)) {
+            if (node.value)
+                curBlk.Close_J(node.ifTrue);
+            else
+                curBlk.Close_J(node.ifFalse);
+        }
     }
 
     @Override

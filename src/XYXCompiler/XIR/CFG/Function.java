@@ -4,6 +4,7 @@ import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.FrontEnd.ASTNode.Type.Func_Type;
 import XYXCompiler.XIR.Instruction.Arithmatic.Arithmatic;
 import XYXCompiler.XIR.Instruction.Instruction;
+import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
@@ -14,6 +15,7 @@ import java.util.*;
 public class Function {
     public String name;
     public List<VirtualReg> ArgRegs = new LinkedList<>();
+    public List<DataSrc> ArgSrcs = new LinkedList<>(); //transformed after allocation
     public List<BasicBlock> RetBlks = new LinkedList<>();
     public boolean isBuiltin = false;
     public int retsize = 0;
