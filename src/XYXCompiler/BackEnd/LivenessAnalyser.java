@@ -19,6 +19,13 @@ public class LivenessAnalyser {
             Set<VirtualReg> In = new HashSet<>();
             Set<VirtualReg> Out = new HashSet<>();
             boolean Converge;
+            for(BasicBlock X: func.ReverseOrder){
+                for(Instruction inst = X.Exit; inst != null; inst = inst.prev){
+                    if(!inst.ifupdated)
+                        inst.Update_UseDef();
+                }
+            }
+
             do{
                 Converge = true;
                 for(BasicBlock X: func.ReverseOrder){
@@ -28,8 +35,6 @@ public class LivenessAnalyser {
                         In.addAll(inst.Live_in);
                         Out.addAll(inst.Live_out);
 
-                        if(!inst.ifupdated)
-                            inst.Update_UseDef();
                         Update_InOut(inst);
 
                         if(!In.equals(inst.Live_in) || !Out.equals(inst.Live_out))
@@ -50,9 +55,10 @@ public class LivenessAnalyser {
             if(inst.next != null)
                 inst.Live_out.addAll(inst.next.Live_in);
         }
-            inst.Live_in.addAll(inst.Used);
-            inst.Live_in.addAll(inst.Live_out);
-            inst.Live_in.remove(inst.Def);
+
+        inst.Live_in.addAll(inst.Live_out);
+        inst.Live_in.remove(inst.Def);
+        inst.Live_in.addAll(inst.Used);
     }
 
 

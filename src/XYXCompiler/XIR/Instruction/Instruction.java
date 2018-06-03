@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction;
 
+import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
@@ -64,6 +65,8 @@ public abstract class Instruction {
     public abstract void Update_UseDef();
     public abstract void Reset_OperandRegs(VirtualReg VReg, PhysicalReg PReg);
     public abstract void Reset_DestRegs(PhysicalReg Reg);
+    public abstract void Reset_Frameslice(FrameSlice slice, PhysicalReg Reg);
+    public abstract void Reset_DestFrameSlice(PhysicalReg Reg);
     public abstract void Print();
     public abstract void LLPrint();
     public abstract void accept(XIRVisitor visitor);

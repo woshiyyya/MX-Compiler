@@ -336,7 +336,7 @@ public class X86_Printer implements XIRVisitor {
     private String getBBLabel(BasicBlock BB){
         String name = BBNameMap.get(BB);
         if(name == null){
-            name = BB.label + "." + (BBNum++);
+            name = BB.label + "_" + (BBNum++);
             BBNameMap.put(BB, name);
         }
         return name;

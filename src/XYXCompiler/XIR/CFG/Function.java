@@ -37,8 +37,8 @@ public class Function {
     public Map<VirtualReg, FrameSlice> ArgSliceMap = new HashMap<>(); // Help params find their location in Frame
     public List<FrameSlice> frameSlice = new ArrayList<>();
     public Set<PhysicalReg> usedPregs = new HashSet<>();
-    public List<PhysicalReg> usedCallerSavedRegs = new LinkedList<>();
-    public List<PhysicalReg> usedCalleeSavedregs = new LinkedList<>();
+    //public List<PhysicalReg> usedCallerSavedRegs = new LinkedList<>();
+    //public List<PhysicalReg> usedCalleeSavedregs = new LinkedList<>();
 
     public Function() {
         StartBB = new BasicBlock(this,"Start_BB");

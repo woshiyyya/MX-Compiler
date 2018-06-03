@@ -1,4 +1,5 @@
 package XYXCompiler.XIR.Instruction.Functional;
+import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
@@ -20,6 +21,15 @@ public class Return_Inst extends Functional {
         this.ifupdated = true;
     }
 
+    @Override
+    public void Reset_Frameslice(FrameSlice slice, PhysicalReg Reg) {
+        if(retval != null && retval == slice) retval = Reg;
+    }
+
+    @Override
+    public void Reset_DestFrameSlice(PhysicalReg Reg) {
+
+    }
     @Override
     public void Reset_OperandRegs(VirtualReg VReg, PhysicalReg PReg) {
         if(retval.equals(VReg)) retval = PReg;

@@ -38,8 +38,8 @@ public class X86Registers {
 
     public void Initialize() {
         // 9
-        CallerSavedRegs.add(rax);
-        CallerSavedRegs.add(rdi);
+        //CallerSavedRegs.add(rax);
+        //CallerSavedRegs.add(rdi);
         CallerSavedRegs.add(rsi);
         CallerSavedRegs.add(rdx);
         CallerSavedRegs.add(rcx);
@@ -60,16 +60,18 @@ public class X86Registers {
 
         //GeneralRegs.add(rax); // reserved for specific use
         //GeneralRegs.add(rdx);
+        //GeneralRegs.add(rcx);
+        //GeneralRegs.add(r15);  //temp
+        //GeneralRegs.add(rbx);
+
         GeneralRegs.add(r10);
         GeneralRegs.add(r11);
         GeneralRegs.add(r12);
         GeneralRegs.add(r13);
         GeneralRegs.add(r14);
-        GeneralRegs.add(r15);
         GeneralRegs.add(rbx);
         GeneralRegs.add(r9);
         GeneralRegs.add(r8);
-        GeneralRegs.add(rcx);
         GeneralRegs.add(rsi);
         GeneralRegs.add(rdi);
 

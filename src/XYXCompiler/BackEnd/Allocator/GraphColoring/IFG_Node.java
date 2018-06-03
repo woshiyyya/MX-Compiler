@@ -5,9 +5,7 @@ import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class IFG_Node {
     public VirtualReg VReg = null;
@@ -15,8 +13,9 @@ public class IFG_Node {
     public int PRegId;
     public int degree = 0;
     public boolean deleted = false;
-    public List<IFG_Node> NeighborNodes = new LinkedList<>();
-    public List<VirtualReg> NeighborVregs = new LinkedList<>();
+    public Set<IFG_Node> MoveRhs = new HashSet<>();
+    public Set<IFG_Node> NeighborNodes = new HashSet<>();
+    public Set<VirtualReg> NeighborVregs = new HashSet<>();
 
     public IFG_Node(VirtualReg VReg) {
         this.VReg = VReg;
@@ -25,6 +24,9 @@ public class IFG_Node {
     public void Add_Neighbor(IFG_Node node){
         NeighborNodes.add(node);
         NeighborVregs.add(node.VReg);
-        degree++;
+    }
+
+    public void setDegree(){
+        degree = NeighborNodes.size();
     }
 }

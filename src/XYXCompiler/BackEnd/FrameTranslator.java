@@ -19,6 +19,8 @@ import javafx.geometry.Pos;
 import org.antlr.v4.runtime.BailErrorStrategy;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import static XYXCompiler.BackEnd.X86_64.X86Registers.*;
@@ -27,6 +29,7 @@ import static java.lang.Integer.min;
 public class FrameTranslator {
     public XIRRoot xirRoot;
     public Map<Function, FrameInfo> InfoMap = new HashMap<>();
+    private Function curFunc;
 
     /*
         # MyFunction2(10, 5, 2);
@@ -36,7 +39,7 @@ public class FrameTranslator {
         |    | [rbp + ?]   (kth argument)               rbp + Pos_LastParam
         |    | [rbp + 10H]  (7th argument)
         | RA | [rbp + 08H]  (return address)             rpb + Pos_RetAddr
-        | FP | [rbp]       (old ebp value)              rpb
+        | FP | [rbp]       (old ebp value)               rpb
         |    | [rbp - 08H]  (1st argument #rdi)          rpb - Pos_FirstParam
         |    | [rbp - 10H]  (2nd argument #rsi)
         |    | [rbp - 18H]  (3rd argument #rdx)
@@ -66,9 +69,10 @@ public class FrameTranslator {
         Info.LastParam              = Info.RetAddr              + 8 * (Argnum - ReducedArgnum);
         Info.FirstParam             = -8;
         Info.CalleeSavedStart       = Info.FirstParam           - 8 * (ReducedArgnum);
-        Info.LocalVariableStart     = Info.CalleeSavedStart     - 8 * func.usedCalleeSavedregs.size();
+        Info.LocalVariableStart     = Info.CalleeSavedStart     - 8 * Info.UsedCalleeSavedReg.size();
         Info.CallerSavedStart       = Info.LocalVariableStart   - 8 * func.frameSlice.size();
-        Info.Totalsize              = (Info.CallerSavedStart    - 8 * func.usedCallerSavedRegs.size())*(-1);
+        //Info.Totalsize              = (Info.CallerSavedStart    - 8 * Info.UsedCallerSavedReg.size())*(-1);
+        Info.Totalsize              = (Info.CallerSavedStart     -8 * func.usedPregs.size())*-1;
 
         Info.updateLocalVariablePosition();
         Info.updateParameterPosition();
@@ -85,7 +89,6 @@ public class FrameTranslator {
         MoveParametersRegs(Info, curBB, Entry);     //Graph Coloring!
         //StoreCalleeSavedRegs(func, curBB, Entry);
     }
-
 
 
     private void Epilogue(Function func){
@@ -141,30 +144,69 @@ public class FrameTranslator {
     private void StoreCallerSavedRegs(FrameInfo Info, BasicBlock curBB, Instruction inst){
         for(int i = 0; i < Info.UsedCallerSavedReg.size(); i++){
             inst.prepend(new Store_Inst(curBB, Info.UsedCallerSavedReg.get(i),
-                    8,rbp,Info.CallerSavedStart + i*8));
+                    8,rbp,Info.CallerSavedStart - i*8));
         }
     }
 
     private void ReloadCallerSavedRegs(FrameInfo Info, BasicBlock curBB, Instruction inst){
         for(int i = 0; i < Info.UsedCallerSavedReg.size(); i++){
             inst.append(new Load_Inst(curBB, Info.UsedCallerSavedReg.get(i),
-                    rbp,Info.CallerSavedStart + i*8,8));
+                    rbp,Info.CallerSavedStart - i*8,8));
         }
     }
 
     private void StoreCalleeSavedRegs(Function func, BasicBlock curBB, Instruction Entry){
         FrameInfo Info = InfoMap.get(func);
-        for(int i = 0; i < func.usedCalleeSavedregs.size(); i++){
-            Entry.prepend(new Store_Inst(curBB, func.usedCalleeSavedregs.get(i),8,rbp,Info.CalleeSavedStart + 8*i));
+        for(int i = 0; i < Info.UsedCalleeSavedReg.size(); i++){
+            Entry.prepend(new Store_Inst(curBB, Info.UsedCalleeSavedReg.get(i),8,rbp,Info.CalleeSavedStart - 8*i));
         }
     }
 
     private void ReloadCalleeSavedRegs(Function func, BasicBlock curBB, Instruction Exit){
         FrameInfo Info = InfoMap.get(func);
-        for(int i = 0; i < func.usedCalleeSavedregs.size(); i++){
-            Exit.prepend(new Load_Inst(curBB, func.usedCalleeSavedregs.get(i),rbp,Info.CalleeSavedStart + 8*i,8));
+        for(int i = 0; i < Info.UsedCalleeSavedReg.size(); i++){
+            Exit.append(new Load_Inst(curBB, Info.UsedCalleeSavedReg.get(i),rbp,Info.CalleeSavedStart - 8*i,8));
         }
     }
+
+    private void StoreBuiltinCalleeSavedRegs(BasicBlock curBB, Instruction Entry){
+        //curFunction Info
+        FrameInfo Info = InfoMap.get(curFunc);
+        int offset = Info.UsedCallerSavedReg.size();
+        // Save Additional regs upon caller-saved Slice!
+        for(int i = 0; i < Info.UsedCalleeSavedReg.size(); i++){
+            Entry.prepend(new Store_Inst(curBB, Info.UsedCalleeSavedReg.get(i),8,rbp,Info.CallerSavedStart - 8*(i+offset)));
+        }
+    }
+
+    private void ReloadBuiltinCalleeSavedRegs(BasicBlock curBB, Instruction Exit){
+        FrameInfo Info = InfoMap.get(curFunc);
+        int offset = Info.UsedCallerSavedReg.size();
+        // Save Additional regs upon caller-saved Slice!
+        for(int i = 0; i < Info.UsedCalleeSavedReg.size(); i++){
+            Exit.append(new Load_Inst(curBB, Info.UsedCalleeSavedReg.get(i),rbp,Info.CallerSavedStart - 8*(i + offset),8));
+        }
+    }
+
+    private void StoreAllRegisters(BasicBlock curBB, Instruction inst){
+        FrameInfo Info = InfoMap.get(curFunc);
+        List<PhysicalReg> List = new LinkedList<>(curFunc.usedPregs);
+        for(int i = 0;i < curFunc.usedPregs.size();i++){
+            PhysicalReg reg = List.get(i);
+            inst.prepend(new Store_Inst(curBB, reg, 8,rbp,Info.CallerSavedStart - 8*i));
+        }
+    }
+
+    private void ReloadAllRegisters(BasicBlock curBB, Instruction inst){
+        FrameInfo Info = InfoMap.get(curFunc);
+        List<PhysicalReg> List = new LinkedList<>(curFunc.usedPregs);
+        for(int i = 0;i < curFunc.usedPregs.size();i++){
+            PhysicalReg reg = List.get(i);
+            inst.append(new Load_Inst(curBB, reg, rbp,Info.CallerSavedStart - 8*i,8));
+        }
+    }
+
+
     private void TransformCall(Function func, Instruction inst){
         FrameInfo Info = InfoMap.get(func);
         BasicBlock curBB = inst.BB_Scope;
@@ -173,6 +215,10 @@ public class FrameTranslator {
             Call_Inst Inst = (Call_Inst) inst;
 
             //StoreCallerSavedRegs(Info, curBB ,Inst);
+            //if(Inst.function.isBuiltin)
+            //    StoreBuiltinCalleeSavedRegs(curBB, Inst);
+
+            StoreAllRegisters(curBB, Inst);//brute force
 
             int paramnum = Inst.ArgLocs.size();
             for(int i = paramnum - 1; i >= 0; i--){
@@ -195,7 +241,9 @@ public class FrameTranslator {
 
 
             //ReloadCallerSavedRegs(Info, curBB, Inst);
-
+            //if(func.isBuiltin)
+            //    ReloadBuiltinCalleeSavedRegs(curBB, Inst);
+            ReloadAllRegisters(curBB, Inst);
             //Pop stack
             for(int i = 0;i < paramnum - 6;i++){
                 inst.next.append(new Pop(curBB, rax));
@@ -211,6 +259,7 @@ public class FrameTranslator {
 
     public void Transform(){
         for(Function func: xirRoot.Functions.values()){
+            curFunc = func;
             processFunctionFrame(func);
             Prologue(func);
             Epilogue(func);

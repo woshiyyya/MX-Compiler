@@ -5,6 +5,9 @@ import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 
 import java.util.*;
 
+import static XYXCompiler.BackEnd.X86_64.X86Registers.CalleeSavedRegs;
+import static XYXCompiler.BackEnd.X86_64.X86Registers.CallerSavedRegs;
+
 public class FrameInfo {
     public Function func;
     public int RetAddr;
@@ -24,9 +27,9 @@ public class FrameInfo {
 
     public void updatePreservedRegs(){
         for(PhysicalReg X: func.usedPregs){
-            if(X.CalleeSave)
+            if(CalleeSavedRegs.contains(X))
                 UsedCalleeSavedReg.add(X);
-            else
+            else if(CallerSavedRegs.contains(X))
                 UsedCallerSavedReg.add(X);
         }
     }

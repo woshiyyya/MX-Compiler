@@ -2,8 +2,9 @@ package XYXCompiler.BackEnd.X86_64;
 
 import XYXCompiler.XIR.CFG.Function;
 import XYXCompiler.XIR.Operand.DataSrc;
+import XYXCompiler.XIR.Operand.Register.Register;
 
-public class FrameSlice extends DataSrc {
+public class FrameSlice extends Register {
     public Function func;
     public String name;
 

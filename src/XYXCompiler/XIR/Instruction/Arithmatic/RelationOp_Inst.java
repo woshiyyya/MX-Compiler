@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Arithmatic;
 
+import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
@@ -54,6 +55,17 @@ public class RelationOp_Inst extends Arithmatic {
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {
         if(dest instanceof VirtualReg) dest = Reg;
+    }
+
+    @Override
+    public void Reset_Frameslice(FrameSlice slice, PhysicalReg Reg) {
+        if(L_operand != null && L_operand == slice) L_operand = Reg;
+        if(R_operand != null && R_operand == slice) R_operand = Reg;
+    }
+
+    @Override
+    public void Reset_DestFrameSlice(PhysicalReg Reg) {
+        if(dest != null) dest = Reg;
     }
 
     @Override

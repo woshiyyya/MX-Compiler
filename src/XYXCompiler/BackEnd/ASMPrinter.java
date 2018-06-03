@@ -1,5 +1,6 @@
 package XYXCompiler.BackEnd;
 
+import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.CFG.Function;
 import XYXCompiler.XIR.CFG.XIRRoot;
@@ -98,10 +99,11 @@ public class ASMPrinter implements XIRVisitor{
 
         @Override
         public void visit(XIRRoot node) {
+
+            Print_ExternReferences();
+            Print_GlobalLabels(node);
+            Print_ASMText(node);
             try {
-                Print_ExternReferences();
-                Print_GlobalLabels(node);
-                Print_ASMText(node);
                 Print_BuiltinFunctions();
                 Print_StaticData(node);
             }catch (Exception ex){
@@ -180,8 +182,14 @@ public class ASMPrinter implements XIRVisitor{
                         case Xor: Inst =  "xor"; break;
                         case Or:  Inst =  "or";  break;
                     }
-                    ASM.append(getAssembly("mov", get(node.dest), get(node.L_operand)));
-                    ASM.append(getAssembly(Inst, get(node.dest), get(node.R_operand)));
+                    if(node.dest != node.R_operand){
+                        ASM.append(getAssembly("mov", get(node.dest), get(node.L_operand)));
+                        ASM.append(getAssembly(Inst, get(node.dest), get(node.R_operand)));
+                    }else{
+                        ASM.append(getAssembly("mov", "rax", get(node.L_operand)));
+                        ASM.append(getAssembly(Inst, "rax", get(node.R_operand)));
+                        ASM.append(getAssembly("mov", get(node.dest), "rax"));
+                    }
                 }
             }
         }
@@ -306,6 +314,9 @@ public class ASMPrinter implements XIRVisitor{
             }else{
                 Dest += "+" + node.offset + "]";
             }
+
+            if(node.source instanceof FrameSlice)
+                System.err.println("FICKINPRINTER");
             ASM.append(getAssembly("mov", Dest, get(node.source)));
         }
 
@@ -331,7 +342,7 @@ public class ASMPrinter implements XIRVisitor{
         private String getBBLabel(BasicBlock BB){
             String name = BBNameMap.get(BB);
             if(name == null){
-                name = BB.label + "." + (BBNum++);
+                name = BB.label + "_" + (BBNum++);
                 BBNameMap.put(BB, name);
             }
             return name;

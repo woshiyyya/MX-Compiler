@@ -30,6 +30,7 @@ public class CodeGenerator {
         analyser.Initialize(xirRoot);
 
         IRViewer viewer = new IRViewer(xirRoot);
+
         if(mod)
             viewer.View();
         //else
@@ -40,6 +41,9 @@ public class CodeGenerator {
 
         GraphColoringAllocator Allocator = new GraphColoringAllocator(xirRoot);
         Allocator.Allocate();
+
+        if(mod)
+            viewer.View();
 
         FrameTranslator Translator = new FrameTranslator(xirRoot);
         Translator.Transform();

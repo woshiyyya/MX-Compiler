@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Memory;
 
+import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Instruction.Instruction;
@@ -19,6 +20,16 @@ public class Push extends Instruction {
 
     @Override
     public void Update_UseDef() {
+
+    }
+
+    @Override
+    public void Reset_Frameslice(FrameSlice slice, PhysicalReg Reg) {
+        if(source != null && source == slice) source = Reg;
+    }
+
+    @Override
+    public void Reset_DestFrameSlice(PhysicalReg Reg) {
 
     }
 

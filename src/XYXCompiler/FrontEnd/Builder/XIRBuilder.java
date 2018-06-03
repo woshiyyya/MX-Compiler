@@ -63,6 +63,7 @@ public class XIRBuilder implements ASTVisitor {
     private boolean curIfAddr = false;
     private int Blknum = 0;
     private int Loopnum = 0;
+    private int addrcnt = 0;
 
 
     public XIRBuilder(TypeTable typeTable) {
@@ -978,13 +979,8 @@ public class XIRBuilder implements ASTVisitor {
         exitAddr(backup);
 
         //if baseaddr is global
-        VirtualReg bodyAddr = new VirtualReg(null);
-        VirtualReg reg = new VirtualReg(null);
-        //globalvar as addr
-        //if(node.name.datasrc instanceof GlobalVar)
-        //    curBlk.add(new Load_Inst(curBlk, bodyAddr, node.name.datasrc,0,8));
-        //else
-            bodyAddr = (VirtualReg)(node.name.datasrc);
+        VirtualReg reg = new VirtualReg("address" + addrcnt++);
+        VirtualReg bodyAddr = (VirtualReg)(node.name.datasrc);
 
         //bodyAddr = (VirtualReg)(node.name.datasrc);
         curBlk.add(new BinaryOp_Inst(curBlk, reg, node.index.datasrc, new Immediate(8),binaryop.Mul));

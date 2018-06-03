@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Control;
 
+import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
@@ -23,6 +24,16 @@ public class Jump_Inst extends Control {
 
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {}
+
+    @Override
+    public void Reset_Frameslice(FrameSlice slice, PhysicalReg Reg) {
+
+    }
+
+    @Override
+    public void Reset_DestFrameSlice(PhysicalReg Reg) {
+
+    }
 
     @Override
     public void Print() {

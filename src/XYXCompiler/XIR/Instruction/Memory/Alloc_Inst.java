@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Memory;
 
+import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
@@ -43,6 +44,16 @@ public class Alloc_Inst extends Memory {
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {
         if(dest instanceof VirtualReg) dest = Reg;
+    }
+
+    @Override
+    public void Reset_Frameslice(FrameSlice slice, PhysicalReg Reg) {
+        if(size != null && size == slice) size = Reg;
+    }
+
+    @Override
+    public void Reset_DestFrameSlice(PhysicalReg Reg) {
+        if(dest != null) dest = Reg;
     }
 
     @Override

@@ -1,34 +1,32 @@
 package XYXCompiler.BackEnd.Allocator.GraphColoring;
 
 import XYXCompiler.BackEnd.X86_64.FrameSlice;
-import XYXCompiler.BackEnd.X86_64.X86Registers;
-import XYXCompiler.FrontEnd.ASTNode.Node;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.CFG.Function;
 import XYXCompiler.XIR.CFG.XIRRoot;
 import XYXCompiler.XIR.Instruction.Functional.Call_Inst;
 import XYXCompiler.XIR.Instruction.Instruction;
 import XYXCompiler.XIR.Instruction.Memory.Load_Inst;
+import XYXCompiler.XIR.Instruction.Memory.Move_Inst;
 import XYXCompiler.XIR.Instruction.Memory.Store_Inst;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
-import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
+import javafx.print.PrintColor;
 
 import java.util.*;
 
-import static XYXCompiler.BackEnd.X86_64.X86Registers.GeneralRegs;
-import static XYXCompiler.BackEnd.X86_64.X86Registers.rax;
-import static XYXCompiler.BackEnd.X86_64.X86Registers.rdi;
+import static XYXCompiler.BackEnd.X86_64.X86Registers.*;
 
 public class GraphColoringAllocator {
     private XIRRoot xirRoot;
     private Function curFunc;
     private Stack<IFG_Node> Stack = new Stack<>();
-    private Set<VirtualReg> WaitList = new HashSet<>();
+    private Stack<VirtualReg> WaitList = new Stack<>();
     private Map<VirtualReg, IFG_Node> NodeMap = new HashMap<>();
+    private Set<VirtualReg> nodes = new HashSet<>();
 
-    private int MaxPRegs = 9;
+    private int MaxPRegs = 5;
     private Set<PhysicalReg> UsedPregs = new HashSet<>();
 
 
@@ -57,65 +55,82 @@ public class GraphColoringAllocator {
         return node;
     }
 
+    private void UpdateNodeDegrees(){
+        for(IFG_Node node: NodeMap.values())
+            node.setDegree();
+    }
+
     private void Construct_InterferenceGraph(Function func){
         NodeMap.clear();
         for(VirtualReg args: func.ArgRegs)
             Add_Node(args);
 
+        for(int i = 0;i < func.ArgRegs.size();i++){
+            for(int j = 0;j < func.ArgRegs.size();j++)
+                if(i != j)
+                    NodeMap.get(func.ArgRegs.get(i)).Add_Neighbor(NodeMap.get(func.ArgRegs.get(j)));
+        }
+
         for(BasicBlock BB: func.PostOrder){
             for(Instruction inst = BB.Entry; inst != null; inst = inst.next){
+
                 if(inst.Def == null) continue;
                 IFG_Node CurNode = Add_Node(inst.Def);
+
                 for(VirtualReg VReg: inst.Live_out){
                     IFG_Node NewNode = Add_Node(VReg);
-                    CurNode.Add_Neighbor(NewNode);
-                    NewNode.Add_Neighbor(CurNode);
+                    if(NewNode != CurNode){
+                        CurNode.Add_Neighbor(NewNode);
+                        NewNode.Add_Neighbor(CurNode);
+                    }
                 }
             }
         }
+        UpdateNodeDegrees();
     }
 
     private void Delete(IFG_Node cur_node){
-        NodeMap.remove(cur_node.VReg);
-        WaitList.remove(cur_node.VReg);
+        nodes.remove(cur_node.VReg);
         Stack.push(cur_node);
         cur_node.deleted = true;
 
         for(VirtualReg X: cur_node.NeighborVregs){
             IFG_Node node = NodeMap.get(X);
-            if(node != null){
+            if(node != null && !node.deleted){
                 node.degree--;
                 if(node.degree < MaxPRegs)
-                    WaitList.add(node.VReg);
+                    WaitList.push(node.VReg);
             }
         }
     }
 
     private void Initialize(Function function){
         Construct_InterferenceGraph(function);
+        nodes.addAll(NodeMap.keySet());
         //initialize waiting list
         for(IFG_Node node: NodeMap.values())
             if(node.degree < MaxPRegs)
-                WaitList.add(node.VReg);
+                WaitList.push(node.VReg);
     }
+
 
     private void Coloring(Function func){
         Initialize(func);
-        while(!NodeMap.isEmpty()){
+        while(!nodes.isEmpty()){
             while(!WaitList.isEmpty()){
-                IFG_Node node = NodeMap.get(WaitList.iterator().next());
+                IFG_Node node = NodeMap.get(WaitList.pop());
                 Delete(node);
             }
-            if(!NodeMap.isEmpty()){
-                IFG_Node node = NodeMap.get(NodeMap.keySet().iterator().next());
+            if(!nodes.isEmpty()){
+                IFG_Node node = NodeMap.get(nodes.iterator().next());
                 Delete(node);
             }
         }
 
         while(!Stack.isEmpty()){
             //Re-put the node
+            UsedPregs.clear();
             IFG_Node node = Stack.pop();
-            NodeMap.put(node.VReg, node);
             node.deleted = false;
 
             //Collect Regs that already been used in neighbors
@@ -132,15 +147,13 @@ public class GraphColoringAllocator {
                     break;
                 }
             }
-
             //degree > k, Spilling!
             if(node.PReg == null){
                 node.PReg = new FrameSlice(curFunc, node.VReg.Name);
                 curFunc.frameSlice.add((FrameSlice) node.PReg);
             }
-
-            UsedPregs.clear();
         }
+
     }
 
     private void  Handle_FunctionCall(Call_Inst call){
@@ -154,8 +167,8 @@ public class GraphColoringAllocator {
 
     private void Transform_Instructions(Function function){
         //special use!
-        function.usedPregs.add(rax);
-        function.usedPregs.add(rdi);
+        //function.usedPregs.add(rax);
+        //function.usedPregs.add(rdi);
 
         for (BasicBlock curBB: function.PostOrder){
             for(Instruction inst = curBB.Entry; inst != null; inst = inst.next){
@@ -164,25 +177,27 @@ public class GraphColoringAllocator {
                 }else{
                     boolean UseTransfer = false;
 
-                    if(inst.Def != null){
-                        DataSrc dataSrc = NodeMap.get(inst.Def).PReg;
-                        if(dataSrc instanceof PhysicalReg){
-                            curFunc.usedPregs.add((PhysicalReg) dataSrc);
-                            inst.Reset_DestRegs((PhysicalReg) dataSrc);
-                        }else if(dataSrc instanceof FrameSlice){
-                            inst.Reset_DestRegs(rax);
-                            inst.append(new Store_Inst(curBB, dataSrc,8, rax,0));
-                        }
-                    }
-
                     for(VirtualReg Vreg: inst.Used){
                         DataSrc dataSrc = NodeMap.get(Vreg).PReg;
                         if(dataSrc instanceof PhysicalReg){
                             curFunc.usedPregs.add((PhysicalReg) dataSrc);
                             inst.Reset_OperandRegs(Vreg, (PhysicalReg) dataSrc);
                         }else if(dataSrc instanceof FrameSlice){
-                            inst.prepend(new Load_Inst(curBB, UseTransfer? rdi : rax, dataSrc,0,8));
+                            PhysicalReg tem = UseTransfer? rbx : r15;
+                            inst.prepend(new Load_Inst(curBB, tem, dataSrc,0,8));
+                            inst.Reset_OperandRegs(Vreg, tem);
                             UseTransfer = true;
+                        }
+                    }
+
+                    if(inst.Def != null){
+                        DataSrc dataSrc = NodeMap.get(inst.Def).PReg;
+                        if(dataSrc instanceof PhysicalReg){
+                            curFunc.usedPregs.add((PhysicalReg) dataSrc);
+                            inst.Reset_DestRegs((PhysicalReg) dataSrc);
+                        }else if(dataSrc instanceof FrameSlice){
+                            inst.Reset_DestRegs(r15);
+                            inst.append(new Store_Inst(curBB, r15,8, dataSrc,0));
                         }
                     }
                 }
@@ -196,12 +211,20 @@ public class GraphColoringAllocator {
         }
     }
 
+    private void PrintColorMap(){
+        for(IFG_Node node: NodeMap.values()){
+            System.err.println(node.VReg.Name + " : " + node.PReg.getString());
+        }
+    }
+
     public void Allocate(){
         for(Function func: xirRoot.Functions.values()){
+            NodeMap.clear();
             curFunc = func;
             Coloring(func);
             Logging_Parameters_Info();
             Transform_Instructions(func);
+            PrintColorMap();
         }
     }
 

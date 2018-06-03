@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.Instruction.Memory;
 
+import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.XIR.CFG.BasicBlock;
 import XYXCompiler.XIR.Operand.DataSrc;
@@ -41,6 +42,15 @@ public class Store_Inst extends Memory {
 
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {}
+
+    @Override
+    public void Reset_Frameslice(FrameSlice slice, PhysicalReg Reg) {
+        if(source != null && source == slice) source = Reg;
+        if(addr != null && addr == slice) addr = Reg;
+    }
+
+    @Override
+    public void Reset_DestFrameSlice(PhysicalReg Reg) {}
 
     @Override
     public void Print() {

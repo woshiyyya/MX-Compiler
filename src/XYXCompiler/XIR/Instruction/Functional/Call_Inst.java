@@ -1,4 +1,5 @@
 package XYXCompiler.XIR.Instruction.Functional;
+import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.BackEnd.XIRVisitor;
 import XYXCompiler.FrontEnd.ASTNode.Type.Void_Type;
 import XYXCompiler.XIR.CFG.BasicBlock;
@@ -42,6 +43,14 @@ public class Call_Inst extends Functional {
 
     @Override
     public void Reset_DestRegs(PhysicalReg Reg) {}
+
+    @Override
+    public void Reset_DestFrameSlice(PhysicalReg Reg) {
+        if(dest != null) dest = Reg;
+    }
+
+    @Override
+    public void Reset_Frameslice(FrameSlice slice, PhysicalReg Reg) {/*Warning*/}
 
     @Override
     public void Print() {
