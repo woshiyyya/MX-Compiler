@@ -1,5 +1,6 @@
 package XYXCompiler.XIR.CFG;
 
+import XYXCompiler.BackEnd.Allocator.GraphColoring.IFG_Node;
 import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.FrontEnd.ASTNode.Type.Func_Type;
 import XYXCompiler.XIR.Instruction.Arithmatic.Arithmatic;
@@ -37,6 +38,7 @@ public class Function {
     public Map<VirtualReg, FrameSlice> ArgSliceMap = new HashMap<>(); // Help params find their location in Frame
     public List<FrameSlice> frameSlice = new ArrayList<>();
     public Set<PhysicalReg> usedPregs = new HashSet<>();
+    public Map<VirtualReg, IFG_Node> ColorMap;
     //public List<PhysicalReg> usedCallerSavedRegs = new LinkedList<>();
     //public List<PhysicalReg> usedCalleeSavedregs = new LinkedList<>();
 

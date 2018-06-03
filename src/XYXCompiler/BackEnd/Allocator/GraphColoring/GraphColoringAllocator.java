@@ -219,13 +219,14 @@ public class GraphColoringAllocator {
 
     public void Allocate(){
         for(Function func: xirRoot.Functions.values()){
-            NodeMap.clear();
+            NodeMap = new HashMap<>();
             curFunc = func;
             func.Initialize_FrameInfo();
             Coloring(func);
             Logging_Parameters_Info();
             Transform_Instructions(func);
             PrintColorMap();
+            func.ColorMap = NodeMap;
         }
     }
 

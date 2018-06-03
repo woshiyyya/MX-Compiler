@@ -1,5 +1,6 @@
 package XYXCompiler.BackEnd;
 
+import XYXCompiler.BackEnd.Allocator.GraphColoring.IFG_Node;
 import XYXCompiler.BackEnd.X86_64.FrameInfo;
 import XYXCompiler.BackEnd.X86_64.FrameSlice;
 import XYXCompiler.BackEnd.X86_64.X86Registers;
@@ -13,6 +14,7 @@ import XYXCompiler.XIR.Instruction.Instruction;
 import XYXCompiler.XIR.Instruction.Memory.*;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
+import XYXCompiler.XIR.Operand.Register.Register;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.Immediate;
 import javafx.geometry.Pos;
@@ -221,6 +223,30 @@ public class FrameTranslator {
         }
     }
 
+    //liveout - define
+
+    private void StorePreservedRegisters(BasicBlock curBB, Instruction inst){
+        FrameInfo Info = InfoMap.get(curFunc);
+        int offset = 0;
+        for(VirtualReg X: inst.Live_out){
+            IFG_Node node = curFunc.ColorMap.get(X);
+            if(node.PReg == inst.Def) continue;
+            if(node.PReg instanceof PhysicalReg)
+                inst.prepend(new Store_Inst(curBB, node.PReg, 8,rbp,Info.CallerSavedStart - 8*(offset++)));
+        }
+    }
+
+    private void ReloadPreservedRegisters(BasicBlock curBB, Instruction inst){
+        FrameInfo Info = InfoMap.get(curFunc);
+        int offset = 0;
+        for(VirtualReg X: inst.Live_out){
+            IFG_Node node = curFunc.ColorMap.get(X);
+            if(node.PReg == inst.Def) continue;
+            if(node.PReg instanceof PhysicalReg)
+                inst.append(new Load_Inst(curBB, (PhysicalReg)node.PReg, rbp,Info.CallerSavedStart - 8*(offset++),8));
+        }
+    }
+
 
     private void TransformCall(Function func, Instruction inst){
         FrameInfo Info = InfoMap.get(func);
@@ -229,11 +255,9 @@ public class FrameTranslator {
         if(inst instanceof Call_Inst){
             Call_Inst Inst = (Call_Inst) inst;
 
-            //StoreCallerSavedRegs(Info, curBB ,Inst);
-            //if(Inst.function.isBuiltin)
-            //    StoreBuiltinCalleeSavedRegs(curBB, Inst);
+            //StoreAllRegisters(curBB, Inst);//brute force
+            StorePreservedRegisters(curBB, Inst);
 
-            StoreAllRegisters(curBB, Inst);//brute force
 
             int paramnum = Inst.ArgLocs.size();
             for(int i = paramnum - 1; i >= 0; i--){
@@ -255,10 +279,9 @@ public class FrameTranslator {
             }
 
 
-            //ReloadCallerSavedRegs(Info, curBB, Inst);
-            //if(func.isBuiltin)
-            //    ReloadBuiltinCalleeSavedRegs(curBB, Inst);
-            ReloadAllRegisters(curBB, Inst);
+            //ReloadAllRegisters(curBB, Inst);
+            ReloadPreservedRegisters(curBB, Inst);
+
             //Pop stack
             for(int i = 0;i < paramnum - 6;i++){
                 inst.next.append(new Pop(curBB, r15));
