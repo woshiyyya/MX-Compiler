@@ -221,6 +221,7 @@ public class GraphColoringAllocator {
         for(Function func: xirRoot.Functions.values()){
             NodeMap.clear();
             curFunc = func;
+            func.Initialize_FrameInfo();
             Coloring(func);
             Logging_Parameters_Info();
             Transform_Instructions(func);

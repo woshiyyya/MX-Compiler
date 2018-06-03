@@ -124,12 +124,27 @@ public class FrameTranslator {
     private void MoveParametersRegs(FrameInfo Info, BasicBlock curBB, Instruction Inst){
         Function func = Info.func;
         for(int i = 0; i < func.ArgSrcs.size(); i++){
+            if(i == 6) break;
             DataSrc dataSrc = func.ArgSrcs.get(i);
             if(dataSrc instanceof PhysicalReg)
                 Inst.prepend(new Move_Inst(curBB, dataSrc, FuncParamRegs.get(i)));
             else if(dataSrc instanceof FrameSlice){
                 Inst.prepend(new Store_Inst(curBB, FuncParamRegs.get(i),8,
                         rbp, Info.FrameSliceOffset.get(dataSrc)));
+            }
+        }
+
+        for(int i = 6;i < func.ArgRegs.size();i++){
+            VirtualReg arg = Info.func.ArgRegs.get(i);
+            FrameSlice slice = func.ArgSliceMap.get(arg);
+            DataSrc dest = func.ArgSrcs.get(i);
+            int offset = Info.FrameSliceOffset.get(slice);
+
+            if(dest instanceof PhysicalReg){
+                Inst.prepend(new Load_Inst(curBB, (PhysicalReg)dest, rbp, offset,8));
+            }else if(dest instanceof FrameSlice){
+                Inst.prepend(new Load_Inst(curBB, rdx, rbp, offset,8));
+                Inst.prepend(new Store_Inst(curBB, rdx,8, rbp,Info.FrameSliceOffset.get(dest)));
             }
         }
     }
@@ -225,7 +240,7 @@ public class FrameTranslator {
                 DataSrc source = Inst.ArgLocs.get(i);
                 if(i > 5){
                     if(source instanceof FrameSlice){
-                        Inst.prepend(new Move_Inst(curBB, rax, source));
+                        Inst.prepend(new Load_Inst(curBB, rax, rbp, Info.FrameSliceOffset.get(source),8));
                         Inst.prepend(new Push(curBB, rax));
                     }else{
                         Inst.prepend(new Push(curBB, source));
@@ -246,7 +261,7 @@ public class FrameTranslator {
             ReloadAllRegisters(curBB, Inst);
             //Pop stack
             for(int i = 0;i < paramnum - 6;i++){
-                inst.next.append(new Pop(curBB, rax));
+                inst.next.append(new Pop(curBB, r15));
             }
         }
     }
