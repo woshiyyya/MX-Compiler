@@ -247,8 +247,22 @@ public class FrameTranslator {
         }
     }
 
+    private void TransformAlloc(Function func, Alloc_Inst Inst){
+        FrameInfo Info = InfoMap.get(func);
+        BasicBlock curBB = Inst.BB_Scope;
+
+        StorePreservedRegisters(curBB, Inst);
+
+        Inst.append(new Move_Inst(curBB, Inst.dest, rax));
+
+        ReloadPreservedRegisters(curBB, Inst);
+    }
 
     private void TransformCall(Function func, Instruction inst){
+        if(inst instanceof Alloc_Inst){
+            TransformAlloc(func, (Alloc_Inst)inst);
+            return;
+        }
         FrameInfo Info = InfoMap.get(func);
         BasicBlock curBB = inst.BB_Scope;
 

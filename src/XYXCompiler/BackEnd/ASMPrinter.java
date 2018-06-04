@@ -286,7 +286,7 @@ public class ASMPrinter implements XIRVisitor{
             //getCallersaved()
             ASM.append(getAssembly("mov","rdi",get(node.size)));
             ASM.append(getAssembly("call","malloc"));
-            ASM.append(getAssembly("mov", get(node.dest),"rax"));
+            //ASM.append(getAssembly("mov", get(node.dest),"rax"));
             //getCalleeSaved()
         }
 
