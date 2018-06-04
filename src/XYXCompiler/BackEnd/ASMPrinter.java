@@ -166,12 +166,15 @@ public class ASMPrinter implements XIRVisitor{
                     ASM.append(getAssembly("mov",get(node.dest),"rdx"));
                 }else if(node.op == BinaryOp_Inst.binaryop.Lsh){
                     ASM.append(getAssembly("mov","rcx",get(node.R_operand)));
-                    ASM.append(getAssembly("sal",get(node.L_operand),"cl"));
-                    ASM.append(getAssembly("mov",get(node.dest),get(node.L_operand)));
+                    ASM.append(getAssembly("mov","rax",get(node.L_operand)));
+                    ASM.append(getAssembly("sal","rax","cl"));
+                    ASM.append(getAssembly("mov",get(node.dest),"rax"));
                 }else if(node.op == BinaryOp_Inst.binaryop.Rsh){
                     ASM.append(getAssembly("mov","rcx",get(node.R_operand)));
-                    ASM.append(getAssembly("sar",get(node.L_operand),"cl"));
-                    ASM.append(getAssembly("mov",get(node.dest),get(node.L_operand)));
+                    ASM.append(getAssembly("mov","rax",get(node.L_operand)));
+                    ASM.append(getAssembly("sar","rax","cl"));
+                    ASM.append(getAssembly("mov",get(node.dest),"rax"));
+
                 }else{
                     String Inst = "";
                     switch (node.op){
