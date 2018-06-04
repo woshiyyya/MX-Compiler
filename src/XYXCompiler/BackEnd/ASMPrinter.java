@@ -217,13 +217,18 @@ public class ASMPrinter implements XIRVisitor{
         public void visit(UnaryOp_Inst node) {
             switch (node.op) {
                 case NEG:
-                    ASM.append(getAssembly("neg", get(node.operand)));
+                    ASM.append(getAssembly("mov", "rax", get(node.operand)));
+                    //ASM.append(getAssembly("neg", get(node.operand)));
+                    ASM.append(getAssembly("neg","rax"));
+                    ASM.append(getAssembly("mov",get(node.dest),"rax"));
                     break;
                 case NOT:
-                    ASM.append(getAssembly("xor", get(node.operand),1));
+                    ASM.append(getAssembly("mov", "rax", get(node.operand)));
+                    ASM.append(getAssembly("not", "rax"));
+                    ASM.append(getAssembly("mov",get(node.dest),"rax"));
                     break;
             }
-            ASM.append(getAssembly("mov",get(node.dest), get(node.operand)));
+            //ASM.append(getAssembly("mov",get(node.dest), get(node.operand)));
         }
 
         private void ArrangeBlockOrder(CJump_Inst node){
