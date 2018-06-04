@@ -224,6 +224,11 @@ public class ASMPrinter implements XIRVisitor{
                     break;
                 case NOT:
                     ASM.append(getAssembly("mov", "rax", get(node.operand)));
+                    ASM.append(getAssembly("xor", "rax",1));
+                    ASM.append(getAssembly("mov",get(node.dest),"rax"));
+                    break;
+                case Tilde:
+                    ASM.append(getAssembly("mov", "rax", get(node.operand)));
                     ASM.append(getAssembly("not", "rax"));
                     ASM.append(getAssembly("mov",get(node.dest),"rax"));
                     break;

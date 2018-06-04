@@ -713,7 +713,7 @@ public class XIRBuilder implements ASTVisitor {
                 VISIT(node.body);
                 node.datasrc = new VirtualReg(null);
                 curBlk.add(new UnaryOp_Inst(curBlk,
-                        (VirtualReg)node.datasrc, unaryop.NOT, node.body.datasrc));
+                        (VirtualReg)node.datasrc, unaryop.Tilde, node.body.datasrc));
                 break;
         }
     }

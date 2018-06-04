@@ -14,7 +14,7 @@ import java.util.Map;
 public class UnaryOp_Inst extends Arithmatic {
 
     public enum unaryop{
-        NEG, NOT
+        NEG, NOT, Tilde
     }
     public Register dest;
     public unaryop op;
