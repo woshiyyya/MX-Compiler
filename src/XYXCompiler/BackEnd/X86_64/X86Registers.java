@@ -65,10 +65,6 @@ public class X86Registers {
         //GeneralRegs.add(r15);  //temp
         //GeneralRegs.add(rbx);
 
-        IntermediateRegs.add(rdx);
-        IntermediateRegs.add(rcx);
-        IntermediateRegs.add(r15);
-        IntermediateRegs.add(rbx);
 
         GeneralRegs.add(r10);
         GeneralRegs.add(r11);

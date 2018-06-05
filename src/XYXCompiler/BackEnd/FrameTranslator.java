@@ -274,7 +274,7 @@ public class FrameTranslator {
 
 
             int paramnum = Inst.ArgLocs.size();
-/*
+
             for(int i = paramnum - 1; i >= 0; i--){
                 DataSrc source = Inst.ArgLocs.get(i);
                 if(i > 5){
@@ -293,7 +293,7 @@ public class FrameTranslator {
                     }
                 }
             }
-*/
+/*
 
             Map<PhysicalReg,PhysicalReg> trans_Map = new HashMap<>();
             Map<PhysicalReg, Integer> OrderMap = new HashMap<>();
@@ -334,6 +334,7 @@ public class FrameTranslator {
                 PhysicalReg dest = FuncParamRegs.get(order);
                 Inst.prepend(new Move_Inst(curBB, dest, Source));
             }
+*/
 
             //ReloadAllRegisters(curBB, Inst);
             ReloadPreservedRegisters(curBB, Inst);
