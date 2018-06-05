@@ -215,7 +215,7 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.rhs);
         DataSrc rhs = node.rhs.datasrc;
         if(rhs instanceof Immediate){
-            ignore = ((Immediate)rhs).ignore;
+            ignore = ((Immediate)rhs).ignore && inst.op == CmpOp.LS;
             if(ignore) return;
         }
 
