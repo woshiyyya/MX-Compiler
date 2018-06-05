@@ -287,8 +287,11 @@ public class FrameTranslator {
                     PhysicalReg reg = FuncParamRegs.get(i);
                     if(source instanceof FrameSlice)
                         Inst.prepend(new Load_Inst(curBB, reg, rbp, Info.FrameSliceOffset.get(source),8));
-                    else
-                        Inst.prepend(new Move_Inst(curBB, reg, source));
+                    else{
+                        Inst.prepend(new Move_Inst(curBB, rax, source));
+                        Inst.prepend(new Move_Inst(curBB, reg, rax));
+                    }
+
                 }
             }
 
