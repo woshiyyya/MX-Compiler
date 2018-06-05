@@ -24,7 +24,7 @@ public class GraphColoringAllocator {
     private Map<VirtualReg, IFG_Node> NodeMap = new HashMap<>();
     private Set<VirtualReg> nodes = new HashSet<>();
 
-    private int MaxPRegs = 8;
+    private int MaxPRegs = 9;
     private Set<PhysicalReg> UsedPregs = new HashSet<>();
 
 

@@ -274,6 +274,7 @@ public class FrameTranslator {
 
 
             int paramnum = Inst.ArgLocs.size();
+/*
             for(int i = paramnum - 1; i >= 0; i--){
                 DataSrc source = Inst.ArgLocs.get(i);
                 if(i > 5){
@@ -288,13 +289,51 @@ public class FrameTranslator {
                     if(source instanceof FrameSlice)
                         Inst.prepend(new Load_Inst(curBB, reg, rbp, Info.FrameSliceOffset.get(source),8));
                     else{
-                        Inst.prepend(new Move_Inst(curBB, rax, source));
-                        Inst.prepend(new Move_Inst(curBB, reg, rax));
+                        Inst.prepend(new Move_Inst(curBB, reg, source));
                     }
+                }
+            }
+*/
 
+            Map<PhysicalReg,PhysicalReg> trans_Map = new HashMap<>();
+            Map<PhysicalReg, Integer> OrderMap = new HashMap<>();
+            List<PhysicalReg> Sources = new LinkedList<>();
+            int id = 0;
+
+            for(int i = paramnum - 1; i >= 0; i--){
+                DataSrc source = Inst.ArgLocs.get(i);
+                if(i > 5){
+                    if(source instanceof FrameSlice){
+                        Inst.prepend(new Load_Inst(curBB, rax, rbp, Info.FrameSliceOffset.get(source),8));
+                        Inst.prepend(new Push(curBB, rax));
+                    }else{
+                        Inst.prepend(new Push(curBB, source));
+                    }
+                }else{
+                    PhysicalReg reg = FuncParamRegs.get(i);
+                    if(source instanceof FrameSlice)
+                        Inst.prepend(new Load_Inst(curBB, reg, rbp, Info.FrameSliceOffset.get(source),8));
+                    else{
+                        if(source instanceof PhysicalReg && FuncParamRegs.contains(source)){
+                            PhysicalReg transReg = IntermediateRegs.get(id++);
+                            trans_Map.put((PhysicalReg)source, transReg);
+                            OrderMap.put((PhysicalReg)source, i);
+                            Sources.add((PhysicalReg)source);
+                            Inst.prepend(new Move_Inst(curBB, transReg, source));
+                            continue;
+                        }
+                        Inst.prepend(new Move_Inst(curBB, reg, source));
+                    }
                 }
             }
 
+            for(int i = 0;i < Sources.size();i++){
+                PhysicalReg Key = Sources.get(i);
+                int order = OrderMap.get(Key);
+                PhysicalReg Source = trans_Map.get(Key);
+                PhysicalReg dest = FuncParamRegs.get(order);
+                Inst.prepend(new Move_Inst(curBB, dest, Source));
+            }
 
             //ReloadAllRegisters(curBB, Inst);
             ReloadPreservedRegisters(curBB, Inst);

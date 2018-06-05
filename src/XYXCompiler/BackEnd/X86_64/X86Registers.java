@@ -33,6 +33,7 @@ public class X86Registers {
     public static Set<PhysicalReg> CalleeSavedRegs = new HashSet<>();
     public static List<PhysicalReg> GeneralRegs = new LinkedList<>();
     public static List<PhysicalReg> FuncParamRegs = new LinkedList<>();
+    public static List<PhysicalReg> IntermediateRegs = new LinkedList<>();
 
     public X86Registers() {}
 
@@ -63,6 +64,11 @@ public class X86Registers {
         //GeneralRegs.add(rcx);
         //GeneralRegs.add(r15);  //temp
         //GeneralRegs.add(rbx);
+
+        IntermediateRegs.add(rdx);
+        IntermediateRegs.add(rcx);
+        IntermediateRegs.add(r15);
+        IntermediateRegs.add(rbx);
 
         GeneralRegs.add(r10);
         GeneralRegs.add(r11);
