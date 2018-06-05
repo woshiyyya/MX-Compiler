@@ -32,6 +32,8 @@ public class ASMPrinter implements XIRVisitor{
         StringBuilder ASM = new StringBuilder();
         private Map<BasicBlock, String> BBNameMap = new HashMap<>();
         private Function curFunc;
+        private BasicBlock curBlk;
+        private BasicBlock nextBlk;
         private BasicBlock AdjacentBlk;
         private int BBNum = 0;
         private int BlkId = 0;
@@ -119,8 +121,16 @@ public class ASMPrinter implements XIRVisitor{
             ASM.append(getAssembly("push","rbp"));
             ASM.append(getAssembly("mov","rbp","rsp"));
 
-            for(BasicBlock X: node.PreOrder) {
-                visit(X);
+            //for(BasicBlock X: node.PreOrder) {
+            //    visit(X);
+            //    this.BlkId++;
+            //}
+            //this.BlkId = 0;
+
+            for(int i = 0;i < node.PreOrder.size();i++){
+                curBlk = node.PreOrder.get(i);
+                nextBlk = i+1 < node.PreOrder.size() ? node.PreOrder.get(i+1) : null;
+                visit(curBlk);
                 this.BlkId++;
             }
             this.BlkId = 0;
@@ -277,7 +287,8 @@ public class ASMPrinter implements XIRVisitor{
 
         @Override
         public void visit(Jump_Inst node) {
-            ASM.append(getAssembly("jmp",getBBLabel(node.target)));
+            if(node.target != nextBlk)
+                ASM.append(getAssembly("jmp",getBBLabel(node.target)));
         }
 
         @Override
