@@ -38,6 +38,12 @@ public class BuiltinFunctionInserter {
         Function println = CreateFunc("println","println");
         addArgs(println, "strout");
 
+        Function printInt = CreateFunc("printInt","printInt");
+        addArgs(printInt, "intout");
+
+        Function printIntln = CreateFunc("printIntln","printIntln");
+        addArgs(printIntln, "intout");
+
         Function getString = CreateFunc("getString","getString");
 
         Function getInt = CreateFunc("getInt","getInt");

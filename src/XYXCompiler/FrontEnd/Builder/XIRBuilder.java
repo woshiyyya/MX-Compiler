@@ -37,6 +37,7 @@ import XYXCompiler.XIR.Operand.Register.VirtualReg;
 import XYXCompiler.XIR.Operand.Static.StringLiteral;
 import XYXCompiler.XIR.Tools.BuiltinFunctionInserter;
 
+import java.beans.Visibility;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -1112,40 +1113,78 @@ public class XIRBuilder implements ASTVisitor {
             curBlk.Close_B(node.datasrc,new Immediate(0),CmpOp.Z,node.ifTrue,node.ifFalse);
     }
 
+    private void PrintOptimization(Expression node, boolean ifPrintln){
+        if(node instanceof Binary_Expression){
+            PrintOptimization(((Binary_Expression) node).lhs, false);
+            PrintOptimization(((Binary_Expression) node).rhs,ifPrintln);
+        }else if(node instanceof Function_call && ((Function_call) node).name.equals("toString")){
+            Function_call call = (Function_call) node;
+            for(Expression X: call.params)
+                VISIT(X);
+            if(ifPrintln){
+                Call_Inst inst = new Call_Inst(curBlk,FuncMap.get("printIntln"),null);
+                inst.ArgLocs.add(call.params.get(0).datasrc);
+                curBlk.add(inst);
+            }else{
+                Call_Inst inst = new Call_Inst(curBlk,FuncMap.get("printInt"),null);
+                inst.ArgLocs.add(call.params.get(0).datasrc);
+                curBlk.add(inst);
+            }
+        }else{
+            VISIT(node);
+            if(ifPrintln){
+                Call_Inst inst = new Call_Inst(curBlk,FuncMap.get("println"),null);
+                inst.ArgLocs.add(node.datasrc);
+                curBlk.add(inst);
+            }else{
+                Call_Inst inst = new Call_Inst(curBlk,FuncMap.get("print"),null);
+                inst.ArgLocs.add(node.datasrc);
+                curBlk.add(inst);
+            }
+        }
+    }
+
     private void HandleBuiltinFunction(Function_call node){
         String name = node.name;
         Function func = FuncMap.get(name);
         VirtualReg reg = null;
-        for(Expression X: node.params)
-            VISIT(X);
-        if(name.equals("println")){
-            Call_Inst call = new Call_Inst(curBlk, func, null);
-            call.ArgLocs.add(node.params.get(0).datasrc);
-            curBlk.add(call);
-        }else if(name.equals("getInt")){
-            reg = new VirtualReg("getint");
-            Call_Inst call = new Call_Inst(curBlk, func, reg);
-            curBlk.add(call);
-        }else if(name.equals("getString")){
-            reg = new VirtualReg("getString");
-            Call_Inst call = new Call_Inst(curBlk, func, reg);
-            curBlk.add(call);
-        }else if(name.equals("print")){
-            Call_Inst call = new Call_Inst(curBlk, func, null);
-            call.ArgLocs.add(node.params.get(0).datasrc);
-            curBlk.add(call);
-        }else if(name.equals("toString")){
-            reg = new VirtualReg("toStirng");
-            Call_Inst call = new Call_Inst(curBlk, func, reg);
-            call.ArgLocs.add(node.params.get(0).datasrc);
-            curBlk.add(call);
-        }
 
-        node.datasrc = reg;
-        if(reg != null)
-            curBlk.add(new Move_Inst(curBlk, reg, rax));
-        if(hasBranch(node))
-            curBlk.Close_B(node.datasrc,new Immediate(0),CmpOp.Z,node.ifTrue,node.ifFalse);
+        if(name.equals("println")){
+            PrintOptimization(node.params.get(0), true);
+            /*
+            Call_Inst call = new Call_Inst(curBlk, func, null);
+            call.ArgLocs.add(node.params.get(0).datasrc);
+            curBlk.add(call);
+            */
+        }else {
+            for (Expression X : node.params)
+                VISIT(X);
+
+            if (name.equals("getInt")) {
+                reg = new VirtualReg("getint");
+                Call_Inst call = new Call_Inst(curBlk, func, reg);
+                curBlk.add(call);
+            } else if (name.equals("getString")) {
+                reg = new VirtualReg("getString");
+                Call_Inst call = new Call_Inst(curBlk, func, reg);
+                curBlk.add(call);
+            } else if (name.equals("print")) {
+                Call_Inst call = new Call_Inst(curBlk, func, null);
+                call.ArgLocs.add(node.params.get(0).datasrc);
+                curBlk.add(call);
+            } else if (name.equals("toString")) {
+                reg = new VirtualReg("toStirng");
+                Call_Inst call = new Call_Inst(curBlk, func, reg);
+                call.ArgLocs.add(node.params.get(0).datasrc);
+                curBlk.add(call);
+            }
+
+            node.datasrc = reg;
+            if (reg != null)
+                curBlk.add(new Move_Inst(curBlk, reg, rax));
+            if (hasBranch(node))
+                curBlk.Close_B(node.datasrc, new Immediate(0), CmpOp.Z, node.ifTrue, node.ifFalse);
+        }
     }
 
     @Override

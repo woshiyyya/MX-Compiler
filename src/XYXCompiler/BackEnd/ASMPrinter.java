@@ -80,6 +80,8 @@ public class ASMPrinter implements XIRVisitor{
             for (GlobalVar X : node.StaticSpace)
                 ASM.append(X.name).append(":\n\t dq 000000000000000AH\n");
 
+            ASM.append("L_001:\n\tdb 25H, 64H, 0AH, 00H\nL_002:\n\tdb 25H, 64H, 00H\n");
+
             for(StringLiteral X: node.LiteralDataPool){
                 String data = X.toInt();
                 ASM.append("\tdq ").append(X.length).append("\n");

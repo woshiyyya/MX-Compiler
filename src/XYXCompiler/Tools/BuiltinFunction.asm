@@ -720,4 +720,19 @@ Llege_021:  mov     eax, 1
 Llege_022:  pop     rbp
 	ret
 
+printInt:
+    mov     rsi, rdi
+    xor     rax, rax
+    mov     rdi, L_002
+    call    printf
+    ret
+
+printIntln:
+    mov     rsi, rdi
+    xor     rax, rax
+    mov     rdi, L_001
+    call     printf
+    ret
+
+
 
