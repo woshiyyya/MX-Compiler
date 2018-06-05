@@ -228,23 +228,6 @@ public class XIRBuilder implements ASTVisitor {
             Handle_StringBuiltinFunction(node);
             return;
         }
-        if(node.lhs.datasrc instanceof Immediate && node.rhs.datasrc instanceof Immediate){
-            int l = ((Immediate) node.lhs.datasrc).value;
-            int r = ((Immediate) node.rhs.datasrc).value;
-            switch(node.op){
-                case Mul:           node.datasrc = new Immediate(l*r); break;
-                case Div:           node.datasrc = new Immediate(l/r); break;
-                case Mod:           node.datasrc = new Immediate(l%r); break;
-                case Plus:          node.datasrc = new Immediate(l+r); break;
-                case Minus:         node.datasrc = new Immediate(l-r); break;
-                case LeftShift:     node.datasrc = new Immediate(l<<r); break;
-                case RightShift:    node.datasrc = new Immediate(l>>r); break;
-                case BitAnd:        node.datasrc = new Immediate(l&r); break;
-                case BitOr:         node.datasrc = new Immediate(l|r); break;
-                case BitXor:        node.datasrc = new Immediate(l^r); break;
-            }
-            return;
-        }
 
         BinaryOp_Inst inst = new BinaryOp_Inst(curBlk);
         switch(node.op){
@@ -263,6 +246,25 @@ public class XIRBuilder implements ASTVisitor {
         VISIT(node.rhs);
         inst.L_operand = node.lhs.datasrc;
         inst.R_operand = node.rhs.datasrc;
+
+        //Constant folding
+        if(inst.L_operand instanceof Immediate && inst.R_operand instanceof Immediate){
+            int l = ((Immediate) inst.L_operand).value;
+            int r = ((Immediate) inst.R_operand).value;
+            switch(node.op){
+                case Mul:           node.datasrc = new Immediate(l*r); break;
+                case Div:           node.datasrc = new Immediate(l/r); break;
+                case Mod:           node.datasrc = new Immediate(l%r); break;
+                case Plus:          node.datasrc = new Immediate(l+r); break;
+                case Minus:         node.datasrc = new Immediate(l-r); break;
+                case LeftShift:     node.datasrc = new Immediate(l<<r); break;
+                case RightShift:    node.datasrc = new Immediate(l>>r); break;
+                case BitAnd:        node.datasrc = new Immediate(l&r); break;
+                case BitOr:         node.datasrc = new Immediate(l|r); break;
+                case BitXor:        node.datasrc = new Immediate(l^r); break;
+            }
+            return;
+        }
 
         //idiv cannot support imm
         if(inst.R_operand instanceof Immediate && (inst.op == binaryop.Mod||inst.op == binaryop.Div)){
