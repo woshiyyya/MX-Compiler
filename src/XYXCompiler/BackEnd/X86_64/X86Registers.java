@@ -69,7 +69,6 @@ public class X86Registers {
         GeneralRegs.add(r12);
         GeneralRegs.add(r13);
         GeneralRegs.add(r14);
-        GeneralRegs.add(rbx);
         GeneralRegs.add(r9);
         GeneralRegs.add(r8);
         GeneralRegs.add(rsi);

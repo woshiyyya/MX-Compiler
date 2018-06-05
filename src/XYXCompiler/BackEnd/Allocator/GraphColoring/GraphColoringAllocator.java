@@ -7,12 +7,10 @@ import XYXCompiler.XIR.CFG.XIRRoot;
 import XYXCompiler.XIR.Instruction.Functional.Call_Inst;
 import XYXCompiler.XIR.Instruction.Instruction;
 import XYXCompiler.XIR.Instruction.Memory.Load_Inst;
-import XYXCompiler.XIR.Instruction.Memory.Move_Inst;
 import XYXCompiler.XIR.Instruction.Memory.Store_Inst;
 import XYXCompiler.XIR.Operand.DataSrc;
 import XYXCompiler.XIR.Operand.Register.PhysicalReg;
 import XYXCompiler.XIR.Operand.Register.VirtualReg;
-import javafx.print.PrintColor;
 
 import java.util.*;
 
@@ -26,7 +24,7 @@ public class GraphColoringAllocator {
     private Map<VirtualReg, IFG_Node> NodeMap = new HashMap<>();
     private Set<VirtualReg> nodes = new HashSet<>();
 
-    private int MaxPRegs = 5;
+    private int MaxPRegs = 8;
     private Set<PhysicalReg> UsedPregs = new HashSet<>();
 
 
