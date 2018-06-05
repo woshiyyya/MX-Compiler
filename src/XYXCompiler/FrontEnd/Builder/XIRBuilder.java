@@ -61,6 +61,7 @@ public class XIRBuilder implements ASTVisitor {
     public List<Array_Type> NewDimList = new LinkedList<>();
     public TypeTable typeTable;
     private boolean curIfAddr = false;
+    private boolean ignore = false;
     private int Blknum = 0;
     private int Loopnum = 0;
     private int addrcnt = 0;
@@ -211,6 +212,12 @@ public class XIRBuilder implements ASTVisitor {
 
         VISIT(node.lhs);
         VISIT(node.rhs);
+        DataSrc rhs = node.rhs.datasrc;
+        if(rhs instanceof Immediate){
+            ignore = ((Immediate)rhs).ignore;
+            if(ignore) return;
+        }
+
 
         if(hasBranch(node)){
             //for this kind of Branch, we have to write "cmp L_operand R_operand; jle Label"
@@ -548,6 +555,7 @@ public class XIRBuilder implements ASTVisitor {
             node.condition.ifTrue = ForBody;
             node.condition.ifFalse = ForAfter;
             VISIT(node.condition);
+            if(ignore){ignore = false; return;}
         }else
             curBlk.add(new Jump_Inst(curBlk, ForBody)); //Always true if nothing
 
