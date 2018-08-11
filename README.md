@@ -19,7 +19,8 @@ CFG -----> Liveliness Analyse -----> Allocate Stack Frame -----> Code Generator
 ```
 LLIRInterpreter.java (By Lequn Chen)
 ```
-Print your IR in LLIR format, and the interpreter will run your IR and return a number.
+Print your IR in LLIR format, and the interpreter will run your IR and return a number.  
+Original Repo： https://github.com/abcdabcd987/LLIRInterpreter
 
 ```
 ASTViewer.java
