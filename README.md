@@ -1,6 +1,8 @@
 # MX-Compiler
 Write a compiler from scratch. 
 
+![](images/Log.png)
+
 This is a course project for [Compiler 2018](https://acm.sjtu.edu.cn/wiki/Compiler_2018) ACM Class. In this project, the XYXCompiler transforms [Mx Language](https://acm.sjtu.edu.cn/w/images/3/30/M_language_manual.pdf)(a C-like language) into x86-64 assembly language. 
 
 This Compiler passed 400+ testcase on an online evaluation platform. The performance of XYXCompiler on Ubuntu 16.04  is comparable with gcc-O1.  
@@ -47,9 +49,6 @@ Test cases
 
 ![](images/case.png)
 
-Final Commit
-
-![](images/Log.png)
 
 
 Example of Source Language Code
