@@ -49,7 +49,7 @@ Test cases
 
 Final Commit
 
-![](images/log.png)
+![](images/Log.png)
 
 
 Example of Source Language Code
