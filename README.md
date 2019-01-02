@@ -1,6 +1,9 @@
 # MX-Compiler
-Write a compiler from scratch.  
-This is a course project for [Compiler 2018](https://acm.sjtu.edu.cn/wiki/Compiler_2018) ACM Class. In this project, the XYXCompiler transforms [Mx Language](https://acm.sjtu.edu.cn/w/images/3/30/M_language_manual.pdf)(a C-like language) into x86-64 assembly language. This Compiler passed 400+ testcase on an online evaluation platform. The performance of XYXCompiler on Ubuntu 16.04  is comparable with gcc-O1.  
+Write a compiler from scratch. 
+
+This is a course project for [Compiler 2018](https://acm.sjtu.edu.cn/wiki/Compiler_2018) ACM Class. In this project, the XYXCompiler transforms [Mx Language](https://acm.sjtu.edu.cn/w/images/3/30/M_language_manual.pdf)(a C-like language) into x86-64 assembly language. 
+
+This Compiler passed 400+ testcase on an online evaluation platform. The performance of XYXCompiler on Ubuntu 16.04  is comparable with gcc-O1.  
 
 ## Architecture
 
@@ -35,12 +38,21 @@ java XYXCompiler.Main
 ```
 Input a sequence of Mx-language code from system control plane, the optimized x86-64 assembly will be printed put.
 
-
+For more information please come and see our [homepage](https://acm.sjtu.edu.cn/wiki/Compiler_2018).
 
 
 
 ## Demo
-Source Language Code
+Test cases
+
+![](images/case.png)
+
+Final Commit
+
+![](images/log.png)
+
+
+Example of Source Language Code
 ```C
 void cost_a_lot_of_time()
 {
@@ -78,6 +90,5 @@ int main() {
 
 	return 0;
 }
-
 ```
 
